@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Quiniela Bullet & Octopus Cup 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f3f0e8;--card:#fff;--ink:#16211b;--mute:#6b7a71;--line:#e3ded2;
+  --green:#1d5a3c;--green2:#e6efe9;--gold:#c79a2a;
+  --blue:#1f4fd1;--blue2:#e7edfd;--white2:#f7f7f5;
+  --ok:#1f8a4c;--bad:#c2412d;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.4 Inter,system-ui,sans-serif;-webkit-text-size-adjust:100%}
+button{font:inherit;cursor:pointer;color:inherit}
+input,select{font:inherit}
+header{background:var(--green);color:#fff;padding:18px 16px 14px}
+header .k{font:600 12px Inter;letter-spacing:.12em;text-transform:uppercase;color:#cfe3d7}
+header h1{font:700 30px/1.05 "Barlow Condensed",sans-serif;margin:4px 0 6px;letter-spacing:.01em}
+header h1 span{color:var(--gold)}
+header .meta{font-size:13px;color:#d9e8df;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:600}
+.pill.open{background:#2f7a52;color:#fff}.pill.closed{background:#7a2f2f;color:#fff}
+nav{position:sticky;top:0;z-index:5;display:flex;background:var(--card);border-bottom:1px solid var(--line)}
+nav button{flex:1;border:0;background:none;padding:13px 4px;font-weight:600;color:var(--mute);border-bottom:3px solid transparent}
+nav button.on{color:var(--green);border-bottom-color:var(--green)}
+main{max-width:640px;margin:0 auto;padding:14px 12px 90px}
+section{display:none}section.on{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+.h{font:700 19px "Barlow Condensed",sans-serif;letter-spacing:.02em;text-transform:uppercase;margin:0 0 8px;display:flex;justify-content:space-between;align-items:baseline}
+.h small{font:500 12px Inter;color:var(--mute);text-transform:none;letter-spacing:0}
+.note{font-size:13px;color:var(--mute)}
+.banner{background:#fff6dc;border:1px solid #ecd9a0;color:#6b5312;border-radius:12px;padding:10px 12px;font-size:13px;margin-bottom:12px}
+.banner.red{background:#fdecea;border-color:#f2c3bc;color:#7a2a20}
+label.f{display:block;font-size:13px;font-weight:600;margin:0 0 6px}
+input.t{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:#fff}
+input.t:focus{outline:2px solid var(--green);border-color:transparent}
+.match{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:stretch;margin-bottom:10px}
+.match .vs{align-self:center;font:700 13px "Barlow Condensed";color:var(--mute)}
+.mt{font-size:11px;color:var(--mute);font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin:4px 0 6px}
+.opt{border:1.5px solid var(--line);border-radius:12px;padding:10px 8px;background:#fff;text-align:center;transition:.12s}
+.opt b{display:block;font-size:15px}
+.opt i{font-style:normal;font-size:12px;color:var(--mute)}
+.opt.w{background:var(--white2)}
+.opt.b{background:var(--blue2);border-color:#cdd8f7}
+.opt.sel.w{border-color:var(--ink);box-shadow:0 0 0 2px var(--ink) inset;background:#fff}
+.opt.sel.b{border-color:var(--blue);box-shadow:0 0 0 2px var(--blue) inset;background:#d7e2fc}
+.opt.sel b::after{content:" ✓"}
+.opt:disabled{cursor:default;opacity:.75}
+.teams{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.teams .opt{padding:16px 8px}.teams .opt b{font:700 22px "Barlow Condensed"}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px;vertical-align:1px}
+.dot.w{background:#fff;border:1.5px solid #9aa59e}.dot.b{background:var(--blue)}
+.save{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);padding:10px 12px calc(10px + env(safe-area-inset-bottom));display:flex;gap:10px;align-items:center;justify-content:center;z-index:6}
+.save .inner{max-width:640px;width:100%;display:flex;gap:10px;align-items:center}
+.btn{border:0;border-radius:12px;padding:12px 16px;font-weight:700;background:var(--green);color:#fff}
+.btn:disabled{background:#a9b8af}
+.btn.ghost{background:var(--green2);color:var(--green)}
+.btn.sm{padding:7px 11px;font-size:13px;border-radius:9px}
+.btn.danger{background:#fdecea;color:var(--bad)}
+.prog{flex:1;font-size:13px;color:var(--mute)}
+.prog b{color:var(--ink)}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px}
+.kpi .v{font:700 24px "Barlow Condensed"}.kpi .l{font-size:11px;color:var(--mute);text-transform:uppercase;letter-spacing:.06em}
+.row{display:grid;grid-template-columns:28px 1fr auto;gap:8px;align-items:center;padding:10px 2px;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0}
+.rk{font:700 18px "Barlow Condensed";color:var(--mute);text-align:center}
+.row.lead .rk{color:var(--gold)}
+.nm{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nm .me{font-size:11px;background:var(--green2);color:var(--green);padding:1px 6px;border-radius:6px;margin-left:4px}
+.marks{display:flex;gap:3px;margin-top:4px;flex-wrap:wrap}
+.mk{width:18px;height:18px;border-radius:5px;font-size:11px;display:grid;place-items:center;background:#eeebe3;color:#8b948e;font-weight:700}
+.mk.ok{background:#dcf1e4;color:var(--ok)}.mk.bad{background:#fbe1dc;color:var(--bad)}
+.pts{font:700 26px "Barlow Condensed";text-align:right;min-width:36px}
+.pts small{display:block;font:500 11px Inter;color:var(--mute)}
+.dist{margin-bottom:10px}
+.dist .lb{display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px}
+.bar{display:flex;height:10px;border-radius:6px;overflow:hidden;background:#eeebe3}
+.bar .bw{background:#c9cfcb}.bar .bb{background:var(--blue)}
+.ent{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--line)}
+.ent:last-child{border-bottom:0}
+.ent .nm{flex:1}
+.paid{border:1.5px solid var(--line);background:#fff;border-radius:9px;padding:6px 9px;font-size:12px;font-weight:700;color:var(--mute)}
+.paid.on{background:#dcf1e4;border-color:#9fd3b4;color:var(--ok)}
+.flex{display:flex;gap:8px;align-items:center}
+.toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:9px 14px;border-radius:10px;font-size:13px;opacity:0;transition:.2s;pointer-events:none;z-index:9}
+.toast.on{opacity:1}
+textarea.copy{width:100%;min-height:160px;font:12px/1.4 ui-monospace,monospace;border:1px solid var(--line);border-radius:10px;padding:8px;margin-top:8px}
+.hide{display:none!important}
+</style>
+<style>
+.links{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+a.btn{text-decoration:none;display:inline-block}
+.wa{background:#25d366;color:#fff}
+.addrow{display:flex;gap:8px;margin-bottom:10px}
+.addrow input{flex:1}
+.ent{flex-wrap:wrap}
+.ent .nm{min-width:120px}
+</style>
+</head>
+<body>
+<header>
+  <div class="k">McGregor · Quiniela</div>
+  <h1>Bullet <span>&</span> Octopus Cup 2026</h1>
+  <div class="meta"><span>Las Cañadas CC · Sáb 31 oct</span><span id="lockPill" class="pill open">…</span></div>
+</header>
+<nav>
+  <button data-tab="picks" id="tabPicks">Mis picks</button>
+  <button data-tab="board" id="tabBoard">Tabla</button>
+  <button data-tab="admin" id="tabAdmin" class="hide">Admin</button>
+</nav>
+<main>
+  <div id="topBanner"></div>
+
+  <section id="s-picks">
+    <div id="picksBanner"></div>
+    <div class="card"><div class="h" id="picksWho">Tus picks</div><div class="note" id="picksSub">Elige quién gana cada uno. Todos valen 1 punto.</div></div>
+    <div class="card">
+      <div class="h">6 Matches <small>1 pt c/u</small></div>
+      <div id="matchPicks"></div>
+    </div>
+    <div class="card">
+      <div class="h">Equipo ganador <small>1 pt</small></div>
+      <div id="teamPick" class="teams"></div>
+    </div>
+    <div class="card">
+      <div class="h">1er lugar individual <small>1 pt · stroke net</small></div>
+      <div id="indPick" class="grid3"></div>
+    </div>
+    <div class="card">
+      <label class="f" for="tb">Desempate: score net del 1er lugar individual</label>
+      <input id="tb" class="t" type="number" inputmode="numeric" min="50" max="120" placeholder="Ej. 68">
+      <div class="note" style="margin-top:6px">Solo cuenta si hay empate en puntos. Gana el más cercano.</div>
+    </div>
+  </section>
+
+  <section id="s-board">
+    <div class="kpis">
+      <div class="kpi"><div class="v" id="kBolsa">—</div><div class="l">Bolsa</div></div>
+      <div class="kpi"><div class="v" id="kN">0</div><div class="l">Apostadores</div></div>
+      <div class="kpi"><div class="v" id="kRes">0/8</div><div class="l">Resultados</div></div>
+    </div>
+    <div class="card">
+      <div class="h">Tabla <small id="boardSub"></small></div>
+      <div id="board"><div class="note">Cargando…</div></div>
+    </div>
+    <div class="card" id="distCard" style="display:none">
+      <div class="h">Cómo votó el grupo</div>
+      <div id="dist"></div>
+    </div>
+    <div class="card">
+      <button class="btn ghost" id="copyBtn" style="width:100%">Copiar tabla para WhatsApp</button>
+      <textarea class="copy hide" id="copyTxt" readonly></textarea>
+    </div>
+  </section>
+
+  <section id="s-admin">
+    <div class="card">
+      <div class="h">Apostadores <small id="admCount"></small></div>
+      <div class="addrow"><input id="newAlias" class="t" maxlength="24" placeholder="Nombre del apostador"><button class="btn" id="addBtn">Agregar</button></div>
+      <div class="note" style="margin-bottom:6px">Cada quien recibe su liga personal. Solo con esa liga puede guardar sus picks.</div>
+      <div id="entList"></div>
+    </div>
+    <div class="card">
+      <div class="h">Resultados <small>toca para marcar / desmarcar</small></div>
+      <div id="resMatches"></div>
+      <div class="mt" style="margin-top:12px">Equipo ganador</div>
+      <div id="resTeam" class="teams"></div>
+      <div class="mt" style="margin-top:12px">1er lugar individual</div>
+      <div id="resInd" class="grid3"></div>
+      <label class="f" style="margin-top:12px" for="resNet">Score net real del 1er lugar (desempate)</label>
+      <input id="resNet" class="t" type="number" inputmode="numeric" placeholder="Ej. 69">
+    </div>
+    <div class="card">
+      <div class="h">Ajustes</div>
+      <label class="f" for="aport">Aportación por apostador ($ MXN)</label>
+      <input id="aport" class="t" type="number" inputmode="numeric" min="0" placeholder="Ej. 500">
+      <label class="f" style="margin-top:12px" for="lockIn">Cierre de picks (hora de tu celular)</label>
+      <input id="lockIn" class="t" type="datetime-local">
+      <button class="btn ghost" id="saveSettings" style="margin-top:10px">Guardar ajustes</button>
+    </div>
+  </section>
+</main>
+
+<div class="save hide" id="saveBar">
+  <div class="inner">
+    <div class="prog" id="prog"><b>0/8</b> picks</div>
+    <button class="btn" id="saveBtn" disabled>Guardar picks</button>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ====== CONFIG (Supabase) ====== */
+const SB_URL = "https://njdvluvuzcczsrrrwyzt.supabase.co";
+const SB_KEY = "sb_publishable_bJvJamSGhkDgcMVmHnpXSA_NXU5ZreP";
+
+const MATCHES = [
+  {w:["Rod",11.2], b:["Changes",11.4], t:"7:30"},
+  {w:["JR Sports",11.8], b:["JuanFer",13.2], t:"7:30"},
+  {w:["Paco",14.6], b:["Perico",13.9], t:"7:40"},
+  {w:["Damiano",19.3], b:["Coronel",16.5], t:"7:40"},
+  {w:["Peter",21.3], b:["Barcity",24.6], t:"8:00"},
+  {w:["Cheche",27.7], b:["Mike",29.5], t:"8:00"},
+];
+const PLAYERS = MATCHES.flatMap(m=>[{n:m.w[0],h:m.w[1],c:"w"},{n:m.b[0],h:m.b[1],c:"b"}]);
+const KEYS = ["m1","m2","m3","m4","m5","m6","team","ind1"];
+const LABEL = {m1:"M1",m2:"M2",m3:"M3",m4:"M4",m5:"M5",m6:"M6",team:"Eq",ind1:"#1"};
+
+const qs = new URLSearchParams(location.search);
+const TOKEN = qs.get("t"), ADMIN = qs.get("admin");
+const MODE = ADMIN ? "admin" : TOKEN ? "player" : "public";
+
+const $ = s=>document.querySelector(s);
+const esc = s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const money = n=>"$"+Math.round(n).toLocaleString("es-MX");
+function toast(t){const el=$("#toast");el.textContent=t;el.classList.add("on");clearTimeout(toast._t);toast._t=setTimeout(()=>el.classList.remove("on"),2400);}
+
+async function rpc(fn,args={}){
+  const h={"Content-Type":"application/json",apikey:SB_KEY};
+  if (!SB_KEY.startsWith("sb_")) h.Authorization="Bearer "+SB_KEY;
+  const r = await fetch(`${SB_URL}/rest/v1/rpc/${fn}`,{method:"POST",headers:h,body:JSON.stringify(args)});
+  const txt = await r.text(); let j=null; try{ j = txt?JSON.parse(txt):null; }catch{}
+  if (!r.ok) throw new Error((j&&j.message)||("Error "+r.status));
+  return j;
+}
+
+/* ====== state ====== */
+let board=null, skew=0, me=null, adm=null;
+let form={picks:{},tb:""}, target=null, dirty=false, saving=false;
+let res={}, delArm=null, tab = MODE==="public" ? "board" : MODE==="admin" ? "admin" : "picks";
+
+function lockAt(){ return board ? new Date(board.lock_at).getTime() : Infinity; }
+function locked(){ return Date.now()+skew >= lockAt(); }
+
+/* ====== tabs ====== */
+function setTab(t){
+  tab=t;
+  document.querySelectorAll("nav button").forEach(x=>x.classList.toggle("on",x.dataset.tab===t));
+  document.querySelectorAll("section").forEach(s=>s.classList.toggle("on",s.id==="s-"+t));
+  $("#saveBar").classList.toggle("hide", t!=="picks");
+  renderAll();
+}
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>setTab(b.dataset.tab));
+
+/* ====== option buttons ====== */
+function optBtn(name,h,c,sel,attrs,dis){return `<button class="opt ${c}${sel?" sel":""}" ${attrs} ${dis?"disabled":""}><b>${esc(name)}</b><i>HCP ${h}</i></button>`;}
+function matchesHTML(src,p,dis){return MATCHES.map((m,i)=>{const k="m"+(i+1);return `<div class="mt">Match ${i+1} · ${m.t}</div><div class="match">
+  ${optBtn(m.w[0],m.w[1],"w",src[k]===m.w[0],`data-${p}="${k}" data-v="${esc(m.w[0])}"`,dis)}<div class="vs">VS</div>
+  ${optBtn(m.b[0],m.b[1],"b",src[k]===m.b[0],`data-${p}="${k}" data-v="${esc(m.b[0])}"`,dis)}</div>`}).join("");}
+function teamHTML(src,p,dis){return [["Blanco","w"],["Azul","b"]].map(([t,c])=>`<button class="opt ${c}${src.team===t?" sel":""}" data-${p}="team" data-v="${t}" ${dis?"disabled":""}><b>${t}</b></button>`).join("");}
+function indHTML(src,p,dis){return PLAYERS.map(x=>`<button class="opt ${x.c}${src.ind1===x.n?" sel":""}" data-${p}="ind1" data-v="${esc(x.n)}" ${dis?"disabled":""}><b style="font-size:14px">${esc(x.n)}</b><i>${x.h}</i></button>`).join("");}
+
+/* ====== picks ====== */
+function picksDisabled(){ if(!target) return true; if(MODE==="admin") return false; return locked(); }
+function renderPicks(){
+  const dis = picksDisabled();
+  $("#matchPicks").innerHTML = matchesHTML(form.picks,"p",dis);
+  $("#teamPick").innerHTML = teamHTML(form.picks,"p",dis);
+  $("#indPick").innerHTML = indHTML(form.picks,"p",dis);
+  $("#tb").disabled = dis;
+  if (document.activeElement!==$("#tb")) $("#tb").value = form.tb ?? "";
+  const n = KEYS.filter(k=>form.picks[k]).length;
+  $("#picksWho").textContent = target ? (MODE==="admin" ? "Capturando: "+target.alias : "Hola, "+target.alias) : "Tus picks";
+  $("#prog").innerHTML = `<b>${n}/8</b> picks${dirty?" · sin guardar":(target&&n===8?" · guardado ✓":"")}`;
+  $("#saveBtn").disabled = dis || saving || !dirty || n<8;
+  $("#saveBtn").textContent = saving ? "Guardando…" : "Guardar picks";
+  let b="";
+  if (MODE==="player" && !me && board) b=`<div class="banner red">Esta liga no es válida. Pídele a Paco tu liga personal.</div>`;
+  else if (MODE==="player" && locked()) b=`<div class="banner red">Picks cerrados. Sigue la <b>Tabla</b> en vivo.</div>`;
+  else if (MODE==="player") b=`<div class="banner">Puedes cambiar tus picks las veces que quieras hasta el cierre. Nadie ve tus picks antes de esa hora.</div>`;
+  $("#picksBanner").innerHTML=b;
+}
+document.addEventListener("click",e=>{
+  const b=e.target.closest("[data-p]"); if(!b||b.disabled) return;
+  const k=b.dataset.p, v=b.dataset.v;
+  if (form.picks[k]===v) delete form.picks[k]; else form.picks[k]=v;
+  dirty=true; renderPicks();
+});
+$("#tb").addEventListener("input",e=>{form.tb=e.target.value;dirty=true;renderPicks();});
+$("#saveBtn").onclick = async ()=>{
+  if (saving||!target) return; saving=true; renderPicks();
+  const tb = form.tb===""||form.tb==null ? null : Math.round(Number(form.tb));
+  try{
+    if (MODE==="admin"){ adm = await rpc("admin_save_picks",{p_admin:ADMIN,p_id:target.id,p_picks:form.picks,p_tb:Number.isFinite(tb)?tb:null}); }
+    else { me = await rpc("save_picks",{p_token:TOKEN,p_picks:form.picks,p_tb:Number.isFinite(tb)?tb:null}); }
+    dirty=false; toast("Picks guardados ✓"); loadBoard();
+  }catch(err){ toast(err.message||"No se pudo guardar"); }
+  finally{ saving=false; renderAll(); }
+};
+function loadTarget(t){ target=t; form={picks:{...(t?.picks||{})}, tb:t?.tb??""}; dirty=false; }
+
+/* ====== scoring / board ====== */
+function scoreOf(e){let p=0;const marks={};KEYS.forEach(k=>{const r=board.results?.[k],v=e.picks?.[k];if(!r)marks[k]="pend";else if(v===r){p++;marks[k]="ok";}else marks[k]="bad";});return{p,marks};}
+function ranked(){
+  const net=board.net_ganador;
+  const rows=board.bettors.map(e=>({e,...scoreOf(e),d:(net!=null&&e.tb!=null)?Math.abs(e.tb-net):Infinity}));
+  rows.sort((a,b)=>b.p-a.p||a.d-b.d||String(a.e.alias).localeCompare(b.e.alias));
+  let rank=0,prev=null;rows.forEach((r,i)=>{const k=r.p+"|"+r.d;if(k!==prev){rank=i+1;prev=k;}r.rank=rank;});
+  return rows;
+}
+function renderBoard(){
+  if(!board) return;
+  const n=board.bettors.length, nres=KEYS.filter(k=>board.results?.[k]).length, open=!locked();
+  $("#kN").textContent=n; $("#kRes").textContent=nres+"/8";
+  $("#kBolsa").textContent = board.aportacion>0 ? money(board.aportacion*n) : "—";
+  $("#boardSub").textContent = open ? "picks ocultos hasta el cierre" : (nres===8?"final":"en vivo");
+  const rows=ranked();
+  $("#board").innerHTML = !rows.length ? `<div class="note">Aún no hay apostadores.</div>` : rows.map(r=>{
+    const mine = me && r.e.id===me.id;
+    const marks = KEYS.map(k=>{const m=r.marks[k];const v=r.e.picks?.[k];return `<span class="mk ${m==="ok"?"ok":m==="bad"?"bad":""}" title="${esc(LABEL[k]+(v?": "+v:""))}">${m==="ok"?"✓":m==="bad"?"✗":"·"}</span>`;}).join("");
+    const sub = open ? `<small>${r.e.complete?"enviado ✓":"pendiente"}</small>` : (board.net_ganador!=null&&r.e.tb!=null?`<small>des. ${esc(r.e.tb)}</small>`:"");
+    return `<div class="row ${r.rank===1&&nres>0?"lead":""}"><div class="rk">${r.rank}</div>
+      <div><div class="nm">${esc(r.e.alias)}${r.e.paid?" 💵":""}${mine?'<span class="me">tú</span>':""}</div>${open?"":`<div class="marks">${marks}</div>`}</div>
+      <div class="pts">${open?"":r.p}${sub}</div></div>`;
+  }).join("");
+  const showDist = !open && n>0;
+  $("#distCard").style.display = showDist?"":"none";
+  if (showDist){
+    const cnt=k=>{const c={};board.bettors.forEach(e=>{const v=e.picks?.[k];if(v)c[v]=(c[v]||0)+1;});return c;};
+    const bar=(la,a,lb,b)=>{const t=a+b||1;return `<div class="dist"><div class="lb"><span><span class="dot w"></span>${esc(la)} ${a}</span><span>${b} ${esc(lb)} <span class="dot b"></span></span></div><div class="bar"><div class="bw" style="width:${a/t*100}%"></div><div class="bb" style="width:${b/t*100}%"></div></div></div>`;};
+    let h=MATCHES.map((m,i)=>{const c=cnt("m"+(i+1));return bar(m.w[0],c[m.w[0]]||0,m.b[0],c[m.b[0]]||0);}).join("");
+    const ct=cnt("team"); h+=bar("Equipo Blanco",ct.Blanco||0,"Equipo Azul",ct.Azul||0);
+    const top=Object.entries(cnt("ind1")).sort((x,y)=>y[1]-x[1]);
+    h+=`<div class="mt" style="margin-top:6px">1er lugar más votado</div><div class="note">${top.map(([k,v])=>`${esc(k)} (${v})`).join(" · ")||"—"}</div>`;
+    $("#dist").innerHTML=h;
+  }
+}
+$("#copyBtn").onclick=async()=>{
+  if(!board) return;
+  const rows=ranked(), nres=KEYS.filter(k=>board.results?.[k]).length, open=!locked();
+  let txt=`⛳ Quiniela Bullet & Octopus Cup 2026\n`;
+  txt += open ? `Picks enviados: ${board.bettors.filter(b=>b.complete).length}/${board.bettors.length}` : `Resultados: ${nres}/8`;
+  if(board.aportacion>0) txt+=` · Bolsa: ${money(board.aportacion*board.bettors.length)}`;
+  txt += "\n\n" + (open ? board.bettors.map(b=>`${b.complete?"✅":"⏳"} ${b.alias}`).join("\n") : rows.map(r=>`${r.rank}. ${r.e.alias} — ${r.p} pts`).join("\n"));
+  txt += `\n\n${location.origin+location.pathname}`;
+  const ta=$("#copyTxt"); ta.value=txt;
+  try{ await navigator.clipboard.writeText(txt); ta.classList.add("hide"); toast("Copiado ✓"); }
+  catch{ ta.classList.remove("hide"); ta.select(); toast("Copia el texto de abajo"); }
+};
+
+/* ====== admin ====== */
+function linkFor(t){ return location.origin+location.pathname+"?t="+encodeURIComponent(t); }
+function renderAdmin(){
+  if (MODE!=="admin"||!adm) return;
+  const list=adm.bettors;
+  $("#admCount").textContent = `${list.filter(b=>Object.keys(b.picks||{}).length===8).length}/${list.length} con picks`;
+  $("#entList").innerHTML = list.length ? list.map(b=>{
+    const n=Object.keys(b.picks||{}).length, link=linkFor(b.token);
+    const msg=`⛳ ${b.alias}, esta es tu liga personal para la quiniela del Bullet & Octopus Cup (cierra sáb 7:30 am). No la compartas:\n${link}`;
+    return `<div class="ent"><div class="nm">${esc(b.alias)} <span class="note">${n}/8</span></div>
+      <button class="paid ${b.paid?"on":""}" data-paid="${b.id}" data-on="${b.paid?1:0}">${b.paid?"Pagó ✓":"Pago"}</button>
+      <div class="links" style="width:100%">
+        <a class="btn sm wa" href="https://wa.me/?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">WhatsApp</a>
+        <button class="btn sm ghost" data-copy="${esc(link)}">Copiar liga</button>
+        <button class="btn sm ghost" data-edit="${b.id}">Capturar picks</button>
+        <button class="btn sm danger" data-del="${b.id}">${delArm===b.id?"¿Seguro?":"Borrar"}</button>
+      </div></div>`;
+  }).join("") : `<div class="note">Agrega a los apostadores para generar sus ligas.</div>`;
+  $("#resMatches").innerHTML=matchesHTML(res,"r",false);
+  $("#resTeam").innerHTML=teamHTML(res,"r",false);
+  $("#resInd").innerHTML=indHTML(res,"r",false);
+}
+function fillAdminInputs(){
+  if (!board) return;
+  $("#resNet").value = board.net_ganador ?? "";
+  $("#aport").value = board.aportacion || "";
+  const d=new Date(board.lock_at), p=x=>String(x).padStart(2,"0");
+  $("#lockIn").value=`${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+async function admCall(fn,args){ try{ adm = await rpc(fn,{p_admin:ADMIN,...args}); renderAdmin(); loadBoard(); }catch(e){ toast(e.message); } }
+$("#addBtn").onclick=()=>{const a=$("#newAlias").value.trim(); if(!a) return; $("#newAlias").value=""; admCall("admin_add_bettor",{p_alias:a});};
+$("#newAlias").addEventListener("keydown",e=>{if(e.key==="Enter")$("#addBtn").click();});
+let resBusy=Promise.resolve();
+function pushResults(){
+  const net = $("#resNet").value===""?null:Math.round(Number($("#resNet").value));
+  const snap={...res};
+  resBusy = resBusy.then(()=>rpc("admin_set_results",{p_admin:ADMIN,p_results:snap,p_net:Number.isFinite(net)?net:null}))
+    .then(()=>loadBoard()).catch(e=>toast(e.message));
+}
+document.addEventListener("click",async e=>{
+  if (MODE!=="admin") return;
+  const r=e.target.closest("[data-r]");
+  if(r){const k=r.dataset.r,v=r.dataset.v; if(res[k]===v) delete res[k]; else res[k]=v; renderAdmin(); pushResults(); return;}
+  const p=e.target.closest("[data-paid]");
+  if(p){ admCall("admin_set_paid",{p_id:p.dataset.paid,p_paid:p.dataset.on!=="1"}); return; }
+  const c=e.target.closest("[data-copy]");
+  if(c){ try{await navigator.clipboard.writeText(c.dataset.copy);toast("Liga copiada ✓");}catch{toast(c.dataset.copy);} return; }
+  const ed=e.target.closest("[data-edit]");
+  if(ed){ const b=adm.bettors.find(x=>x.id===ed.dataset.edit); loadTarget(b); $("#tabPicks").classList.remove("hide"); setTab("picks"); window.scrollTo(0,0); return; }
+  const d=e.target.closest("[data-del]");
+  if(d){ const id=d.dataset.del; if(delArm!==id){delArm=id;renderAdmin();setTimeout(()=>{if(delArm===id){delArm=null;renderAdmin();}},3000);return;}
+    delArm=null; if(target&&target.id===id) loadTarget(null); admCall("admin_del_bettor",{p_id:id}); }
+});
+let netT; $("#resNet").addEventListener("input",()=>{clearTimeout(netT);netT=setTimeout(pushResults,700);});
+$("#saveSettings").onclick=async()=>{
+  const d=new Date($("#lockIn").value);
+  try{ await rpc("admin_set_settings",{p_admin:ADMIN,p_lock:isNaN(d)?null:d.toISOString(),p_aport:Number($("#aport").value)||0}); toast("Ajustes guardados ✓"); loadBoard(); }
+  catch(e){ toast(e.message); }
+};
+
+/* ====== header / boot ====== */
+function renderHeader(){
+  const pill=$("#lockPill"); if(!board){pill.textContent="…";return;}
+  const d=new Date(board.lock_at);
+  if(locked()){pill.className="pill closed";pill.textContent="Picks cerrados";}
+  else{const ms=lockAt()-(Date.now()+skew),h=Math.floor(ms/3600000),m=Math.floor(ms%3600000/60000);
+    pill.className="pill open";pill.textContent=`Cierra en ${h>0?h+"h ":""}${m}m · ${d.toLocaleString("es-MX",{weekday:"short",hour:"numeric",minute:"2-digit"})}`;}
+}
+function renderAll(){ renderHeader(); renderPicks(); renderBoard(); renderAdmin(); }
+async function loadBoard(){
+  try{ board = await rpc("get_board"); skew = new Date(board.now).getTime()-Date.now(); renderAll(); }
+  catch(e){ $("#board").innerHTML=`<div class="banner red">No se pudo cargar la tabla. Revisa tu conexión.</div>`; }
+}
+(async ()=>{
+  if (SB_URL.startsWith("__")){ $("#topBanner").innerHTML=`<div class="banner red">Falta configurar Supabase en el archivo.</div>`; }
+  $("#tabPicks").classList.toggle("hide", MODE!=="player");
+  $("#tabAdmin").classList.toggle("hide", MODE!=="admin");
+  if (MODE==="public"){ document.querySelector("nav").classList.add("hide"); $("#topBanner").innerHTML+=`<div class="banner">Para apostar necesitas tu liga personal — pídesela a Paco.</div>`; }
+  setTab(tab);
+  await loadBoard();
+  if (MODE==="player"){
+    try{ me = await rpc("get_me",{p_token:TOKEN}); }catch{ me=null; }
+    if (me) loadTarget(me);
+    renderAll();
+  }
+  if (MODE==="admin"){
+    try{ adm = await rpc("admin_get",{p_admin:ADMIN}); res={...(board?.results||{})}; fillAdminInputs(); renderAll(); }
+    catch(e){ $("#topBanner").innerHTML=`<div class="banner red">Clave de admin no válida.</div>`; }
+  }
+  setInterval(()=>{ if(!document.hidden) loadBoard(); }, 20000);
+  setInterval(renderHeader, 30000);
+})();
+</script>
+</body>
+</html>
