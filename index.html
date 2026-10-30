@@ -157,6 +157,11 @@ textarea.copy{width:100%;min-height:160px;font:12px/1.4 ui-monospace,monospace;b
 
   <!-- PRINCIPAL -->
   <section id="s-principal">
+    <div class="card hide" id="apprCard" style="text-align:center">
+      <div class="h" style="justify-content:center" id="apprTitle">Solicitud de liga</div>
+      <div id="apprMsg" style="margin-bottom:12px"></div>
+      <button class="btn" id="apprBtn" style="width:100%">Confirmar</button>
+    </div>
     <div class="hero">
       <img id="heroLogo" alt="Hermanos McGregor">
       <h1>Bullet & Octopus Cup</h1>
@@ -333,6 +338,7 @@ const LONG = {m1:"Match 1",m2:"Match 2",m3:"Match 3",m4:"Match 4",m5:"Match 5",m
 const qs = new URLSearchParams(location.search);
 const TOKEN = qs.get("t"), ADMIN = qs.get("admin");
 const MODE = ADMIN ? "admin" : TOKEN ? "player" : "public";
+const REQ = qs.get("req"), REQK = qs.get("k"), REQACT = qs.get("act");
 
 const $ = s=>document.querySelector(s);
 const esc = s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -651,6 +657,21 @@ async function loadBoard(){
   $("#barLogo").src = $("#heroLogo").src = STORE+"logo.webp";
   $("#tabAdmin").classList.toggle("hide", MODE!=="admin");
   setTab("principal");
+  if (REQ && REQK){
+    const ok = REQACT!=="no";
+    $("#apprCard").classList.remove("hide");
+    $("#apprTitle").textContent = ok ? "Aprobar solicitud" : "Rechazar solicitud";
+    $("#apprMsg").textContent = ok ? "Confirma para darlo de alta. Le llega su bienvenida con su liga personal." : "Confirma para rechazar esta solicitud.";
+    $("#apprBtn").textContent = ok ? "✅ Confirmar aprobación" : "Confirmar rechazo";
+    $("#apprBtn").onclick = async ()=>{
+      $("#apprBtn").disabled = true;
+      try{ const r = await rpc("resolve_request_link",{p_id:REQ,p_key:REQK,p_approve:ok});
+        $("#apprMsg").innerHTML = r.already ? `La solicitud de <b>${esc(r.alias)}</b> ya estaba ${esc(r.status)}.`
+          : r.status==="aprobada" ? `✅ <b>${esc(r.alias)}</b> quedó dado de alta. Su liga va en camino a <b>${esc(r.email)}</b>.` : `Solicitud de <b>${esc(r.alias)}</b> rechazada.`;
+        $("#apprBtn").classList.add("hide"); history.replaceState(null,"",location.pathname); loadBoard();
+      }catch(e){ $("#apprMsg").textContent = e.message; $("#apprBtn").disabled=false; }
+    };
+  }
   await loadBoard();
   if (MODE==="player"){
     try{ me = await rpc("get_me",{p_token:TOKEN}); }catch{ me=null; }
