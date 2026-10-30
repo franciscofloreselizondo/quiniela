@@ -132,6 +132,9 @@ input.t:focus,select.t:focus{outline:2px solid var(--gold);border-color:transpar
 .toast.on{opacity:1}
 textarea.copy{width:100%;min-height:160px;font:12px/1.4 ui-monospace,monospace;border:1px solid var(--line);border-radius:10px;padding:8px;margin-top:8px;background:rgba(0,0,0,.2);color:var(--cream)}
 .hide{display:none!important}
+.em{display:flex;gap:6px;width:100%}.em input{flex:1;padding:7px 10px;font-size:13px}
+.mlog{font-size:12px;color:var(--mute);border-top:1px solid rgba(164,161,106,.2);padding:6px 0}
+.mlog b{color:var(--cream)}.ok2{color:var(--ok)}.bad2{color:var(--bad)}
 </style>
 </head>
 <body>
@@ -186,6 +189,16 @@ textarea.copy{width:100%;min-height:160px;font:12px/1.4 ui-monospace,monospace;b
   <!-- MIS PICKS -->
   <section id="s-picks">
     <div id="picksBanner"></div>
+    <div class="card hide" id="reqCard">
+      <div class="h">Solicita tu liga</div>
+      <div class="note" style="margin-bottom:10px">Déjanos tu nombre y correo. Paco aprueba tu registro y te llega por correo tu liga personal para llenar tus picks.</div>
+      <label class="f" for="reqName">Nombre (como te conocen en el grupo)</label>
+      <input id="reqName" class="t" maxlength="24" placeholder="Ej. Changes">
+      <label class="f" for="reqEmail" style="margin-top:10px">Correo</label>
+      <input id="reqEmail" class="t" type="email" placeholder="tu@correo.com">
+      <button class="btn" id="reqBtn" style="width:100%;margin-top:12px">Solicitar mi liga</button>
+      <div id="reqMsg" class="note" style="margin-top:10px"></div>
+    </div>
     <div id="picksBody">
       <div class="card"><div class="h" id="picksWho">Tus picks</div><div class="note" id="picksSub"></div></div>
       <div class="card">
@@ -237,9 +250,13 @@ textarea.copy{width:100%;min-height:160px;font:12px/1.4 ui-monospace,monospace;b
 
   <!-- ADMIN -->
   <section id="s-admin">
+    <div class="card" id="reqAdmCard">
+      <div class="h">Solicitudes <small id="reqCount"></small></div>
+      <div id="reqList"></div>
+    </div>
     <div class="card">
       <div class="h">Apostadores <small id="admCount"></small></div>
-      <div class="addrow"><input id="newAlias" class="t" maxlength="24" placeholder="Nombre del apostador"><button class="btn" id="addBtn">Agregar</button></div>
+      <div class="addrow"><input id="newAlias" class="t" maxlength="24" placeholder="Nombre"></div><div class="addrow"><input id="newEmail" class="t" type="email" placeholder="Correo (le llega la bienvenida)"><button class="btn" id="addBtn">Agregar</button></div>
       <div class="note" style="margin-bottom:6px">Cada quien recibe su liga personal. Solo con esa liga puede guardar sus picks.</div>
       <div id="entList"></div>
     </div>
@@ -252,6 +269,16 @@ textarea.copy{width:100%;min-height:160px;font:12px/1.4 ui-monospace,monospace;b
       <div id="resInd" class="grid3"></div>
       <label class="f" style="margin-top:12px" for="resNet">Score net real del 1er lugar (desempate)</label>
       <input id="resNet" class="t" type="number" inputmode="numeric" placeholder="Ej. 69">
+    </div>
+    <div class="card">
+      <div class="h">Cerrar evento</div>
+      <div class="note" id="closeNote" style="margin-bottom:10px">Cuando tengas todos los resultados y el score net del 1er lugar, cierra el evento: se manda a todos el correo con ganador(es) y el racional.</div>
+      <button class="btn" id="closeBtn" style="width:100%">Cerrar evento y enviar ganador</button>
+    </div>
+    <div class="card">
+      <div class="h">Correos <small id="mailKey"></small></div>
+      <div id="mailLog"></div>
+      <button class="btn ghost" id="testMail" style="width:100%;margin-top:8px">Enviar correo de prueba a todos</button>
     </div>
     <div class="card">
       <div class="h">Ajustes</div>
@@ -336,7 +363,7 @@ function bolsa(){ return entrada()*(board?.bettors.length||0); }
 function prizes(){
   const B=bolsa(), e=entrada(), w=board?.winners||1;
   if (w===1) return [B];
-  if (w===2) return [B*.7, B*.3];
+  if (w===2){ const sec=Math.round(B*.3/100)*100; return [B-sec, sec]; }
   return [Math.max(B-3*e,0), 2*e, e];
 }
 function lockLabel(){ if(!board) return ""; return new Date(board.lock_at).toLocaleString("es-MX",{weekday:"long",day:"numeric",month:"short",hour:"numeric",minute:"2-digit"}); }
@@ -375,10 +402,10 @@ function renderPrincipal(){
     : `1º ${money(pr[0])} · 2º doble entrada (${money(pr[1])}) · 3º reintegro (${money(pr[2])}).`;
   $("#rLock").textContent = `Picks cierran el ${lockLabel()}. Todos los picks son públicos`;
   const ms=lockAt()-(Date.now()+skew);
-  $("#heroCd").textContent = locked() ? "Picks cerrados · sigue el ranking en vivo" : `Picks cierran en ${fmtLeft(ms)}`;
+  $("#heroCd").textContent = board.closed ? "Evento cerrado · resultados finales" : locked() ? "Picks cerrados · sigue el ranking en vivo" : `Picks cierran en ${fmtLeft(ms)}`;
 
   // menu
-  let picksSub = "Necesitas tu liga";
+  let picksSub = (locked()||board.closed) ? "Cerrado" : "Solicitar liga →";
   if (MODE==="player" && me){ picksSub = locked() ? "Ver →" : (isComplete(me.picks) ? "Editar →" : "Llenar →"); }
   if (MODE==="admin") picksSub = "Capturar desde Admin";
   $("#menu").innerHTML = `
@@ -403,17 +430,19 @@ function isComplete(p){ return KEYS.every(k=>p&&p[k]); }
 document.addEventListener("click",e=>{const g=e.target.closest("[data-go]"); if(g) setTab(g.dataset.go);});
 
 /* ====== picks ====== */
-function picksDisabled(){ if(!target) return true; if(MODE==="admin") return false; return locked(); }
+function picksDisabled(){ if(!target) return true; if(MODE==="admin") return false; return locked() || !!board?.closed; }
 function renderPicks(){
   const p=PTS();
   $("#ptsMatchL").textContent=`${p.match} pt c/u`; $("#ptsTeamL").textContent=`${p.team} pts`; $("#ptsIndL").textContent=`${p.ind1} pts`;
   let b="";
-  if (MODE==="public") b=`<div class="banner">Para llenar tus picks necesitas tu liga personal. Pídesela a Paco por WhatsApp.</div>`;
+  if (MODE==="public") b="";
   else if (MODE==="admin" && !target) b=`<div class="banner">Como admin, captura picks desde la pestaña <b>Admin</b> → "Capturar picks".</div>`;
   else if (MODE==="player" && !me && board) b=`<div class="banner red">Esta liga no es válida. Pídele a Paco tu liga personal.</div>`;
+  else if (MODE==="player" && board?.closed) b=`<div class="banner red">Evento cerrado. Revisa el <b>Ranking</b> final.</div>`;
   else if (MODE==="player" && locked()) b=`<div class="banner red">Picks cerrados. Sigue el <b>Ranking</b> en vivo.</div>`;
   else if (MODE==="player") b=`<div class="banner">Puedes cambiar tus picks las veces que quieras hasta el cierre. Los picks de todos son públicos.</div>`;
   $("#picksBanner").innerHTML=b;
+  $("#reqCard").classList.toggle("hide", MODE!=="public");
   $("#picksBody").classList.toggle("hide", !target);
   $("#saveBar").classList.toggle("hide", !(tab==="picks" && target));
   if (!target) return;
@@ -443,11 +472,22 @@ $("#saveBtn").onclick = async ()=>{
   try{
     if (MODE==="admin"){ adm = await rpc("admin_save_picks",{p_admin:ADMIN,p_id:target.id,p_picks:form.picks,p_tb:Number.isFinite(tb)?tb:null}); }
     else { me = await rpc("save_picks",{p_token:TOKEN,p_picks:form.picks,p_tb:Number.isFinite(tb)?tb:null}); target=me; }
-    dirty=false; toast("Picks guardados ✓"); await loadBoard(); openRow = target?.id||null; setTab("ranking");
+    dirty=false; toast("Picks guardados ✓ · te llega confirmación por correo"); await loadBoard(); openRow = target?.id||null; setTab("ranking");
   }catch(err){ toast(err.message||"No se pudo guardar"); }
   finally{ saving=false; renderAll(); }
 };
 function loadTarget(t){ target=t; form={picks:{...(t?.picks||{})}, tb:t?.tb??""}; dirty=false; }
+
+$("#reqBtn").onclick=async()=>{
+  const a=$("#reqName").value.trim(), em=$("#reqEmail").value.trim();
+  if(!a) return toast("Escribe tu nombre"); if(!/^\S+@\S+\.\S+$/.test(em)) return toast("Correo no válido");
+  $("#reqBtn").disabled=true;
+  try{ const r=await rpc("request_access",{p_alias:a,p_email:em});
+    $("#reqMsg").innerHTML = r==="ya_pendiente" ? "Ya tenías una solicitud pendiente. En cuanto Paco la apruebe te llega tu liga a <b>"+esc(em)+"</b>." : "¡Listo! Tu solicitud llegó. Cuando Paco la apruebe te llega tu liga a <b>"+esc(em)+"</b>.";
+    $("#reqName").value=""; $("#reqEmail").value=""; }
+  catch(e){ $("#reqMsg").textContent=e.message; }
+  finally{ $("#reqBtn").disabled=false; }
+};
 
 /* ====== ranking ====== */
 function scoreOf(e){let p=0;const marks={};KEYS.forEach(k=>{const r=board.results?.[k],v=e.picks?.[k];if(!r)marks[k]="pend";else if(v===r){p+=ptOf(k);marks[k]="ok";}else marks[k]="bad";});return{p,marks};}
@@ -459,7 +499,7 @@ function ranked(){
   while(i<rows.length){
     let j=i; while(j+1<rows.length && rows[j+1].p===rows[i].p && rows[j+1].d===rows[i].d) j++;
     let sum=0; for(let k=i;k<=j;k++) sum += pr[k]||0;
-    for(let k=i;k<=j;k++){ rows[k].rank=i+1; rows[k].prize = sum/(j-i+1); }
+    for(let k=i;k<=j;k++){ rows[k].rank=i+1; rows[k].prize = rows[k].p>0 ? Math.round(sum/(j-i+1)) : 0; }
     i=j+1;
   }
   return rows;
@@ -468,7 +508,7 @@ function renderBoard(){
   if(!board) return;
   const n=board.bettors.length, nres=KEYS.filter(k=>board.results?.[k]).length;
   $("#kN").textContent=n; $("#kRes").textContent=nres+"/8"; $("#kBolsa").textContent = money(bolsa());
-  $("#boardSub").textContent = nres===8 ? "final" : nres ? "en vivo" : `${board.bettors.filter(b=>b.complete).length}/${n} con picks`;
+  $("#boardSub").textContent = board.closed ? "final · evento cerrado" : nres===8 ? "resultados completos" : nres ? "en vivo" : `${board.bettors.filter(b=>b.complete).length}/${n} con picks`;
   const rows=ranked();
   $("#board").innerHTML = !rows.length ? `<div class="note">Aún no hay apostadores.</div>` : rows.map(r=>{
     const mine = me && r.e.id===me.id;
@@ -511,19 +551,32 @@ function renderAdmin(){
   $("#entList").innerHTML = list.length ? list.map(b=>{
     const n=Object.keys(b.picks||{}).length, link=linkFor(b.token);
     const msg=`⛳ ${b.alias}, esta es tu liga personal para la quiniela del Bullet & Octopus Cup (Hermanos McGregor). Cierra sáb 7:30 am. No la compartas:\n${link}`;
-    return `<div class="ent"><div class="nm">${esc(b.alias)} <span class="note">${n}/8</span></div>
+    return `<div class="ent"><div class="nm">${esc(b.alias)} <span class="note">${n}/8${b.email?"":" · sin correo"}</span></div>
       <button class="paid ${b.paid?"on":""}" data-paid="${b.id}" data-on="${b.paid?1:0}">${b.paid?"Pagó ✓":"Pago"}</button>
       <div class="links">
         <a class="btn sm wa" href="https://wa.me/?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">WhatsApp</a>
         <button class="btn sm ghost" data-copy="${esc(link)}">Copiar liga</button>
         <button class="btn sm ghost" data-edit="${b.id}">Capturar picks</button>
         <button class="btn sm danger" data-del="${b.id}">${delArm===b.id?"¿Seguro?":"Borrar"}</button>
-      </div></div>`;
+      </div>
+      <div class="em"><input class="t" type="email" placeholder="correo@ejemplo.com" value="${esc(b.email||"")}" data-emailin="${b.id}"><button class="btn sm ghost" data-email="${b.id}">${b.email?"Guardar + reenviar":"Guardar + enviar"}</button></div></div>`;
   }).join("") : `<div class="note">Agrega a los apostadores para generar sus ligas.</div>`;
   $("#resMatches").innerHTML=matchesHTML(res,"r",false);
   $("#resTeam").innerHTML=teamHTML(res,"r",false);
   $("#resInd").innerHTML=indHTML(res,"r",false);
+  const rq=adm.requests||[];
+  $("#reqCount").textContent = rq.length ? rq.length+" pendiente"+(rq.length>1?"s":"") : "";
+  $("#reqList").innerHTML = rq.length ? rq.map(r=>`<div class="ent"><div class="nm">${esc(r.alias)}<div class="note">${esc(r.email)}</div></div>
+     <button class="btn sm" data-appr="${r.id}">Aprobar</button><button class="btn sm danger" data-rej="${r.id}">Rechazar</button></div>`).join("")
+     : `<div class="note">Sin solicitudes pendientes. Quien entre a la página general puede pedir su liga con nombre y correo.</div>`;
+  $("#tabAdmin").textContent = rq.length ? `Admin (${rq.length})` : "Admin";
+  $("#mailKey").textContent = adm.has_key ? "Brevo conectado ✓" : "Falta la API key de Brevo";
+  $("#mailLog").innerHTML = (adm.mail||[]).length ? adm.mail.map(m=>{const ok=!m.error && (m.status_code==null || (m.status_code>=200&&m.status_code<300));
+    return `<div class="mlog"><b>${esc(m.kind)}</b> · ${new Date(m.created_at).toLocaleTimeString("es-MX",{hour:"numeric",minute:"2-digit"})} · <span class="${ok?"ok2":"bad2"}">${m.error?esc(m.error):m.status_code?("HTTP "+m.status_code):"enviando…"}</span><br>${esc(m.subject||"")}</div>`;}).join("") : `<div class="note">Aún no se ha enviado ningún correo.</div>`;
+  const closed = !!board?.closed;
+  $("#closeBtn").textContent = closed ? (closeArm?"¿Reabrir? Toca otra vez":"Reabrir evento") : (closeArm?"¿Seguro? Toca otra vez para cerrar y enviar":"Cerrar evento y enviar ganador");
 }
+let closeArm=false;
 function fillAdminInputs(){
   if (!board) return;
   const p=PTS();
@@ -535,7 +588,15 @@ function fillAdminInputs(){
   $("#lockIn").value=`${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}T${z(d.getHours())}:${z(d.getMinutes())}`;
 }
 async function admCall(fn,args){ try{ adm = await rpc(fn,{p_admin:ADMIN,...args}); renderAdmin(); loadBoard(); }catch(e){ toast(e.message); } }
-$("#addBtn").onclick=()=>{const a=$("#newAlias").value.trim(); if(!a) return; $("#newAlias").value=""; admCall("admin_add_bettor",{p_alias:a});};
+$("#addBtn").onclick=()=>{const a=$("#newAlias").value.trim(); const em=$("#newEmail").value.trim(); if(!a) return toast("Falta el nombre"); if(em && !/^\S+@\S+\.\S+$/.test(em)) return toast("Correo no válido"); $("#newAlias").value=""; $("#newEmail").value=""; admCall("admin_add_bettor",{p_alias:a,p_email:em||null}); if(em) toast("Agregado · bienvenida enviada a "+em);};
+$("#newEmail").addEventListener("keydown",e=>{if(e.key==="Enter")$("#addBtn").click();});
+$("#testMail").onclick=async()=>{ try{ adm=await rpc("admin_test_mail",{p_admin:ADMIN}); toast("Correo de prueba enviado"); renderAdmin(); setTimeout(refreshAdm,4000);}catch(e){toast(e.message);} };
+$("#closeBtn").onclick=async()=>{
+  if(!closeArm){ closeArm=true; renderAdmin(); setTimeout(()=>{closeArm=false;renderAdmin();},4000); return; }
+  closeArm=false; const closing=!board?.closed;
+  try{ await rpc("admin_close_event",{p_admin:ADMIN,p_close:closing}); toast(closing?"Evento cerrado · correo del ganador enviado":"Evento reabierto"); await loadBoard(); setTimeout(refreshAdm,4000);}catch(e){toast(e.message);}
+};
+async function refreshAdm(){ try{ adm=await rpc("admin_get",{p_admin:ADMIN}); renderAdmin(); }catch{} }
 $("#newAlias").addEventListener("keydown",e=>{if(e.key==="Enter")$("#addBtn").click();});
 let resBusy=Promise.resolve();
 function pushResults(){
@@ -552,6 +613,12 @@ document.addEventListener("click",async e=>{
   if(p){ admCall("admin_set_paid",{p_id:p.dataset.paid,p_paid:p.dataset.on!=="1"}); return; }
   const c=e.target.closest("[data-copy]");
   if(c){ try{await navigator.clipboard.writeText(c.dataset.copy);toast("Liga copiada ✓");}catch{toast(c.dataset.copy);} return; }
+  const ap=e.target.closest("[data-appr]"), rj=e.target.closest("[data-rej]");
+  if(ap||rj){ admCall("admin_resolve_request",{p_id:(ap||rj).dataset[ap?"appr":"rej"],p_approve:!!ap}); toast(ap?"Aprobado · le llega su liga por correo":"Solicitud rechazada"); setTimeout(refreshAdm,4000); return; }
+  const em=e.target.closest("[data-email]");
+  if(em){ const id=em.dataset.email; const v=document.querySelector(`[data-emailin="${id}"]`).value.trim();
+    if(v && !/^\S+@\S+\.\S+$/.test(v)) return toast("Correo no válido");
+    admCall("admin_set_email",{p_id:id,p_email:v||null,p_send:!!v}); toast(v?"Correo guardado · bienvenida enviada":"Correo borrado"); setTimeout(refreshAdm,4000); return; }
   const ed=e.target.closest("[data-edit]");
   if(ed){ const b=adm.bettors.find(x=>x.id===ed.dataset.edit); loadTarget(b); setTab("picks"); return; }
   const d=e.target.closest("[data-del]");
@@ -594,7 +661,7 @@ async function loadBoard(){
     try{ adm = await rpc("admin_get",{p_admin:ADMIN}); res={...(board?.results||{})}; fillAdminInputs(); setTab("admin"); }
     catch(e){ $("#topBanner").innerHTML=`<div class="banner red">Clave de admin no válida.</div>`; }
   }
-  setInterval(()=>{ if(!document.hidden && !dirty) loadBoard(); }, 20000);
+  setInterval(()=>{ if(!document.hidden && !dirty){ loadBoard(); if(MODE==="admin") refreshAdm(); } }, 20000);
   setInterval(renderHeader, 30000);
 })();
 </script>
