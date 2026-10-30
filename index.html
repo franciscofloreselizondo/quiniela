@@ -3,162 +3,239 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Quiniela Bullet & Octopus Cup 2026</title>
+<meta name="theme-color" content="#0b3029">
+<title>Quiniela Bullet & Octopus Cup 2026 · Hermanos McGregor</title>
+<link rel="icon" href="https://njdvluvuzcczsrrrwyzt.supabase.co/storage/v1/object/public/quiniela/icon180.png">
+<link rel="apple-touch-icon" href="https://njdvluvuzcczsrrrwyzt.supabase.co/storage/v1/object/public/quiniela/icon180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#f3f0e8;--card:#fff;--ink:#16211b;--mute:#6b7a71;--line:#e3ded2;
-  --green:#1d5a3c;--green2:#e6efe9;--gold:#c79a2a;
-  --blue:#1f4fd1;--blue2:#e7edfd;--white2:#f7f7f5;
-  --ok:#1f8a4c;--bad:#c2412d;
+  --g:#0b3029;--g2:#0e3a32;--g3:#14453b;--gold:#a4a16a;--gold2:#c9c59a;
+  --cream:#efe9cf;--cream2:#f7f3e3;--mute:#b9b892;--line:rgba(164,161,106,.38);
+  --red:#8f2d2a;--red2:#a83a35;--ok:#7fc79a;--bad:#e59a8f;
 }
 *{box-sizing:border-box}
-html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.4 Inter,system-ui,sans-serif;-webkit-text-size-adjust:100%}
+html,body{margin:0;color:var(--cream);font:15px/1.4 Inter,system-ui,sans-serif;-webkit-text-size-adjust:100%;
+  background:var(--g) repeating-linear-gradient(180deg,rgba(255,255,255,.028) 0 46px,transparent 46px 92px) fixed;min-height:100vh}
 button{font:inherit;cursor:pointer;color:inherit}
-input,select{font:inherit}
-header{background:var(--green);color:#fff;padding:18px 16px 14px}
-header .k{font:600 12px Inter;letter-spacing:.12em;text-transform:uppercase;color:#cfe3d7}
-header h1{font:700 30px/1.05 "Barlow Condensed",sans-serif;margin:4px 0 6px;letter-spacing:.01em}
-header h1 span{color:var(--gold)}
-header .meta{font-size:13px;color:#d9e8df;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:600}
-.pill.open{background:#2f7a52;color:#fff}.pill.closed{background:#7a2f2f;color:#fff}
-nav{position:sticky;top:0;z-index:5;display:flex;background:var(--card);border-bottom:1px solid var(--line)}
-nav button{flex:1;border:0;background:none;padding:13px 4px;font-weight:600;color:var(--mute);border-bottom:3px solid transparent}
-nav button.on{color:var(--green);border-bottom-color:var(--green)}
-main{max-width:640px;margin:0 auto;padding:14px 12px 90px}
+a{color:inherit}
+.serif{font-family:"Cormorant Garamond",Georgia,serif}
+/* top bar */
+.top{position:sticky;top:0;z-index:10;background:rgba(11,48,41,.94);backdrop-filter:blur(6px);border-bottom:1px solid var(--line)}
+.bar{display:flex;align-items:center;gap:10px;padding:8px 14px;max-width:640px;margin:0 auto}
+.bar img{width:34px;height:34px}
+.bar .t{flex:1;font:700 19px/1.05 "Cormorant Garamond",serif}
+.bar .t small{display:block;font:500 11px Inter;color:var(--gold);letter-spacing:.08em;text-transform:uppercase}
+.pill{border:1px solid var(--gold);color:var(--cream);border-radius:999px;padding:3px 10px;font-size:11.5px;white-space:nowrap}
+.pill.closed{border-color:var(--red2);background:rgba(143,45,42,.35)}
+nav{display:flex;max-width:640px;margin:0 auto;overflow-x:auto;scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+nav button{flex:1 0 auto;border:0;background:none;padding:10px 12px;font-size:13.5px;font-weight:600;color:var(--mute);border-bottom:2px solid transparent;white-space:nowrap}
+nav button.on{color:var(--cream);border-bottom-color:var(--gold)}
+main{max-width:640px;margin:0 auto;padding:14px 14px 96px}
 section{display:none}section.on{display:block}
-.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
-.h{font:700 19px "Barlow Condensed",sans-serif;letter-spacing:.02em;text-transform:uppercase;margin:0 0 8px;display:flex;justify-content:space-between;align-items:baseline}
-.h small{font:500 12px Inter;color:var(--mute);text-transform:none;letter-spacing:0}
-.note{font-size:13px;color:var(--mute)}
-.banner{background:#fff6dc;border:1px solid #ecd9a0;color:#6b5312;border-radius:12px;padding:10px 12px;font-size:13px;margin-bottom:12px}
-.banner.red{background:#fdecea;border-color:#f2c3bc;color:#7a2a20}
-label.f{display:block;font-size:13px;font-weight:600;margin:0 0 6px}
-input.t{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:#fff}
-input.t:focus{outline:2px solid var(--green);border-color:transparent}
-.match{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:stretch;margin-bottom:10px}
-.match .vs{align-self:center;font:700 13px "Barlow Condensed";color:var(--mute)}
-.mt{font-size:11px;color:var(--mute);font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin:4px 0 6px}
-.opt{border:1.5px solid var(--line);border-radius:12px;padding:10px 8px;background:#fff;text-align:center;transition:.12s}
+.card{background:rgba(255,253,244,.055);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+.h{font:600 12px Inter;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin:0 0 10px;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.h small{letter-spacing:0;text-transform:none;color:var(--mute);font-weight:500}
+.note{font-size:12.5px;color:var(--mute)}
+.banner{border:1px solid var(--gold);background:rgba(164,161,106,.12);border-radius:12px;padding:10px 12px;font-size:13px;margin-bottom:12px}
+.banner.red{border-color:var(--red2);background:rgba(143,45,42,.25)}
+/* hero */
+.hero{text-align:center;padding:10px 0 4px}
+.hero img{width:150px;height:150px;filter:drop-shadow(0 8px 20px rgba(0,0,0,.35))}
+.hero h1{font:700 34px/1 "Cormorant Garamond",serif;margin:12px 0 6px}
+.hero .sub{font-size:12px;color:var(--gold);letter-spacing:.12em;text-transform:uppercase}
+.hero .line{width:56px;height:1px;background:var(--gold);margin:12px auto}
+.hero .cd{font-size:13px;color:var(--gold2)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;text-align:center}
+.stats b{display:block;font:700 26px/1.1 "Cormorant Garamond",serif;color:var(--cream)}
+.stats span{font-size:11px;color:var(--mute)}
+.rl{list-style:none;padding:0;margin:12px 0 0;font-size:13px}
+.rl li{display:flex;gap:10px;padding:7px 0;border-top:1px solid rgba(164,161,106,.18)}
+.rl li i{font-style:normal;color:var(--gold);min-width:74px;font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.06em;padding-top:1px}
+.menu{display:grid;gap:8px;margin-bottom:12px}
+.m{display:flex;justify-content:space-between;align-items:center;border-radius:12px;padding:14px 16px;font:700 21px "Cormorant Garamond",serif;border:1px solid var(--line);background:transparent;color:var(--cream);text-align:left;width:100%}
+.m small{font:500 12.5px Inter;color:var(--gold2)}
+.m.pri{background:var(--cream);color:var(--g);border-color:var(--cream)}
+.m.pri small{color:#4d5f55}
+/* favorites */
+.fav{margin-bottom:10px}
+.fav .lb{display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:4px}
+.fav .lb b{font-weight:600}
+.fbar{display:flex;height:8px;border-radius:5px;overflow:hidden;background:rgba(255,255,255,.08)}
+.fbar .w{background:var(--cream)}.fbar .r{background:var(--red2)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:12.5px}
+.chip b{color:var(--gold2)}
+/* picks */
+.mt{font-size:11px;color:var(--gold);font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin:6px 0 6px}
+.match{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:stretch;margin-bottom:8px}
+.match .vs{align-self:center;font:700 15px "Cormorant Garamond",serif;color:var(--gold)}
+.opt{border:1.5px solid transparent;border-radius:12px;padding:10px 6px;text-align:center;transition:.12s}
 .opt b{display:block;font-size:15px}
-.opt i{font-style:normal;font-size:12px;color:var(--mute)}
-.opt.w{background:var(--white2)}
-.opt.b{background:var(--blue2);border-color:#cdd8f7}
-.opt.sel.w{border-color:var(--ink);box-shadow:0 0 0 2px var(--ink) inset;background:#fff}
-.opt.sel.b{border-color:var(--blue);box-shadow:0 0 0 2px var(--blue) inset;background:#d7e2fc}
+.opt i{font-style:normal;font-size:11.5px;opacity:.75}
+.opt.w{background:var(--cream2);color:var(--g)}
+.opt.r{background:var(--red);color:var(--cream)}
+.opt.sel{border-color:var(--gold);box-shadow:0 0 0 3px var(--gold)}
 .opt.sel b::after{content:" ✓"}
-.opt:disabled{cursor:default;opacity:.75}
+.opt:disabled{cursor:default;opacity:.6}
+.opt.sel:disabled{opacity:1}
 .teams{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.teams .opt{padding:16px 8px}.teams .opt b{font:700 22px "Barlow Condensed"}
+.teams .opt{padding:16px 8px}.teams .opt b{font:700 24px "Cormorant Garamond",serif}
 .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px;vertical-align:1px}
-.dot.w{background:#fff;border:1.5px solid #9aa59e}.dot.b{background:var(--blue)}
-.save{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);padding:10px 12px calc(10px + env(safe-area-inset-bottom));display:flex;gap:10px;align-items:center;justify-content:center;z-index:6}
-.save .inner{max-width:640px;width:100%;display:flex;gap:10px;align-items:center}
-.btn{border:0;border-radius:12px;padding:12px 16px;font-weight:700;background:var(--green);color:#fff}
-.btn:disabled{background:#a9b8af}
-.btn.ghost{background:var(--green2);color:var(--green)}
-.btn.sm{padding:7px 11px;font-size:13px;border-radius:9px}
-.btn.danger{background:#fdecea;color:var(--bad)}
-.prog{flex:1;font-size:13px;color:var(--mute)}
-.prog b{color:var(--ink)}
+label.f{display:block;font-size:13px;font-weight:600;margin:0 0 6px}
+input.t,select.t{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.07);color:var(--cream);font:inherit}
+select.t option{color:#000}
+input.t:focus,select.t:focus{outline:2px solid var(--gold);border-color:transparent}
+.save{position:fixed;left:0;right:0;bottom:0;background:rgba(11,48,41,.97);border-top:1px solid var(--line);padding:10px 14px calc(10px + env(safe-area-inset-bottom));z-index:10}
+.save .inner{max-width:640px;margin:0 auto;display:flex;gap:10px;align-items:center}
+.btn{border:0;border-radius:12px;padding:12px 16px;font-weight:700;background:var(--cream);color:var(--g);text-decoration:none;display:inline-block;text-align:center}
+.btn:disabled{opacity:.4}
+.btn.ghost{background:transparent;color:var(--cream);border:1px solid var(--line)}
+.btn.sm{padding:7px 11px;font-size:12.5px;border-radius:9px}
+.btn.wa{background:#25d366;color:#05351c}
+.btn.danger{background:transparent;color:var(--bad);border:1px solid rgba(229,154,143,.5)}
+.prog{flex:1;font-size:13px;color:var(--mute)}.prog b{color:var(--cream)}
+/* ranking */
 .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
-.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px}
-.kpi .v{font:700 24px "Barlow Condensed"}.kpi .l{font-size:11px;color:var(--mute);text-transform:uppercase;letter-spacing:.06em}
-.row{display:grid;grid-template-columns:28px 1fr auto;gap:8px;align-items:center;padding:10px 2px;border-bottom:1px solid var(--line)}
+.kpi{border:1px solid var(--line);border-radius:12px;padding:10px;background:rgba(255,253,244,.04)}
+.kpi .v{font:700 24px "Cormorant Garamond",serif}.kpi .l{font-size:10.5px;color:var(--mute);text-transform:uppercase;letter-spacing:.08em}
+.row{border-bottom:1px solid rgba(164,161,106,.2);padding:10px 2px;cursor:pointer}
 .row:last-child{border-bottom:0}
-.rk{font:700 18px "Barlow Condensed";color:var(--mute);text-align:center}
-.row.lead .rk{color:var(--gold)}
+.rtop{display:grid;grid-template-columns:28px 1fr auto;gap:8px;align-items:center}
+.rk{font:700 22px "Cormorant Garamond",serif;color:var(--mute);text-align:center}
+.row.p1 .rk{color:var(--gold)}
 .nm{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.nm .me{font-size:11px;background:var(--green2);color:var(--green);padding:1px 6px;border-radius:6px;margin-left:4px}
-.marks{display:flex;gap:3px;margin-top:4px;flex-wrap:wrap}
-.mk{width:18px;height:18px;border-radius:5px;font-size:11px;display:grid;place-items:center;background:#eeebe3;color:#8b948e;font-weight:700}
-.mk.ok{background:#dcf1e4;color:var(--ok)}.mk.bad{background:#fbe1dc;color:var(--bad)}
-.pts{font:700 26px "Barlow Condensed";text-align:right;min-width:36px}
-.pts small{display:block;font:500 11px Inter;color:var(--mute)}
-.dist{margin-bottom:10px}
-.dist .lb{display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px}
-.bar{display:flex;height:10px;border-radius:6px;overflow:hidden;background:#eeebe3}
-.bar .bw{background:#c9cfcb}.bar .bb{background:var(--blue)}
-.ent{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--line)}
-.ent:last-child{border-bottom:0}
-.ent .nm{flex:1}
-.paid{border:1.5px solid var(--line);background:#fff;border-radius:9px;padding:6px 9px;font-size:12px;font-weight:700;color:var(--mute)}
-.paid.on{background:#dcf1e4;border-color:#9fd3b4;color:var(--ok)}
-.flex{display:flex;gap:8px;align-items:center}
-.toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:9px 14px;border-radius:10px;font-size:13px;opacity:0;transition:.2s;pointer-events:none;z-index:9}
+.me{font-size:10.5px;background:var(--gold);color:var(--g);padding:1px 6px;border-radius:6px;margin-left:5px;font-weight:700}
+.prize{font-size:11.5px;color:var(--gold2);margin-left:6px;font-weight:600}
+.marks{display:flex;gap:3px;margin-top:5px;flex-wrap:wrap}
+.mk{min-width:18px;height:18px;border-radius:5px;font-size:10.5px;display:grid;place-items:center;background:rgba(255,255,255,.08);color:var(--mute);font-weight:700;padding:0 3px}
+.mk.ok{background:rgba(127,199,154,.25);color:var(--ok)}.mk.bad{background:rgba(229,154,143,.2);color:var(--bad)}
+.pts{font:700 28px "Cormorant Garamond",serif;text-align:right;min-width:36px;line-height:1}
+.pts small{display:block;font:500 10.5px Inter;color:var(--mute)}
+.detail{display:none;margin:8px 0 2px 36px;font-size:12.5px}
+.row.open .detail{display:grid;grid-template-columns:auto 1fr;gap:3px 10px}
+.detail span:nth-child(odd){color:var(--gold);font-weight:600}
+.detail .ok{color:var(--ok)}.detail .bad{color:var(--bad)}
+/* convocatoria */
+.pages img{width:100%;border-radius:10px;display:block;margin-bottom:10px;border:1px solid var(--line)}
+/* admin */
+.ent{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 0;border-bottom:1px solid rgba(164,161,106,.2)}
+.ent:last-child{border-bottom:0}.ent .nm{flex:1;min-width:120px}
+.links{display:flex;gap:6px;flex-wrap:wrap;width:100%}
+.paid{border:1px solid var(--line);background:transparent;border-radius:9px;padding:6px 9px;font-size:12px;font-weight:700;color:var(--mute)}
+.paid.on{border-color:var(--ok);color:var(--ok)}
+.addrow{display:flex;gap:8px;margin-bottom:10px}.addrow input{flex:1}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);background:var(--cream);color:var(--g);padding:9px 14px;border-radius:10px;font-size:13px;font-weight:600;opacity:0;transition:.2s;pointer-events:none;z-index:20}
 .toast.on{opacity:1}
-textarea.copy{width:100%;min-height:160px;font:12px/1.4 ui-monospace,monospace;border:1px solid var(--line);border-radius:10px;padding:8px;margin-top:8px}
+textarea.copy{width:100%;min-height:160px;font:12px/1.4 ui-monospace,monospace;border:1px solid var(--line);border-radius:10px;padding:8px;margin-top:8px;background:rgba(0,0,0,.2);color:var(--cream)}
 .hide{display:none!important}
-</style>
-<style>
-.links{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
-a.btn{text-decoration:none;display:inline-block}
-.wa{background:#25d366;color:#fff}
-.addrow{display:flex;gap:8px;margin-bottom:10px}
-.addrow input{flex:1}
-.ent{flex-wrap:wrap}
-.ent .nm{min-width:120px}
 </style>
 </head>
 <body>
-<header>
-  <div class="k">McGregor · Quiniela</div>
-  <h1>Bullet <span>&</span> Octopus Cup 2026</h1>
-  <div class="meta"><span>Las Cañadas CC · Sáb 31 oct</span><span id="lockPill" class="pill open">…</span></div>
-</header>
-<nav>
-  <button data-tab="picks" id="tabPicks">Mis picks</button>
-  <button data-tab="board" id="tabBoard">Tabla</button>
-  <button data-tab="admin" id="tabAdmin" class="hide">Admin</button>
-</nav>
+<div class="top">
+  <div class="bar">
+    <img id="barLogo" alt="Hermanos McGregor">
+    <div class="t">Bullet & Octopus Cup<small>Hermanos McGregor</small></div>
+    <span id="lockPill" class="pill">…</span>
+  </div>
+  <nav id="nav">
+    <button data-tab="principal">Principal</button>
+    <button data-tab="picks">Mis picks</button>
+    <button data-tab="ranking">Ranking</button>
+    <button data-tab="conv">Convocatoria</button>
+    <button data-tab="admin" class="hide" id="tabAdmin">Admin</button>
+  </nav>
+</div>
 <main>
   <div id="topBanner"></div>
 
-  <section id="s-picks">
-    <div id="picksBanner"></div>
-    <div class="card"><div class="h" id="picksWho">Tus picks</div><div class="note" id="picksSub">Elige quién gana cada uno. Todos valen 1 punto.</div></div>
-    <div class="card">
-      <div class="h">6 Matches <small>1 pt c/u</small></div>
-      <div id="matchPicks"></div>
+  <!-- PRINCIPAL -->
+  <section id="s-principal">
+    <div class="hero">
+      <img id="heroLogo" alt="Hermanos McGregor">
+      <h1>Bullet & Octopus Cup</h1>
+      <div class="sub">Las Cañadas CC · Sáb 31 oct 2026</div>
+      <div class="line"></div>
+      <div class="cd" id="heroCd">&nbsp;</div>
     </div>
     <div class="card">
-      <div class="h">Equipo ganador <small>1 pt</small></div>
-      <div id="teamPick" class="teams"></div>
+      <div class="h">Reglas rápidas</div>
+      <div class="stats">
+        <div><b id="sEntrada">—</b><span>Entrada</span></div>
+        <div><b id="sBolsa">—</b><span id="sBolsaL">Bolsa</span></div>
+        <div><b id="sMax">—</b><span>Puntos máx.</span></div>
+      </div>
+      <ul class="rl">
+        <li><i>Picks</i><span>6 matches, equipo ganador (Blanco o Rojo) y 1er lugar individual.</span></li>
+        <li><i>Puntos</i><span id="rPts"></span></li>
+        <li><i>Premios</i><span id="rPrem"></span></li>
+        <li><i>Empate</i><span>Gana quien más se acerque al score net del 1er lugar individual.</span></li>
+        <li><i>Cierre</i><span id="rLock"></span></li>
+      </ul>
     </div>
-    <div class="card">
-      <div class="h">1er lugar individual <small>1 pt · stroke net</small></div>
-      <div id="indPick" class="grid3"></div>
-    </div>
-    <div class="card">
-      <label class="f" for="tb">Desempate: score net del 1er lugar individual</label>
-      <input id="tb" class="t" type="number" inputmode="numeric" min="50" max="120" placeholder="Ej. 68">
-      <div class="note" style="margin-top:6px">Solo cuenta si hay empate en puntos. Gana el más cercano.</div>
+    <div class="menu" id="menu"></div>
+    <div class="card" id="favCard">
+      <div class="h">Favoritos del grupo <small id="favN"></small></div>
+      <div id="fav"></div>
     </div>
   </section>
 
-  <section id="s-board">
+  <!-- MIS PICKS -->
+  <section id="s-picks">
+    <div id="picksBanner"></div>
+    <div id="picksBody">
+      <div class="card"><div class="h" id="picksWho">Tus picks</div><div class="note" id="picksSub"></div></div>
+      <div class="card">
+        <div class="h">6 Matches <small id="ptsMatchL"></small></div>
+        <div id="matchPicks"></div>
+      </div>
+      <div class="card">
+        <div class="h">Equipo ganador <small id="ptsTeamL"></small></div>
+        <div id="teamPick" class="teams"></div>
+      </div>
+      <div class="card">
+        <div class="h">1er lugar individual <small id="ptsIndL"></small></div>
+        <div id="indPick" class="grid3"></div>
+      </div>
+      <div class="card">
+        <label class="f" for="tb">Desempate: score net del 1er lugar individual</label>
+        <input id="tb" class="t" type="number" inputmode="numeric" min="50" max="120" placeholder="Ej. 68">
+        <div class="note" style="margin-top:6px">Solo cuenta si hay empate en puntos. Gana el más cercano.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- RANKING -->
+  <section id="s-ranking">
     <div class="kpis">
       <div class="kpi"><div class="v" id="kBolsa">—</div><div class="l">Bolsa</div></div>
       <div class="kpi"><div class="v" id="kN">0</div><div class="l">Apostadores</div></div>
       <div class="kpi"><div class="v" id="kRes">0/8</div><div class="l">Resultados</div></div>
     </div>
     <div class="card">
-      <div class="h">Tabla <small id="boardSub"></small></div>
+      <div class="h">Ranking <small id="boardSub"></small></div>
       <div id="board"><div class="note">Cargando…</div></div>
-    </div>
-    <div class="card" id="distCard" style="display:none">
-      <div class="h">Cómo votó el grupo</div>
-      <div id="dist"></div>
+      <div class="note" style="margin-top:8px">Toca un nombre para ver sus picks.</div>
     </div>
     <div class="card">
-      <button class="btn ghost" id="copyBtn" style="width:100%">Copiar tabla para WhatsApp</button>
+      <button class="btn ghost" id="copyBtn" style="width:100%">Copiar ranking para WhatsApp</button>
       <textarea class="copy hide" id="copyTxt" readonly></textarea>
     </div>
   </section>
 
+  <!-- CONVOCATORIA -->
+  <section id="s-conv">
+    <div class="card" style="text-align:center">
+      <div class="h" style="justify-content:center">Convocatoria</div>
+      <a class="btn" id="pdfBtn" target="_blank" rel="noopener">Abrir PDF</a>
+    </div>
+    <div class="pages" id="pages"></div>
+  </section>
+
+  <!-- ADMIN -->
   <section id="s-admin">
     <div class="card">
       <div class="h">Apostadores <small id="admCount"></small></div>
@@ -178,11 +255,23 @@ a.btn{text-decoration:none;display:inline-block}
     </div>
     <div class="card">
       <div class="h">Ajustes</div>
-      <label class="f" for="aport">Aportación por apostador ($ MXN)</label>
-      <input id="aport" class="t" type="number" inputmode="numeric" min="0" placeholder="Ej. 500">
+      <label class="f" for="aport">Entrada por apostador ($ MXN)</label>
+      <input id="aport" class="t" type="number" inputmode="numeric" min="0">
+      <label class="f" style="margin-top:12px" for="winSel">Número de ganadores</label>
+      <select id="winSel" class="t">
+        <option value="1">1 · se lleva toda la bolsa</option>
+        <option value="2">2 · 70% / 30%</option>
+        <option value="3">3 · 1º el resto · 2º doble entrada · 3º reintegro</option>
+      </select>
+      <div class="mt" style="margin-top:12px">Puntos por acierto</div>
+      <div class="g3">
+        <div><label class="f" for="pM">Match</label><input id="pM" class="t" type="number" min="0" inputmode="numeric"></div>
+        <div><label class="f" for="pT">Equipo</label><input id="pT" class="t" type="number" min="0" inputmode="numeric"></div>
+        <div><label class="f" for="pI">1er lugar</label><input id="pI" class="t" type="number" min="0" inputmode="numeric"></div>
+      </div>
       <label class="f" style="margin-top:12px" for="lockIn">Cierre de picks (hora de tu celular)</label>
       <input id="lockIn" class="t" type="datetime-local">
-      <button class="btn ghost" id="saveSettings" style="margin-top:10px">Guardar ajustes</button>
+      <button class="btn" id="saveSettings" style="margin-top:12px;width:100%">Guardar ajustes</button>
     </div>
   </section>
 </main>
@@ -196,21 +285,23 @@ a.btn{text-decoration:none;display:inline-block}
 <div class="toast" id="toast"></div>
 
 <script>
-/* ====== CONFIG (Supabase) ====== */
+/* ====== CONFIG ====== */
 const SB_URL = "https://njdvluvuzcczsrrrwyzt.supabase.co";
 const SB_KEY = "sb_publishable_bJvJamSGhkDgcMVmHnpXSA_NXU5ZreP";
+const STORE = SB_URL + "/storage/v1/object/public/quiniela/";
 
 const MATCHES = [
-  {w:["Rod",11.2], b:["Changes",11.4], t:"7:30"},
-  {w:["JR Sports",11.8], b:["JuanFer",13.2], t:"7:30"},
-  {w:["Paco",14.6], b:["Perico",13.9], t:"7:40"},
-  {w:["Damiano",19.3], b:["Coronel",16.5], t:"7:40"},
-  {w:["Peter",21.3], b:["Barcity",24.6], t:"8:00"},
-  {w:["Cheche",27.7], b:["Mike",29.5], t:"8:00"},
+  {w:["Rod",11.2], r:["Changes",11.4], t:"7:30"},
+  {w:["JR Sports",11.8], r:["JuanFer",13.2], t:"7:30"},
+  {w:["Paco",14.6], r:["Perico",13.9], t:"7:40"},
+  {w:["Damiano",19.3], r:["Coronel",16.5], t:"7:40"},
+  {w:["Peter",21.3], r:["Barcity",24.6], t:"8:00"},
+  {w:["Cheche",27.7], r:["Mike",29.5], t:"8:00"},
 ];
-const PLAYERS = MATCHES.flatMap(m=>[{n:m.w[0],h:m.w[1],c:"w"},{n:m.b[0],h:m.b[1],c:"b"}]);
+const PLAYERS = MATCHES.flatMap(m=>[{n:m.w[0],h:m.w[1],c:"w"},{n:m.r[0],h:m.r[1],c:"r"}]);
 const KEYS = ["m1","m2","m3","m4","m5","m6","team","ind1"];
 const LABEL = {m1:"M1",m2:"M2",m3:"M3",m4:"M4",m5:"M5",m6:"M6",team:"Eq",ind1:"#1"};
+const LONG = {m1:"Match 1",m2:"Match 2",m3:"Match 3",m4:"Match 4",m5:"Match 5",m6:"Match 6",team:"Equipo",ind1:"1er lugar"};
 
 const qs = new URLSearchParams(location.search);
 const TOKEN = qs.get("t"), ADMIN = qs.get("admin");
@@ -233,17 +324,30 @@ async function rpc(fn,args={}){
 /* ====== state ====== */
 let board=null, skew=0, me=null, adm=null;
 let form={picks:{},tb:""}, target=null, dirty=false, saving=false;
-let res={}, delArm=null, tab = MODE==="public" ? "board" : MODE==="admin" ? "admin" : "picks";
+let res={}, delArm=null, openRow=null, tab="principal";
 
 function lockAt(){ return board ? new Date(board.lock_at).getTime() : Infinity; }
 function locked(){ return Date.now()+skew >= lockAt(); }
+function PTS(){ return board?.pts || {match:1,team:2,ind1:3}; }
+function ptOf(k){ const p=PTS(); return k.startsWith("m") ? p.match : p[k]; }
+function maxPts(){ const p=PTS(); return 6*p.match+p.team+p.ind1; }
+function entrada(){ return Number(board?.aportacion||0); }
+function bolsa(){ return entrada()*(board?.bettors.length||0); }
+function prizes(){
+  const B=bolsa(), e=entrada(), w=board?.winners||1;
+  if (w===1) return [B];
+  if (w===2) return [B*.7, B*.3];
+  return [Math.max(B-3*e,0), 2*e, e];
+}
+function lockLabel(){ if(!board) return ""; return new Date(board.lock_at).toLocaleString("es-MX",{weekday:"long",day:"numeric",month:"short",hour:"numeric",minute:"2-digit"}); }
 
 /* ====== tabs ====== */
 function setTab(t){
   tab=t;
   document.querySelectorAll("nav button").forEach(x=>x.classList.toggle("on",x.dataset.tab===t));
   document.querySelectorAll("section").forEach(s=>s.classList.toggle("on",s.id==="s-"+t));
-  $("#saveBar").classList.toggle("hide", t!=="picks");
+  $("#saveBar").classList.toggle("hide", !(t==="picks" && target));
+  window.scrollTo(0,0);
   renderAll();
 }
 document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>setTab(b.dataset.tab));
@@ -251,14 +355,68 @@ document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>setTab(b.datase
 /* ====== option buttons ====== */
 function optBtn(name,h,c,sel,attrs,dis){return `<button class="opt ${c}${sel?" sel":""}" ${attrs} ${dis?"disabled":""}><b>${esc(name)}</b><i>HCP ${h}</i></button>`;}
 function matchesHTML(src,p,dis){return MATCHES.map((m,i)=>{const k="m"+(i+1);return `<div class="mt">Match ${i+1} · ${m.t}</div><div class="match">
-  ${optBtn(m.w[0],m.w[1],"w",src[k]===m.w[0],`data-${p}="${k}" data-v="${esc(m.w[0])}"`,dis)}<div class="vs">VS</div>
-  ${optBtn(m.b[0],m.b[1],"b",src[k]===m.b[0],`data-${p}="${k}" data-v="${esc(m.b[0])}"`,dis)}</div>`}).join("");}
-function teamHTML(src,p,dis){return [["Blanco","w"],["Azul","b"]].map(([t,c])=>`<button class="opt ${c}${src.team===t?" sel":""}" data-${p}="team" data-v="${t}" ${dis?"disabled":""}><b>${t}</b></button>`).join("");}
+  ${optBtn(m.w[0],m.w[1],"w",src[k]===m.w[0],`data-${p}="${k}" data-v="${esc(m.w[0])}"`,dis)}<div class="vs">vs</div>
+  ${optBtn(m.r[0],m.r[1],"r",src[k]===m.r[0],`data-${p}="${k}" data-v="${esc(m.r[0])}"`,dis)}</div>`}).join("");}
+function teamHTML(src,p,dis){return [["Blanco","w"],["Rojo","r"]].map(([t,c])=>`<button class="opt ${c}${src.team===t?" sel":""}" data-${p}="team" data-v="${t}" ${dis?"disabled":""}><b>${t}</b></button>`).join("");}
 function indHTML(src,p,dis){return PLAYERS.map(x=>`<button class="opt ${x.c}${src.ind1===x.n?" sel":""}" data-${p}="ind1" data-v="${esc(x.n)}" ${dis?"disabled":""}><b style="font-size:14px">${esc(x.n)}</b><i>${x.h}</i></button>`).join("");}
+
+/* ====== principal ====== */
+function renderPrincipal(){
+  if(!board) return;
+  const p=PTS(), n=board.bettors.length, e=entrada(), pr=prizes();
+  $("#sEntrada").textContent = money(e);
+  $("#sBolsa").textContent = money(bolsa());
+  $("#sBolsaL").textContent = `Bolsa · ${n} apostador${n===1?"":"es"}`;
+  $("#sMax").textContent = maxPts();
+  $("#rPts").textContent = `Cada match ${p.match} pt · Equipo ${p.team} pts · 1er lugar ${p.ind1} pts.`;
+  const w=board.winners||1;
+  $("#rPrem").textContent = w===1 ? `El 1º se lleva toda la bolsa (${money(pr[0])}).`
+    : w===2 ? `1º 70% (${money(pr[0])}) · 2º 30% (${money(pr[1])}).`
+    : `1º ${money(pr[0])} · 2º doble entrada (${money(pr[1])}) · 3º reintegro (${money(pr[2])}).`;
+  $("#rLock").textContent = `Picks cierran el ${lockLabel()}. Todos los picks son públicos`;
+  const ms=lockAt()-(Date.now()+skew);
+  $("#heroCd").textContent = locked() ? "Picks cerrados · sigue el ranking en vivo" : `Picks cierran en ${fmtLeft(ms)}`;
+
+  // menu
+  let picksSub = "Necesitas tu liga";
+  if (MODE==="player" && me){ picksSub = locked() ? "Ver →" : (isComplete(me.picks) ? "Editar →" : "Llenar →"); }
+  if (MODE==="admin") picksSub = "Capturar desde Admin";
+  $("#menu").innerHTML = `
+    <button class="m pri" data-go="picks">Mis picks <small>${esc(picksSub)}</small></button>
+    <button class="m" data-go="ranking">Ranking <small>En vivo →</small></button>
+    <button class="m" data-go="conv">Convocatoria <small>PDF →</small></button>`;
+
+  // favorites
+  const withPicks = board.bettors.filter(b=>Object.keys(b.picks||{}).length);
+  $("#favN").textContent = withPicks.length ? `${withPicks.length} con picks` : "";
+  if (!withPicks.length){ $("#fav").innerHTML = `<div class="note">Aún nadie ha llenado sus picks.</div>`; return; }
+  const cnt=k=>{const c={};withPicks.forEach(b=>{const v=b.picks?.[k];if(v)c[v]=(c[v]||0)+1;});return c;};
+  const bar=(la,a,lb,b)=>{const t=a+b||1;const pa=Math.round(a/t*100),pb=100-pa;return `<div class="fav"><div class="lb"><span><b>${esc(la)}</b> ${a?pa+"%":""}</span><span>${b?pb+"%":""} <b>${esc(lb)}</b></span></div><div class="fbar"><div class="w" style="width:${a/t*100}%"></div><div class="r" style="width:${b/t*100}%"></div></div></div>`;};
+  let h = MATCHES.map((m,i)=>{const c=cnt("m"+(i+1));return `<div class="mt">Match ${i+1}</div>`+bar(m.w[0],c[m.w[0]]||0,m.r[0],c[m.r[0]]||0);}).join("");
+  const ct=cnt("team"); h += `<div class="mt" style="margin-top:10px">Equipo ganador</div>`+bar("Blanco",ct.Blanco||0,"Rojo",ct.Rojo||0);
+  const top=Object.entries(cnt("ind1")).sort((x,y)=>y[1]-x[1]).slice(0,5);
+  h += `<div class="mt" style="margin-top:10px">1er lugar individual</div><div class="chips">${top.map(([k,v])=>`<span class="chip">${esc(k)} <b>${Math.round(v/withPicks.length*100)}%</b></span>`).join("")}</div>`;
+  $("#fav").innerHTML = h;
+}
+function fmtLeft(ms){ if(ms<=0) return "0m"; const d=Math.floor(ms/86400000), h=Math.floor(ms%86400000/3600000), m=Math.floor(ms%3600000/60000); return (d?d+"d ":"")+(h?h+"h ":"")+m+"m"; }
+function isComplete(p){ return KEYS.every(k=>p&&p[k]); }
+document.addEventListener("click",e=>{const g=e.target.closest("[data-go]"); if(g) setTab(g.dataset.go);});
 
 /* ====== picks ====== */
 function picksDisabled(){ if(!target) return true; if(MODE==="admin") return false; return locked(); }
 function renderPicks(){
+  const p=PTS();
+  $("#ptsMatchL").textContent=`${p.match} pt c/u`; $("#ptsTeamL").textContent=`${p.team} pts`; $("#ptsIndL").textContent=`${p.ind1} pts`;
+  let b="";
+  if (MODE==="public") b=`<div class="banner">Para llenar tus picks necesitas tu liga personal. Pídesela a Paco por WhatsApp.</div>`;
+  else if (MODE==="admin" && !target) b=`<div class="banner">Como admin, captura picks desde la pestaña <b>Admin</b> → "Capturar picks".</div>`;
+  else if (MODE==="player" && !me && board) b=`<div class="banner red">Esta liga no es válida. Pídele a Paco tu liga personal.</div>`;
+  else if (MODE==="player" && locked()) b=`<div class="banner red">Picks cerrados. Sigue el <b>Ranking</b> en vivo.</div>`;
+  else if (MODE==="player") b=`<div class="banner">Puedes cambiar tus picks las veces que quieras hasta el cierre. Los picks de todos son públicos.</div>`;
+  $("#picksBanner").innerHTML=b;
+  $("#picksBody").classList.toggle("hide", !target);
+  $("#saveBar").classList.toggle("hide", !(tab==="picks" && target));
+  if (!target) return;
   const dis = picksDisabled();
   $("#matchPicks").innerHTML = matchesHTML(form.picks,"p",dis);
   $("#teamPick").innerHTML = teamHTML(form.picks,"p",dis);
@@ -266,15 +424,11 @@ function renderPicks(){
   $("#tb").disabled = dis;
   if (document.activeElement!==$("#tb")) $("#tb").value = form.tb ?? "";
   const n = KEYS.filter(k=>form.picks[k]).length;
-  $("#picksWho").textContent = target ? (MODE==="admin" ? "Capturando: "+target.alias : "Hola, "+target.alias) : "Tus picks";
-  $("#prog").innerHTML = `<b>${n}/8</b> picks${dirty?" · sin guardar":(target&&n===8?" · guardado ✓":"")}`;
+  $("#picksWho").textContent = MODE==="admin" ? "Capturando: "+target.alias : "Hola, "+target.alias;
+  $("#picksSub").textContent = "Elige quién gana cada uno. Al guardar te llevamos al ranking.";
+  $("#prog").innerHTML = `<b>${n}/8</b> picks${dirty?" · sin guardar":(n===8?" · guardado ✓":"")}`;
   $("#saveBtn").disabled = dis || saving || !dirty || n<8;
   $("#saveBtn").textContent = saving ? "Guardando…" : "Guardar picks";
-  let b="";
-  if (MODE==="player" && !me && board) b=`<div class="banner red">Esta liga no es válida. Pídele a Paco tu liga personal.</div>`;
-  else if (MODE==="player" && locked()) b=`<div class="banner red">Picks cerrados. Sigue la <b>Tabla</b> en vivo.</div>`;
-  else if (MODE==="player") b=`<div class="banner">Puedes cambiar tus picks las veces que quieras hasta el cierre. Nadie ve tus picks antes de esa hora.</div>`;
-  $("#picksBanner").innerHTML=b;
 }
 document.addEventListener("click",e=>{
   const b=e.target.closest("[data-p]"); if(!b||b.disabled) return;
@@ -288,74 +442,78 @@ $("#saveBtn").onclick = async ()=>{
   const tb = form.tb===""||form.tb==null ? null : Math.round(Number(form.tb));
   try{
     if (MODE==="admin"){ adm = await rpc("admin_save_picks",{p_admin:ADMIN,p_id:target.id,p_picks:form.picks,p_tb:Number.isFinite(tb)?tb:null}); }
-    else { me = await rpc("save_picks",{p_token:TOKEN,p_picks:form.picks,p_tb:Number.isFinite(tb)?tb:null}); }
-    dirty=false; toast("Picks guardados ✓"); loadBoard();
+    else { me = await rpc("save_picks",{p_token:TOKEN,p_picks:form.picks,p_tb:Number.isFinite(tb)?tb:null}); target=me; }
+    dirty=false; toast("Picks guardados ✓"); await loadBoard(); openRow = target?.id||null; setTab("ranking");
   }catch(err){ toast(err.message||"No se pudo guardar"); }
   finally{ saving=false; renderAll(); }
 };
 function loadTarget(t){ target=t; form={picks:{...(t?.picks||{})}, tb:t?.tb??""}; dirty=false; }
 
-/* ====== scoring / board ====== */
-function scoreOf(e){let p=0;const marks={};KEYS.forEach(k=>{const r=board.results?.[k],v=e.picks?.[k];if(!r)marks[k]="pend";else if(v===r){p++;marks[k]="ok";}else marks[k]="bad";});return{p,marks};}
+/* ====== ranking ====== */
+function scoreOf(e){let p=0;const marks={};KEYS.forEach(k=>{const r=board.results?.[k],v=e.picks?.[k];if(!r)marks[k]="pend";else if(v===r){p+=ptOf(k);marks[k]="ok";}else marks[k]="bad";});return{p,marks};}
 function ranked(){
   const net=board.net_ganador;
   const rows=board.bettors.map(e=>({e,...scoreOf(e),d:(net!=null&&e.tb!=null)?Math.abs(e.tb-net):Infinity}));
   rows.sort((a,b)=>b.p-a.p||a.d-b.d||String(a.e.alias).localeCompare(b.e.alias));
-  let rank=0,prev=null;rows.forEach((r,i)=>{const k=r.p+"|"+r.d;if(k!==prev){rank=i+1;prev=k;}r.rank=rank;});
+  const pr=prizes(); let i=0;
+  while(i<rows.length){
+    let j=i; while(j+1<rows.length && rows[j+1].p===rows[i].p && rows[j+1].d===rows[i].d) j++;
+    let sum=0; for(let k=i;k<=j;k++) sum += pr[k]||0;
+    for(let k=i;k<=j;k++){ rows[k].rank=i+1; rows[k].prize = sum/(j-i+1); }
+    i=j+1;
+  }
   return rows;
 }
 function renderBoard(){
   if(!board) return;
-  const n=board.bettors.length, nres=KEYS.filter(k=>board.results?.[k]).length, open=!locked();
-  $("#kN").textContent=n; $("#kRes").textContent=nres+"/8";
-  $("#kBolsa").textContent = board.aportacion>0 ? money(board.aportacion*n) : "—";
-  $("#boardSub").textContent = open ? "picks ocultos hasta el cierre" : (nres===8?"final":"en vivo");
+  const n=board.bettors.length, nres=KEYS.filter(k=>board.results?.[k]).length;
+  $("#kN").textContent=n; $("#kRes").textContent=nres+"/8"; $("#kBolsa").textContent = money(bolsa());
+  $("#boardSub").textContent = nres===8 ? "final" : nres ? "en vivo" : `${board.bettors.filter(b=>b.complete).length}/${n} con picks`;
   const rows=ranked();
   $("#board").innerHTML = !rows.length ? `<div class="note">Aún no hay apostadores.</div>` : rows.map(r=>{
     const mine = me && r.e.id===me.id;
-    const marks = KEYS.map(k=>{const m=r.marks[k];const v=r.e.picks?.[k];return `<span class="mk ${m==="ok"?"ok":m==="bad"?"bad":""}" title="${esc(LABEL[k]+(v?": "+v:""))}">${m==="ok"?"✓":m==="bad"?"✗":"·"}</span>`;}).join("");
-    const sub = open ? `<small>${r.e.complete?"enviado ✓":"pendiente"}</small>` : (board.net_ganador!=null&&r.e.tb!=null?`<small>des. ${esc(r.e.tb)}</small>`:"");
-    return `<div class="row ${r.rank===1&&nres>0?"lead":""}"><div class="rk">${r.rank}</div>
-      <div><div class="nm">${esc(r.e.alias)}${r.e.paid?" 💵":""}${mine?'<span class="me">tú</span>':""}</div>${open?"":`<div class="marks">${marks}</div>`}</div>
-      <div class="pts">${open?"":r.p}${sub}</div></div>`;
+    const marks = KEYS.map(k=>{const m=r.marks[k];return `<span class="mk ${m==="ok"?"ok":m==="bad"?"bad":""}">${LABEL[k]}</span>`;}).join("");
+    const det = KEYS.map(k=>{const v=r.e.picks?.[k];const m=r.marks[k];return `<span>${LONG[k]}</span><span class="${m==="ok"?"ok":m==="bad"?"bad":""}">${esc(v||"—")}${m==="ok"?" ✓":m==="bad"?" ✗":""}</span>`;}).join("")
+      + `<span>Desempate</span><span>${r.e.tb!=null?esc(r.e.tb):"—"}</span>`;
+    const prize = nres>0 && r.prize>0 && r.p>0 ? `<span class="prize">${money(r.prize)}</span>` : "";
+    const sub = r.e.complete ? (r.e.paid?"pagó 💵":"") : "incompleto";
+    return `<div class="row ${r.rank===1&&nres>0?"p1":""} ${openRow===r.e.id?"open":""}" data-row="${esc(r.e.id)}">
+      <div class="rtop"><div class="rk">${r.rank}</div>
+      <div><div class="nm">${esc(r.e.alias)}${mine?'<span class="me">tú</span>':""}${prize}</div><div class="marks">${marks}</div></div>
+      <div class="pts">${r.p}<small>${esc(sub)}</small></div></div>
+      <div class="detail">${det}</div></div>`;
   }).join("");
-  const showDist = !open && n>0;
-  $("#distCard").style.display = showDist?"":"none";
-  if (showDist){
-    const cnt=k=>{const c={};board.bettors.forEach(e=>{const v=e.picks?.[k];if(v)c[v]=(c[v]||0)+1;});return c;};
-    const bar=(la,a,lb,b)=>{const t=a+b||1;return `<div class="dist"><div class="lb"><span><span class="dot w"></span>${esc(la)} ${a}</span><span>${b} ${esc(lb)} <span class="dot b"></span></span></div><div class="bar"><div class="bw" style="width:${a/t*100}%"></div><div class="bb" style="width:${b/t*100}%"></div></div></div>`;};
-    let h=MATCHES.map((m,i)=>{const c=cnt("m"+(i+1));return bar(m.w[0],c[m.w[0]]||0,m.b[0],c[m.b[0]]||0);}).join("");
-    const ct=cnt("team"); h+=bar("Equipo Blanco",ct.Blanco||0,"Equipo Azul",ct.Azul||0);
-    const top=Object.entries(cnt("ind1")).sort((x,y)=>y[1]-x[1]);
-    h+=`<div class="mt" style="margin-top:6px">1er lugar más votado</div><div class="note">${top.map(([k,v])=>`${esc(k)} (${v})`).join(" · ")||"—"}</div>`;
-    $("#dist").innerHTML=h;
-  }
 }
+document.addEventListener("click",e=>{const r=e.target.closest("[data-row]"); if(!r) return; openRow = openRow===r.dataset.row?null:r.dataset.row; renderBoard();});
 $("#copyBtn").onclick=async()=>{
   if(!board) return;
-  const rows=ranked(), nres=KEYS.filter(k=>board.results?.[k]).length, open=!locked();
-  let txt=`⛳ Quiniela Bullet & Octopus Cup 2026\n`;
-  txt += open ? `Picks enviados: ${board.bettors.filter(b=>b.complete).length}/${board.bettors.length}` : `Resultados: ${nres}/8`;
-  if(board.aportacion>0) txt+=` · Bolsa: ${money(board.aportacion*board.bettors.length)}`;
-  txt += "\n\n" + (open ? board.bettors.map(b=>`${b.complete?"✅":"⏳"} ${b.alias}`).join("\n") : rows.map(r=>`${r.rank}. ${r.e.alias} — ${r.p} pts`).join("\n"));
+  const rows=ranked(), nres=KEYS.filter(k=>board.results?.[k]).length;
+  let txt=`⛳ Quiniela Bullet & Octopus Cup 2026 · Hermanos McGregor\nResultados: ${nres}/8 · Bolsa: ${money(bolsa())}\n\n`;
+  txt += rows.map(r=>`${r.rank}. ${r.e.alias} — ${r.p} pts${nres>0&&r.prize>0&&r.p>0?" ("+money(r.prize)+")":""}`).join("\n");
   txt += `\n\n${location.origin+location.pathname}`;
   const ta=$("#copyTxt"); ta.value=txt;
   try{ await navigator.clipboard.writeText(txt); ta.classList.add("hide"); toast("Copiado ✓"); }
   catch{ ta.classList.remove("hide"); ta.select(); toast("Copia el texto de abajo"); }
 };
 
+/* ====== convocatoria ====== */
+function renderConv(){
+  $("#pdfBtn").href = STORE+"convocatoria.pdf";
+  if (!$("#pages").children.length) $("#pages").innerHTML = [1,2,3,4].map(i=>`<img loading="lazy" src="${STORE}conv-p-${i}.jpg" alt="Convocatoria página ${i}">`).join("");
+}
+
 /* ====== admin ====== */
 function linkFor(t){ return location.origin+location.pathname+"?t="+encodeURIComponent(t); }
 function renderAdmin(){
   if (MODE!=="admin"||!adm) return;
   const list=adm.bettors;
-  $("#admCount").textContent = `${list.filter(b=>Object.keys(b.picks||{}).length===8).length}/${list.length} con picks`;
+  $("#admCount").textContent = `${list.filter(b=>isComplete(b.picks)).length}/${list.length} con picks`;
   $("#entList").innerHTML = list.length ? list.map(b=>{
     const n=Object.keys(b.picks||{}).length, link=linkFor(b.token);
-    const msg=`⛳ ${b.alias}, esta es tu liga personal para la quiniela del Bullet & Octopus Cup (cierra sáb 7:30 am). No la compartas:\n${link}`;
+    const msg=`⛳ ${b.alias}, esta es tu liga personal para la quiniela del Bullet & Octopus Cup (Hermanos McGregor). Cierra sáb 7:30 am. No la compartas:\n${link}`;
     return `<div class="ent"><div class="nm">${esc(b.alias)} <span class="note">${n}/8</span></div>
       <button class="paid ${b.paid?"on":""}" data-paid="${b.id}" data-on="${b.paid?1:0}">${b.paid?"Pagó ✓":"Pago"}</button>
-      <div class="links" style="width:100%">
+      <div class="links">
         <a class="btn sm wa" href="https://wa.me/?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">WhatsApp</a>
         <button class="btn sm ghost" data-copy="${esc(link)}">Copiar liga</button>
         <button class="btn sm ghost" data-edit="${b.id}">Capturar picks</button>
@@ -368,10 +526,13 @@ function renderAdmin(){
 }
 function fillAdminInputs(){
   if (!board) return;
+  const p=PTS();
   $("#resNet").value = board.net_ganador ?? "";
-  $("#aport").value = board.aportacion || "";
-  const d=new Date(board.lock_at), p=x=>String(x).padStart(2,"0");
-  $("#lockIn").value=`${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+  $("#aport").value = board.aportacion ?? 200;
+  $("#winSel").value = String(board.winners||1);
+  $("#pM").value=p.match; $("#pT").value=p.team; $("#pI").value=p.ind1;
+  const d=new Date(board.lock_at), z=x=>String(x).padStart(2,"0");
+  $("#lockIn").value=`${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}T${z(d.getHours())}:${z(d.getMinutes())}`;
 }
 async function admCall(fn,args){ try{ adm = await rpc(fn,{p_admin:ADMIN,...args}); renderAdmin(); loadBoard(); }catch(e){ toast(e.message); } }
 $("#addBtn").onclick=()=>{const a=$("#newAlias").value.trim(); if(!a) return; $("#newAlias").value=""; admCall("admin_add_bettor",{p_alias:a});};
@@ -392,7 +553,7 @@ document.addEventListener("click",async e=>{
   const c=e.target.closest("[data-copy]");
   if(c){ try{await navigator.clipboard.writeText(c.dataset.copy);toast("Liga copiada ✓");}catch{toast(c.dataset.copy);} return; }
   const ed=e.target.closest("[data-edit]");
-  if(ed){ const b=adm.bettors.find(x=>x.id===ed.dataset.edit); loadTarget(b); $("#tabPicks").classList.remove("hide"); setTab("picks"); window.scrollTo(0,0); return; }
+  if(ed){ const b=adm.bettors.find(x=>x.id===ed.dataset.edit); loadTarget(b); setTab("picks"); return; }
   const d=e.target.closest("[data-del]");
   if(d){ const id=d.dataset.del; if(delArm!==id){delArm=id;renderAdmin();setTimeout(()=>{if(delArm===id){delArm=null;renderAdmin();}},3000);return;}
     delArm=null; if(target&&target.id===id) loadTarget(null); admCall("admin_del_bettor",{p_id:id}); }
@@ -400,40 +561,40 @@ document.addEventListener("click",async e=>{
 let netT; $("#resNet").addEventListener("input",()=>{clearTimeout(netT);netT=setTimeout(pushResults,700);});
 $("#saveSettings").onclick=async()=>{
   const d=new Date($("#lockIn").value);
-  try{ await rpc("admin_set_settings",{p_admin:ADMIN,p_lock:isNaN(d)?null:d.toISOString(),p_aport:Number($("#aport").value)||0}); toast("Ajustes guardados ✓"); loadBoard(); }
-  catch(e){ toast(e.message); }
+  const num=(id,def)=>{const v=parseInt($(id).value,10);return Number.isFinite(v)&&v>=0?v:def;};
+  try{
+    await rpc("admin_set_settings",{p_admin:ADMIN,p_lock:isNaN(d)?null:d.toISOString(),p_aport:num("#aport",200),
+      p_winners:Number($("#winSel").value),p_pts:{match:num("#pM",1),team:num("#pT",2),ind1:num("#pI",3)}});
+    toast("Ajustes guardados ✓"); await loadBoard(); fillAdminInputs();
+  }catch(e){ toast(e.message); }
 };
 
 /* ====== header / boot ====== */
 function renderHeader(){
   const pill=$("#lockPill"); if(!board){pill.textContent="…";return;}
-  const d=new Date(board.lock_at);
-  if(locked()){pill.className="pill closed";pill.textContent="Picks cerrados";}
-  else{const ms=lockAt()-(Date.now()+skew),h=Math.floor(ms/3600000),m=Math.floor(ms%3600000/60000);
-    pill.className="pill open";pill.textContent=`Cierra en ${h>0?h+"h ":""}${m}m · ${d.toLocaleString("es-MX",{weekday:"short",hour:"numeric",minute:"2-digit"})}`;}
+  if(locked()){pill.className="pill closed";pill.textContent="Cerrado";}
+  else{pill.className="pill";pill.textContent="Cierra en "+fmtLeft(lockAt()-(Date.now()+skew));}
 }
-function renderAll(){ renderHeader(); renderPicks(); renderBoard(); renderAdmin(); }
+function renderAll(){ renderHeader(); renderPrincipal(); renderPicks(); renderBoard(); renderAdmin(); if(tab==="conv") renderConv(); }
 async function loadBoard(){
   try{ board = await rpc("get_board"); skew = new Date(board.now).getTime()-Date.now(); renderAll(); }
-  catch(e){ $("#board").innerHTML=`<div class="banner red">No se pudo cargar la tabla. Revisa tu conexión.</div>`; }
+  catch(e){ $("#board").innerHTML=`<div class="banner red">No se pudo cargar. Revisa tu conexión.</div>`; }
 }
 (async ()=>{
-  if (SB_URL.startsWith("__")){ $("#topBanner").innerHTML=`<div class="banner red">Falta configurar Supabase en el archivo.</div>`; }
-  $("#tabPicks").classList.toggle("hide", MODE!=="player");
+  $("#barLogo").src = $("#heroLogo").src = STORE+"logo.webp";
   $("#tabAdmin").classList.toggle("hide", MODE!=="admin");
-  if (MODE==="public"){ document.querySelector("nav").classList.add("hide"); $("#topBanner").innerHTML+=`<div class="banner">Para apostar necesitas tu liga personal — pídesela a Paco.</div>`; }
-  setTab(tab);
+  setTab("principal");
   await loadBoard();
   if (MODE==="player"){
     try{ me = await rpc("get_me",{p_token:TOKEN}); }catch{ me=null; }
-    if (me) loadTarget(me);
+    if (me){ loadTarget(me); if (isComplete(me.picks)) setTab("ranking"); }
     renderAll();
   }
   if (MODE==="admin"){
-    try{ adm = await rpc("admin_get",{p_admin:ADMIN}); res={...(board?.results||{})}; fillAdminInputs(); renderAll(); }
+    try{ adm = await rpc("admin_get",{p_admin:ADMIN}); res={...(board?.results||{})}; fillAdminInputs(); setTab("admin"); }
     catch(e){ $("#topBanner").innerHTML=`<div class="banner red">Clave de admin no válida.</div>`; }
   }
-  setInterval(()=>{ if(!document.hidden) loadBoard(); }, 20000);
+  setInterval(()=>{ if(!document.hidden && !dirty) loadBoard(); }, 20000);
   setInterval(renderHeader, 30000);
 })();
 </script>
