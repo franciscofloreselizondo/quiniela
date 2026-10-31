@@ -132,6 +132,43 @@ input.t:focus,select.t:focus{outline:2px solid var(--gold);border-color:transpar
 .toast.on{opacity:1}
 textarea.copy{width:100%;min-height:160px;font:12px/1.4 ui-monospace,monospace;border:1px solid var(--line);border-radius:10px;padding:8px;margin-top:8px;background:rgba(0,0,0,.2);color:var(--cream)}
 .hide{display:none!important}
+/* resumen ranking */
+.status{display:flex;align-items:center;gap:8px;justify-content:center;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold2);margin:0 0 12px}
+.status i{width:8px;height:8px;border-radius:50%;background:var(--gold);display:inline-block}
+.status.live i{background:#e2564b;box-shadow:0 0 0 0 rgba(226,86,75,.6);animation:pulse 1.6s infinite}
+.status.fin i{background:var(--ok)}
+@keyframes pulse{70%{box-shadow:0 0 0 8px rgba(226,86,75,0)}100%{box-shadow:0 0 0 0 rgba(226,86,75,0)}}
+.score{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;text-align:center;gap:6px}
+.score .tm{border-radius:12px;padding:10px 6px}
+.score .tm.w{background:var(--cream2);color:var(--g)}.score .tm.r{background:var(--red);color:var(--cream)}
+.score .tm b{display:block;font:700 40px/1 "Cormorant Garamond",serif}
+.score .tm span{font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:700}
+.score .tm.win{box-shadow:0 0 0 3px var(--gold)}
+.score .x{font:700 18px "Cormorant Garamond",serif;color:var(--gold)}
+.cup{text-align:center;margin-top:10px;font-size:13px;color:var(--gold2)}
+.mres{display:grid;grid-template-columns:20px 1fr auto;gap:8px;align-items:center;padding:7px 0;border-top:1px solid rgba(164,161,106,.18);font-size:13px}
+.mres .n{color:var(--gold);font-weight:700;font-size:11px}
+.mres .dot{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:6px;vertical-align:0}
+.mres .dot.w{background:var(--cream2)}.mres .dot.r{background:var(--red2)}
+.mres .lose{color:var(--mute);font-size:12px}
+.mres .pc{font-size:11.5px;color:var(--mute);text-align:right}
+.tag{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border-radius:6px;padding:2px 6px;margin-left:4px;background:rgba(229,154,143,.2);color:var(--bad)}
+.podium{display:grid;grid-template-columns:1fr 1.15fr 1fr;align-items:end;gap:6px;text-align:center}
+.podium .st{border:1px solid var(--line);border-radius:12px 12px 4px 4px;padding:10px 4px 8px;background:rgba(255,253,244,.05)}
+.podium .st.p1{background:rgba(164,161,106,.2);border-color:var(--gold);padding-top:16px}
+.podium .st .md{font:700 26px/1 "Cormorant Garamond",serif;color:var(--gold)}
+.podium .st .who{font-weight:700;font-size:14px;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.podium .st .sc{font-size:12px;color:var(--gold2);margin-top:2px}
+.podium .st .pz{font-size:12px;color:var(--ok);font-weight:700;margin-top:3px}
+.podium .st.empty .who{color:var(--mute);font-weight:500}
+.facts{list-style:none;margin:0;padding:0;font-size:13px}
+.facts li{display:flex;gap:10px;padding:8px 0;border-top:1px solid rgba(164,161,106,.18)}
+.facts li:first-child{border-top:0}
+.facts li i{font-style:normal;font-size:17px;width:22px;text-align:center}
+.facts b{color:var(--cream)}
+.facts span{color:var(--mute)}
+.pzl{display:flex;justify-content:space-between;padding:6px 0;border-top:1px solid rgba(164,161,106,.18);font-size:13px}
+.pzl b{color:var(--gold2)}
 .em{display:flex;gap:6px;width:100%}.em input{flex:1;padding:7px 10px;font-size:13px}
 .mlog{font-size:12px;color:var(--mute);border-top:1px solid rgba(164,161,106,.2);padding:6px 0}
 .mlog b{color:var(--cream)}.ok2{color:var(--ok)}.bad2{color:var(--bad)}
@@ -228,6 +265,8 @@ textarea.copy{width:100%;min-height:160px;font:12px/1.4 ui-monospace,monospace;b
 
   <!-- RANKING -->
   <section id="s-ranking">
+    <div class="status" id="stLine"><i></i><span id="stTxt">—</span></div>
+    <div id="summary"></div>
     <div class="kpis">
       <div class="kpi"><div class="v" id="kBolsa">—</div><div class="l">Bolsa</div></div>
       <div class="kpi"><div class="v" id="kN">0</div><div class="l">Apostadores</div></div>
@@ -274,6 +313,12 @@ textarea.copy{width:100%;min-height:160px;font:12px/1.4 ui-monospace,monospace;b
       <div id="resInd" class="grid3"></div>
       <label class="f" style="margin-top:12px" for="resNet">Score net real del 1er lugar (desempate)</label>
       <input id="resNet" class="t" type="number" inputmode="numeric" placeholder="Ej. 69">
+      <div id="podAdm" class="hide"><div class="mt" style="margin-top:14px">Podio net · 2º y 3º lugar (opcional)</div>
+      <div class="g3" style="grid-template-columns:2fr 1fr">
+        <select id="pod2" class="t"></select><input id="pod2n" class="t" type="number" inputmode="numeric" placeholder="Net">
+        <select id="pod3" class="t"></select><input id="pod3n" class="t" type="number" inputmode="numeric" placeholder="Net">
+      </div>
+      <button class="btn ghost" id="podBtn" style="width:100%;margin-top:8px">Guardar podio</button></div>
     </div>
     <div class="card">
       <div class="h">Cerrar evento</div>
@@ -320,6 +365,7 @@ textarea.copy{width:100%;min-height:160px;font:12px/1.4 ui-monospace,monospace;b
 /* ====== CONFIG ====== */
 const SB_URL = "https://njdvluvuzcczsrrrwyzt.supabase.co";
 const SB_KEY = "sb_publishable_bJvJamSGhkDgcMVmHnpXSA_NXU5ZreP";
+const PODIO_ON = false; // 2º/3º net: activar junto con la migración 008
 const STORE = SB_URL + "/storage/v1/object/public/quiniela/";
 
 const MATCHES = [
@@ -357,7 +403,7 @@ async function rpc(fn,args={}){
 /* ====== state ====== */
 let board=null, skew=0, me=null, adm=null;
 let form={picks:{},tb:""}, target=null, dirty=false, saving=false;
-let res={}, delArm=null, openRow=null, tab="principal";
+let res={}, delArm=null, openRow=null, tab="principal", podio={};
 
 function lockAt(){ return board ? new Date(board.lock_at).getTime() : Infinity; }
 function locked(){ return Date.now()+skew >= lockAt(); }
@@ -510,8 +556,61 @@ function ranked(){
   }
   return rows;
 }
+function teamOf(name){ for(const m of MATCHES){ if(m.w[0]===name) return "w"; if(m.r[0]===name) return "r"; } return ""; }
+function renderSummary(){
+  const R=board.results||{}, nres=KEYS.filter(k=>R[k]).length, B=board.bettors, withP=B.filter(b=>Object.keys(b.picks||{}).length);
+  const st=$("#stLine");
+  const fin=!!board.closed, live=!fin && (nres>0 || locked());
+  st.className="status"+(fin?" fin":live?" live":"");
+  $("#stTxt").textContent = fin ? "Final · evento cerrado" : nres ? `En juego · ${nres}/8 resultados` : locked() ? "En juego · esperando resultados" : "Antes del torneo · picks abiertos";
+  if(!nres){ $("#summary").innerHTML = `<div class="card"><div class="note" style="text-align:center">El resumen del torneo y de la quiniela aparece en cuanto se capture el primer resultado.</div></div>`; return; }
+  const pctOf=(k,v)=>{ const n=withP.filter(b=>b.picks?.[k]===v).length; return withP.length?Math.round(n/withP.length*100):0; };
+  // --- torneo: marcador ---
+  let wN=0,rN=0; MATCHES.forEach((m,i)=>{const v=R["m"+(i+1)]; if(v===m.w[0])wN++; else if(v===m.r[0])rN++;});
+  const pend=6-wN-rN, cup=R.team;
+  let h=`<div class="card"><div class="h">Marcador por equipos <small>${pend?pend+" match"+(pend>1?"es":"")+" por definir":"6/6 matches"}</small></div>
+    <div class="score"><div class="tm w ${cup==="Blanco"?"win":""}"><b>${wN}</b><span>Blanco</span></div><div class="x">vs</div><div class="tm r ${cup==="Rojo"?"win":""}"><b>${rN}</b><span>Rojo</span></div></div>
+    <div class="cup">${cup?`🏆 Copa por equipos: <b>${esc(cup)}</b>`:"Copa por equipos: por definir"}</div>`;
+  h+=MATCHES.map((m,i)=>{const k="m"+(i+1),v=R[k];
+    if(!v) return `<div class="mres"><span class="n">M${i+1}</span><span class="lose">${esc(m.w[0])} vs ${esc(m.r[0])} · por definir</span><span></span></div>`;
+    const lo=v===m.w[0]?m.r[0]:m.w[0], pc=pctOf(k,v);
+    return `<div class="mres"><span class="n">M${i+1}</span><span><span class="dot ${teamOf(v)}"></span><b>${esc(v)}</b> <span class="lose">le ganó a ${esc(lo)}</span>${withP.length&&pc<35?'<span class="tag">Sorpresa</span>':""}</span><span class="pc">${pc}% le atinó</span></div>`;}).join("");
+  h+=`</div>`;
+  // --- podio net ---
+  const P=[R.ind1?{n:R.ind1,net:board.net_ganador}:null, podio.p2||null, podio.p3||null];
+  if(!PODIO_ON){ if(R.ind1) h+=`<div class="card" id="netCard"><div class="h">1er lugar net individual</div><div class="podium" style="grid-template-columns:1fr"><div class="st p1"><div class="md">🏆</div><div class="who">${esc(R.ind1)}</div><div class="sc">${board.net_ganador!=null?"Net "+esc(board.net_ganador):"&nbsp;"}</div></div></div></div>`; }
+  else if(P.some(Boolean)){
+    const stp=(x,i)=>`<div class="st ${i===0?"p1":""} ${x?"":"empty"}"><div class="md">${i+1}º</div><div class="who">${x?esc(x.n):"por definir"}</div><div class="sc">${x&&x.net!=null?"Net "+esc(x.net):"&nbsp;"}</div></div>`;
+    h+=`<div class="card"><div class="h">Podio net individual</div><div class="podium">${stp(P[1],1)}${stp(P[0],0)}${stp(P[2],2)}</div></div>`;
+  }
+  // --- quiniela ---
+  const rows=ranked(), top=rows.slice(0,3);
+  const stq=(r,i)=>`<div class="st ${i===0?"p1":""} ${r?"":"empty"}"><div class="md">${i+1}º</div><div class="who">${r?esc(r.e.alias):"—"}</div><div class="sc">${r?r.p+" pts":"&nbsp;"}</div>${r&&r.prize>0&&r.p>0?`<div class="pz">${money(r.prize)}</div>`:""}</div>`;
+  h+=`<div class="card"><div class="h">Podio de la quiniela <small>${fin?"final":"parcial"}</small></div><div class="podium">${stq(top[1],1)}${stq(top[0],0)}${stq(top[2],2)}</div>`;
+  const pr=prizes(), labels=["1º","2º","3º"];
+  h+=`<div style="margin-top:12px"><div class="pzl"><span>Bolsa total · ${B.length} apostadores</span><b>${money(bolsa())}</b></div>${pr.map((x,i)=>`<div class="pzl"><span>Premio ${labels[i]}</span><b>${money(x)}</b></div>`).join("")}</div></div>`;
+  // --- datos curiosos ---
+  const res8=KEYS.filter(k=>R[k]);
+  const hits=r=>res8.filter(k=>r.e.picks?.[k]===R[k]).length;
+  const facts=[];
+  const best=rows.filter(r=>Object.keys(r.e.picks||{}).length).map(r=>({r,h:hits(r)})).sort((a,b)=>b.h-a.h);
+  if(best.length&&best[0].h>0){ const mx=best[0].h, who=best.filter(x=>x.h===mx).map(x=>x.r.e.alias);
+    facts.push(["🎯",`<b>${esc(who.join(", "))}</b> <span>${who.length>1?"son los más acertados":"es el más acertado"}: ${mx} de ${res8.length} picks (${Math.round(mx/res8.length*100)}%).</span>`]); }
+  let contra=null; res8.forEach(k=>{ const c=withP.filter(b=>b.picks?.[k]===R[k]); if(c.length&&(!contra||c.length<contra.c.length)) contra={k,c}; });
+  if(contra&&withP.length&&contra.c.length/withP.length<0.5) facts.push(["🦉",`<b>${esc(contra.c.map(b=>b.alias).join(", "))}</b> <span>le${contra.c.length>1?"s":""} atinó contra la corriente en ${LONG[contra.k]} (${esc(R[contra.k])}): solo ${contra.c.length} de ${withP.length}.</span>`]);
+  let worst=null; res8.forEach(k=>{ const pc=pctOf(k,R[k]); if(worst==null||pc<worst.pc) worst={k,pc}; });
+  if(worst&&withP.length&&!(worst.k==="ind1"&&R.ind1)) facts.push(["💥",`<b>${LONG[worst.k]}</b> <span>fue el que más tumbó: solo ${worst.pc}% del grupo le atinó a ${esc(R[worst.k])}.</span>`]);
+  if(R.ind1){ const c=withP.filter(b=>b.picks?.ind1===R.ind1); facts.push(["⛳",`<b>${c.length} de ${withP.length}</b> <span>le atinaron al 1er lugar (${esc(R.ind1)})${c.length&&c.length<=4?": "+esc(c.map(b=>b.alias).join(", ")):""}.</span>`]); }
+  if(board.net_ganador!=null){ const t=withP.filter(b=>b.tb!=null).map(b=>({a:b.alias,d:Math.abs(b.tb-board.net_ganador),tb:b.tb})).sort((x,y)=>x.d-y.d);
+    if(t.length){ const who=t.filter(x=>x.d===t[0].d); if(who.length>3) facts.push(["📏",`<b>${who.length} apostadores</b> <span>empataron como los más cercanos al net del 1er lugar (${esc(who[0].tb)} vs ${esc(board.net_ganador)}).</span>`]); else facts.push(["📏",`<b>${esc(who.map(x=>x.a).join(", "))}</b> <span>${who.length>1?"fueron los":"fue el"} más cercano${who.length>1?"s":""} al net del 1er lugar (${esc(who[0].tb)} vs ${esc(board.net_ganador)}).</span>`]); } }
+  const zero=rows.filter(r=>Object.keys(r.e.picks||{}).length&&hits(r)===0).length;
+  if(zero) facts.push(["🙈",`<b>${zero}</b> <span>apostador${zero>1?"es":""} sin un solo acierto todavía.</span>`]);
+  if(facts.length) h+=`<div class="card"><div class="h">Datos curiosos</div><ul class="facts">${facts.map(([i,t])=>`<li><i>${i}</i><div>${t}</div></li>`).join("")}</ul></div>`;
+  $("#summary").innerHTML=h;
+}
 function renderBoard(){
   if(!board) return;
+  renderSummary();
   const n=board.bettors.length, nres=KEYS.filter(k=>board.results?.[k]).length;
   $("#kN").textContent=n; $("#kRes").textContent=nres+"/8"; $("#kBolsa").textContent = money(bolsa());
   $("#boardSub").textContent = board.closed ? "final · evento cerrado" : nres===8 ? "resultados completos" : nres ? "en vivo" : `${board.bettors.filter(b=>b.complete).length}/${n} con picks`;
@@ -534,7 +633,9 @@ document.addEventListener("click",e=>{const r=e.target.closest("[data-row]"); if
 $("#copyBtn").onclick=async()=>{
   if(!board) return;
   const rows=ranked(), nres=KEYS.filter(k=>board.results?.[k]).length;
-  let txt=`⛳ Quiniela Bullet & Octopus Cup 2026 · Hermanos McGregor\nResultados: ${nres}/8 · Bolsa: ${money(bolsa())}\n\n`;
+  let txt=`⛳ Quiniela Bullet & Octopus Cup 2026 · Hermanos McGregor\nResultados: ${nres}/8 · Bolsa: ${money(bolsa())}\n`;
+  { const R=board.results||{}; let w=0,r=0; MATCHES.forEach((m,i)=>{const v=R["m"+(i+1)]; if(v===m.w[0])w++; else if(v===m.r[0])r++;}); if(nres) txt+=`Matches: Blanco ${w} – ${r} Rojo${R.team?" · Copa: "+R.team:""}${R.ind1?" · 1er net: "+R.ind1:""}\n`; }
+  txt+=`\n`;
   txt += rows.map(r=>`${r.rank}. ${r.e.alias} — ${r.p} pts${nres>0&&r.prize>0&&r.p>0?" ("+money(r.prize)+")":""}`).join("\n");
   txt += `\n\n${location.origin+location.pathname}`;
   const ta=$("#copyTxt"); ta.value=txt;
@@ -570,6 +671,8 @@ function renderAdmin(){
   $("#resMatches").innerHTML=matchesHTML(res,"r",false);
   $("#resTeam").innerHTML=teamHTML(res,"r",false);
   $("#resInd").innerHTML=indHTML(res,"r",false);
+  const popt=sel=>`<option value="">— vacío —</option>`+PLAYERS.map(x=>`<option ${sel===x.n?"selected":""}>${esc(x.n)}</option>`).join("");
+  if(!$("#pod2").options.length){ $("#pod2").innerHTML=popt(podio.p2?.n); $("#pod3").innerHTML=popt(podio.p3?.n); }
   const rq=adm.requests||[];
   $("#reqCount").textContent = rq.length ? rq.length+" pendiente"+(rq.length>1?"s":"") : "";
   $("#reqList").innerHTML = rq.length ? rq.map(r=>`<div class="ent"><div class="nm">${esc(r.alias)}<div class="note">${esc(r.email)}</div></div>
@@ -585,6 +688,7 @@ function renderAdmin(){
 let closeArm=false;
 function fillAdminInputs(){
   if (!board) return;
+  $("#pod2n").value = podio.p2?.net ?? ""; $("#pod3n").value = podio.p3?.net ?? "";
   const p=PTS();
   $("#resNet").value = board.net_ganador ?? "";
   $("#aport").value = board.aportacion ?? 200;
@@ -632,6 +736,11 @@ document.addEventListener("click",async e=>{
     delArm=null; if(target&&target.id===id) loadTarget(null); admCall("admin_del_bettor",{p_id:id}); }
 });
 let netT; $("#resNet").addEventListener("input",()=>{clearTimeout(netT);netT=setTimeout(pushResults,700);});
+$("#podBtn").onclick=async()=>{
+  const g=(s,n)=>{const v=$(s).value; const t=$(n).value===""?null:Math.round(Number($(n).value)); return v?{n:v,net:Number.isFinite(t)?t:null}:null;};
+  try{ podio = await rpc("admin_set_podio",{p_admin:ADMIN,p_podio:{p2:g("#pod2","#pod2n"),p3:g("#pod3","#pod3n")}}) || {}; toast("Podio guardado ✓"); renderAll(); }
+  catch(e){ toast(/admin_set_podio|function/.test(e.message)?"El podio aún no está activado en la base":e.message); }
+};
 $("#saveSettings").onclick=async()=>{
   const d=new Date($("#lockIn").value);
   const num=(id,def)=>{const v=parseInt($(id).value,10);return Number.isFinite(v)&&v>=0?v:def;};
@@ -650,12 +759,15 @@ function renderHeader(){
 }
 function renderAll(){ renderHeader(); renderPrincipal(); renderPicks(); renderBoard(); renderAdmin(); if(tab==="conv") renderConv(); }
 async function loadBoard(){
-  try{ board = await rpc("get_board"); skew = new Date(board.now).getTime()-Date.now(); renderAll(); }
+  try{ board = await rpc("get_board"); skew = new Date(board.now).getTime()-Date.now();
+    if (PODIO_ON) { try{ podio = (await rpc("get_podio")) || {}; }catch{ podio = {}; } }
+    renderAll(); }
   catch(e){ $("#board").innerHTML=`<div class="banner red">No se pudo cargar. Revisa tu conexión.</div>`; }
 }
 (async ()=>{
   $("#barLogo").src = $("#heroLogo").src = STORE+"logo.webp";
   $("#tabAdmin").classList.toggle("hide", MODE!=="admin");
+  $("#podAdm").classList.toggle("hide", !PODIO_ON);
   setTab("principal");
   if (REQ && REQK){
     const ok = REQACT!=="no";
@@ -673,6 +785,8 @@ async function loadBoard(){
     };
   }
   await loadBoard();
+  // Después del cierre (7:30) todos aterrizan en Ranking (salvo la liga de aprobación)
+  if (MODE!=="admin" && !REQ && board && (locked() || board.closed)) setTab("ranking");
   if (MODE==="player"){
     try{ me = await rpc("get_me",{p_token:TOKEN}); }catch{ me=null; }
     if (me){ loadTarget(me); if (isComplete(me.picks)) setTab("ranking"); }
