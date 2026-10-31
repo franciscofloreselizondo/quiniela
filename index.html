@@ -489,7 +489,7 @@ $("#reqBtn").onclick=async()=>{
   if(!a) return toast("Escribe tu nombre"); if(!/^\S+@\S+\.\S+$/.test(em)) return toast("Correo no válido");
   $("#reqBtn").disabled=true;
   try{ const r=await rpc("request_access",{p_alias:a,p_email:em});
-    $("#reqMsg").innerHTML = r==="ya_pendiente" ? "Ya tenías una solicitud pendiente. En cuanto Paco la apruebe te llega tu liga a <b>"+esc(em)+"</b>." : "¡Listo! Tu solicitud llegó. Cuando Paco la apruebe te llega tu liga a <b>"+esc(em)+"</b>.";
+    $("#reqMsg").innerHTML = r==="aprobado" ? "✅ ¡Listo! Ya estás dado de alta. Revisa tu correo <b>"+esc(em)+"</b> (también Spam/Promociones): ahí está tu liga para llenar tus picks." : r==="ya_pendiente" ? "Ya tenías una solicitud pendiente. En cuanto Paco la apruebe te llega tu liga a <b>"+esc(em)+"</b>." : "¡Listo! Tu solicitud llegó. Cuando Paco la apruebe te llega tu liga a <b>"+esc(em)+"</b>.";
     $("#reqName").value=""; $("#reqEmail").value=""; }
   catch(e){ $("#reqMsg").textContent=e.message; }
   finally{ $("#reqBtn").disabled=false; }
