@@ -275,7 +275,7 @@ table.att td.ok{color:var(--ok);font-weight:700}table.att td.ko{color:var(--bad)
     <div class="card hide" id="crqApprove" style="text-align:center"><div class="h" style="justify-content:center" id="crqTitle">Solicitud de acceso</div><div id="crqMsg" style="margin-bottom:12px"></div><button class="btn gold w" id="crqBtn">Confirmar</button></div>
     <div class="card" id="reqAccess">
       <div class="h">¿Eres socio y no tienes acceso?</div>
-      <div class="note" style="margin-bottom:6px">Deja tu nombre y correo. El Presidente o Paco lo aprueban y te llega un correo para entrar.</div>
+      <div class="note" style="margin-bottom:6px">Deja tu nombre y correo. El Presidente lo aprueba y te llega un correo para entrar.</div>
       <label class="f" for="raName">Nombre (como te conocen en el grupo)</label><input id="raName" class="t" maxlength="40">
       <label class="f" for="raEmail">Correo</label><input id="raEmail" class="t" type="email" inputmode="email">
       <button class="btn ghost w" id="raBtn" style="margin-top:12px">Solicitar acceso</button>
@@ -299,6 +299,7 @@ table.att td.ok{color:var(--ok);font-weight:700}table.att td.ko{color:var(--bad)
       <button class="tile" id="tileLogout"><i>🚪</i><b>Salir</b><span>Cerrar sesión</span></button>
     </div>
     <div class="card"><div class="h">Mi perfil <small id="pfMail"></small></div>
+      <label class="f" for="pfNick">Apodo</label><input id="pfNick" class="t" maxlength="30">
       <div class="row2"><div><label class="f" for="pfHcp">HCP (18 Birdies)</label><input id="pfHcp" class="t" inputmode="decimal"></div>
       <div><label class="f" for="pfLiga">Liga</label><select id="pfLiga" class="t"><option value="">—</option><option value="sabado">Sabatina</option><option value="domingo">Dominical</option><option value="ambas">Ambas</option></select></div></div>
       <button class="btn ghost w" id="pfSave" style="margin-top:10px">Guardar mi perfil</button></div>
@@ -452,6 +453,7 @@ $("#tileLogout").onclick=()=>logout(false);
 $("#whoBtn").onclick=()=>go("home");
 function isAdminBets(){ return ME&&(ME.superadmin||ME.bet_admin); }
 function isAdminMembers(){ return ME&&(ME.superadmin||ME.role==="presidente"||ME.role==="secretario"); }
+function canDelMembers(){ return ME&&(ME.superadmin||ME.role==="presidente"||ME.board); }
 function afterLogin(){
   $("#whoBtn").textContent=ME.name;
   const m=location.hash.match(/e=([0-9a-f-]{36})/);
@@ -460,7 +462,7 @@ function afterLogin(){
 
 /* ===== home ===== */
 async function renderHome(){
-  $("#hiName").textContent="Bienvenido, "+ME.name; fillProfile(); loadCal();
+  $("#hiName").textContent="Bienvenido, "+(ME.nickname||ME.name); fillProfile(); loadCal();
   $("#hiRole").textContent=[ROLES[ME.role], ME.fundador?"Fundador":null, ME.superadmin?"Administrador":ME.bet_admin?"Admin de apuestas":null].filter(Boolean).join(" · ");
   try{ EVENTS=await rpc("b_events_list",{p_token:TOKEN}); }catch{ EVENTS=[]; }
   const nx=EVENTS.filter(e=>!e.closed).sort((a,b)=>new Date(a.lock_at)-new Date(b.lock_at))[0];
@@ -761,7 +763,7 @@ async function loadMembers(){
   const act=MEMBERS.filter(m=>m.active);
   $("#memCount").textContent=`${act.length} socios activos`;
   $("#newMemBtn").classList.toggle("hide",!isAdminMembers());
-  $("#memList").innerHTML=MEMBERS.map(m=>`<div class="mem" ${isAdminMembers()?`data-medit="${m.id}" style="cursor:pointer"`:""}><div><div class="n">${esc(m.name)}${m.id===ME.id?'<span class="me">TÚ</span>':""}</div>
+  $("#memList").innerHTML=MEMBERS.map(m=>`<div class="mem" ${(isAdminMembers()||canDelMembers())?`data-medit="${m.id}" style="cursor:pointer"`:""}><div><div class="n">${esc(m.name)}${m.nickname?` <span style="color:var(--gold2);font-weight:500">“${esc(m.nickname)}”</span>`:""}${m.id===ME.id?'<span class="me">TÚ</span>':""}</div>
     <div class="s">${m.liga?esc(LIGAS[m.liga])+" · ":""}${m.hcp!=null?"HCP "+esc(m.hcp):"HCP —"}${!m.active?" · inactivo":""}${isAdminMembers()&&m.email?" · "+esc(m.email):""}</div></div>
     <div style="text-align:right">${m.role!=="miembro"?`<span class="badge g">${ROLES[m.role].toUpperCase()}</span>`:""}${m.board?`<span class="badge">BOARD</span>`:""}${m.fundador?`<span class="badge c">FUNDADOR</span>`:""}${m.superadmin?`<span class="badge">ADMIN</span>`:m.bet_admin?`<span class="badge">APUESTAS</span>`:""}</div></div>`).join("");
 }
@@ -769,7 +771,7 @@ function memberForm(m){
   m=m||{name:"",email:"",role:"miembro",fundador:false,liga:"",hcp:"",active:true,bet_admin:false};
   const opt=(o,v)=>Object.entries(o).map(([k,l])=>`<option value="${k}" ${v===k?"selected":""}>${l}</option>`).join("");
   return `<div class="h">${m.id?"Editar socio":"Nuevo socio"}</div>
-    <label class="f">Nombre</label><input class="t" id="mName" value="${esc(m.name)}">
+    <div class="row2"><div><label class="f">Nombre</label><input class="t" id="mName" value="${esc(m.name)}"></div><div><label class="f">Apodo</label><input class="t" id="mNick" maxlength="30" value="${esc(m.nickname||"")}" placeholder="Ej. La Bala"></div></div>
     <label class="f">Correo (para entrar)</label><input class="t" id="mEmail" type="email" value="${esc(m.email||"")}">
     <div class="row2"><div><label class="f">Rol</label><select class="t" id="mRole">${opt(ROLES,m.role)}</select></div><div><label class="f">Liga</label><select class="t" id="mLiga"><option value="">—</option>${opt(LIGAS,m.liga)}</select></div></div>
     <div class="row2"><div><label class="f">HCP</label><input class="t" id="mHcp" inputmode="decimal" value="${esc(m.hcp??"")}"></div>
@@ -777,14 +779,18 @@ function memberForm(m){
     <label class="f">Board (vota cambios al Código)</label><select class="t" id="mBoard"><option value="false">No</option><option value="true" ${m.board?"selected":""}>Sí</option></select>
     ${m.id&&!m.superadmin?`<label class="f">Estatus</label><select class="t" id="mAct"><option value="true">Activo</option><option value="false" ${m.active?"":"selected"}>Inactivo</option></select>`:""}
     ${ME.superadmin&&m.id&&!m.superadmin?`<label class="f">Admin de apuestas (puede abrir torneos)</label><select class="t" id="mBet"><option value="false">No</option><option value="true" ${m.bet_admin?"selected":""}>Sí</option></select>`:""}
-    <button class="btn gold w" id="mSave" data-id="${m.id||""}" style="margin-top:14px">Guardar</button><button class="btn ghost w" id="mCancel" style="margin-top:8px">Cancelar</button>`;
+    ${isAdminMembers()?`<button class="btn gold w" id="mSave" data-id="${m.id||""}" style="margin-top:14px">Guardar</button>`:""}
+    ${m.id&&canDelMembers()&&!m.superadmin&&m.id!==ME.id?`<button class="btn danger w" id="mDel" data-id="${m.id}" style="margin-top:8px">Eliminar socio</button>`:""}
+    <button class="btn ghost w" id="mCancel" style="margin-top:8px">Cancelar</button>`;
 }
 $("#newMemBtn").onclick=()=>{ $("#memForm").innerHTML=memberForm(null); $("#memForm").classList.remove("hide"); window.scrollTo(0,0); };
 document.addEventListener("click",async e=>{
   const ed=e.target.closest("[data-medit]"); if(ed){ $("#memForm").innerHTML=memberForm(MEMBERS.find(m=>m.id===ed.dataset.medit)); $("#memForm").classList.remove("hide"); window.scrollTo(0,0); return; }
   if(e.target.id==="mCancel"){ $("#memForm").classList.add("hide"); return; }
+  if(e.target.id==="mDel"){ const mm=MEMBERS.find(x=>x.id===e.target.dataset.id); if(!confirm(`¿Eliminar a ${mm?mm.name:"este socio"} del club? Ya no podrá entrar. Su historial de asistencias y quinielas se conserva.`)) return;
+    try{ MEMBERS=await rpc("c_admin_delete_member",{p_token:TOKEN,p_id:e.target.dataset.id}); toast("Socio eliminado"); $("#memForm").classList.add("hide"); loadMembers(); }catch(err){ toast(err.message); } return; }
   if(e.target.id==="mSave"){ const id=e.target.dataset.id||null, prev=MEMBERS.find(m=>m.id===id);
-    const d={id,name:$("#mName").value.trim(),email:$("#mEmail").value.trim(),role:$("#mRole").value,liga:$("#mLiga").value||null,hcp:$("#mHcp").value.trim(),fundador:$("#mFund").value==="true",board:$("#mBoard").value==="true",active:$("#mAct")?$("#mAct").value==="true":true};
+    const d={id,name:$("#mName").value.trim(),nickname:$("#mNick").value.trim(),email:$("#mEmail").value.trim(),role:$("#mRole").value,liga:$("#mLiga").value||null,hcp:$("#mHcp").value.trim(),fundador:$("#mFund").value==="true",board:$("#mBoard").value==="true",active:$("#mAct")?$("#mAct").value==="true":true};
     e.target.disabled=true;
     try{ MEMBERS=await rpc("c_admin_save_member",{p_token:TOKEN,p_data:d});
       if($("#mBet")&&id&&(($("#mBet").value==="true")!==!!prev?.bet_admin)) MEMBERS=await rpc("c_admin_set_bet_admin",{p_token:TOKEN,p_id:id,p_on:$("#mBet").value==="true"});
@@ -1001,8 +1007,8 @@ document.addEventListener("click",async e=>{ const t=e.target;
   if(t.id==="cfCancel"){ $("#calForm").innerHTML=""; return; }
   if(t.id==="cfSave"||t.id==="cfDel"){ try{ CAL=await rpc("c_admin_calendar",{p_token:TOKEN,p_data:t.id==="cfDel"?{delete:t.dataset.id}:{id:t.dataset.id||null,date:$("#cfDate").value,days:$("#cfDays").value,name:$("#cfName").value,honorees:$("#cfHon").value,tipo:$("#cfTipo").value}}); toast(t.id==="cfDel"?"Torneo borrado":"Calendario guardado ✓"); renderCal(); }catch(err){ toast(err.message);} return; }
 }, true);
-function fillProfile(){ $("#pfHcp").value=ME.hcp??""; $("#pfLiga").value=ME.liga||""; $("#pfMail").textContent=ME.email||""; }
-$("#pfSave").onclick=async()=>{ try{ ME=await rpc("c_update_me",{p_token:TOKEN,p_data:{hcp:$("#pfHcp").value.trim(),liga:$("#pfLiga").value}}); toast("Perfil guardado ✓"); fillProfile(); }catch(e){ toast(e.message); } };
+function fillProfile(){ $("#pfNick").value=ME.nickname||""; $("#pfHcp").value=ME.hcp??""; $("#pfLiga").value=ME.liga||""; $("#pfMail").textContent=ME.email||""; }
+$("#pfSave").onclick=async()=>{ try{ ME=await rpc("c_update_me",{p_token:TOKEN,p_data:{nickname:$("#pfNick").value.trim(),hcp:$("#pfHcp").value.trim(),liga:$("#pfLiga").value}}); toast("Perfil guardado ✓"); fillProfile(); }catch(e){ toast(e.message); } };
 $("#raBtn").onclick=async()=>{ const n=$("#raName").value.trim(), em=$("#raEmail").value.trim(); if(!n) return toast("Escribe tu nombre"); if(!/^\S+@\S+\.\S+$/.test(em)) return toast("Correo no válido");
   $("#raBtn").disabled=true; try{ const r=await rpc("c_request_access",{p_name:n,p_email:em});
     $("#raMsg").innerHTML = r==="ya_registrado"?"Ese correo ya tiene acceso: pide tu código arriba.": r==="ya_pendiente"?"Ya tienes una solicitud pendiente. Te avisamos por correo al aprobarla.":"✅ Solicitud enviada. Te llega un correo cuando la aprueben."; }
