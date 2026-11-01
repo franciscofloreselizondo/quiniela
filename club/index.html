@@ -195,6 +195,26 @@ textarea.copy{width:100%;min-height:150px;font:12px/1.4 ui-monospace,monospace;b
 .mrow input{padding:7px 6px;font-size:14px}
 .ent{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:8px 0;border-top:1px solid #dccb9e}.ent:first-child{border-top:0}
 .ent .nm2{flex:1;min-width:110px}
+.grid{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -6px}
+table.att{border-collapse:collapse;font-size:13px;min-width:100%}
+table.att th,table.att td{border:1px solid #d6c597;text-align:center;padding:3px 2px;min-width:26px;height:26px}
+table.att th.nm,table.att td.nm{text-align:left;min-width:96px;max-width:110px;padding:3px 6px;position:sticky;left:0;background:#f3ead2;z-index:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+table.att th{font:600 9.5px Cinzel,serif;color:var(--ink2);writing-mode:vertical-rl;transform:rotate(180deg);height:58px;padding:4px 2px;cursor:default}
+table.att th.nm,table.att th.k{writing-mode:horizontal-tb;transform:none;height:auto}
+table.att th.ed{cursor:pointer;color:var(--green)}
+table.att th .lb{display:inline-block;background:var(--wood);color:var(--gold2);padding:1px 2px;border-radius:2px;margin-bottom:2px}
+table.att td.a{color:var(--ok);font-weight:700}
+table.att td.ns{background:#8f2d2a;color:#fff;font-weight:700}
+table.att td.st{background:#d9534f}
+table.att td.ok{color:var(--ok);font-weight:700}table.att td.ko{color:var(--claret);font-weight:700}
+.seg{display:flex;border:1px solid #c2a873;border-radius:3px;overflow:hidden}
+.seg button{flex:1;border:0;background:#fbf6e8;padding:7px 6px;font:600 11px Cinzel,serif;color:var(--ink2)}
+.seg button.on.a{background:var(--green);color:var(--parch)}.seg button.on.n{background:var(--claret);color:var(--parch)}.seg button.on.x{background:#d6c597;color:var(--ink)}
+.mk2{display:grid;grid-template-columns:1fr 190px;gap:8px;align-items:center;padding:6px 0;border-top:1px solid #e0d1aa}
+.trow{display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid #dccb9e}.trow:first-child{border-top:0}
+.trow .nm2{flex:1}
+.st2{font:700 10px Cinzel,serif;letter-spacing:.06em;padding:3px 6px;border-radius:2px;white-space:nowrap}
+.st2.ok{background:rgba(47,107,69,.18);color:var(--ok)}.st2.pend{background:#efe0b5;color:#7a5c1e}.st2.late{background:rgba(143,45,42,.15);color:var(--claret)}
 .code{font:700 30px "Cormorant Garamond",serif;letter-spacing:.5em;text-align:center}
 </style>
 </head>
@@ -208,6 +228,8 @@ textarea.copy{width:100%;min-height:150px;font:12px/1.4 ui-monospace,monospace;b
   <nav class="main hide" id="mainNav">
     <button data-nav="home">Casa Club</button>
     <button data-nav="bets">Apuestas</button>
+    <button data-nav="att">Asistencias</button>
+    <button data-nav="treas">Tesorería</button>
     <button data-nav="hist">Históricos</button>
     <button data-nav="members">Miembros</button>
   </nav>
@@ -240,6 +262,8 @@ textarea.copy{width:100%;min-height:150px;font:12px/1.4 ui-monospace,monospace;b
     <div id="homeNext"></div>
     <div class="tiles">
       <button class="tile" data-nav="bets"><i>🎲</i><b>Apuestas</b><span>Quinielas y torneos</span></button>
+      <button class="tile" data-nav="att"><i>📋</i><b>Asistencias</b><span>Salidas y No-Show</span></button>
+      <button class="tile" data-nav="treas"><i>💰</i><b>Tesorería</b><span>Cuotas y fondos</span></button>
       <button class="tile" data-nav="hist"><i>📜</i><b>Históricos</b><span>Tendencias y tu récord</span></button>
       <button class="tile" data-nav="members"><i>🏌️</i><b>Miembros</b><span>Socios y roles</span></button>
       <button class="tile" id="tileLogout"><i>🚪</i><b>Salir</b><span>Cerrar sesión</span></button>
@@ -271,6 +295,23 @@ textarea.copy{width:100%;min-height:150px;font:12px/1.4 ui-monospace,monospace;b
       <button class="btn ghost sm" id="hAll" style="margin-top:10px">Todas las fechas</button>
     </div>
     <div id="histBody"></div>
+  </section>
+
+  <!-- ASISTENCIAS -->
+  <section class="view" id="v-att">
+    <div class="plaque"><div class="pt">Asistencias</div><div class="pn">Libro de Salidas</div><div class="ps">No Call, No Show · Regla 7a: jugar al menos cada 6 semanas</div></div>
+    <div class="card"><div class="row2"><div><label class="f" for="attLiga">Liga</label><select id="attLiga" class="t"><option value="sabado">Sabatina</option><option value="domingo">Dominical</option></select></div>
+      <div><label class="f" for="attSeason">Temporada</label><select id="attSeason" class="t"></select></div></div></div>
+    <button class="btn gold w hide" id="newOutBtn" style="margin-bottom:14px">+ Registrar salida</button>
+    <div class="card hide" id="outForm"></div>
+    <div id="attBody"></div>
+  </section>
+
+  <!-- TESORERIA -->
+  <section class="view" id="v-treas">
+    <div class="plaque"><div class="pt">Tesorería</div><div class="pn">Libro de Cuentas</div><div class="ps">Inscripciones y fondos del club</div></div>
+    <div class="card"><label class="f" for="trSeason">Temporada</label><select id="trSeason" class="t"></select></div>
+    <div id="trBody"></div>
   </section>
 
   <!-- MEMBERS -->
@@ -325,6 +366,8 @@ function go(v){
   if(v==="bets"){ history.replaceState(null,"",location.pathname); loadEvents(); }
   if(v==="hist") loadHist();
   if(v==="members") loadMembers();
+  if(v==="att") loadAtt();
+  if(v==="treas") loadTreas();
   if(v==="home") renderHome();
   show(v);
 }
@@ -358,7 +401,7 @@ function isAdminMembers(){ return ME&&(ME.superadmin||ME.role==="presidente"||ME
 function afterLogin(){
   $("#whoBtn").textContent=ME.name;
   const m=location.hash.match(/e=([0-9a-f-]{36})/);
-  if(m) openEvent(m[1]); else go("home");
+  if(m) openEvent(m[1]); else if(location.hash==='#asistencias') go('att'); else if(location.hash==='#tesoreria') go('treas'); else go("home");
 }
 
 /* ===== home ===== */
@@ -746,6 +789,137 @@ function renderHist(){
   $("#histBody").innerHTML = mine + (facts.length?`<div class="card"><div class="h">Datos curiosos</div><ul class="facts">${facts.map(([i,t])=>`<li><i>${i}</i><div>${t}</div></li>`).join("")}</ul></div>`:"") + tbl;
 }
 document.addEventListener("click",e=>{const h=e.target.closest("[data-hs]"); if(h){ hSort=h.dataset.hs; renderHist(); }});
+
+
+/* ===== asistencias ===== */
+let ATT=null, OUTF=null;
+const seasonOf=d=>{const x=d?new Date(d+"T12:00:00"):new Date(); return x.getFullYear()+"-"+(x.getMonth()<6?1:2);};
+const seasonLabel=s=>{const [y,h]=s.split("-"); return (h==="1"?"1er semestre ":"2º semestre ")+y;};
+function seasonOpts(sel,extra){ const set=new Set([seasonOf(),...(extra||[])]); return [...set].sort().reverse().map(x=>`<option value="${x}" ${x===sel?"selected":""}>${seasonLabel(x)}</option>`).join(""); }
+const TIPOS={regular:"Regular",major:"Major",championship:"Championship",gran_finale:"Gran Finale"};
+const nsLabel=n=>n>=3?`<b style='color:var(--claret)'>${n}ª falta: descalificado de la temporada</b>`:n===2?"<b style='color:var(--claret)'>2ª falta: última advertencia</b>":"1ª falta";
+const nsAmt=k=>(k.p>0?"🍾 + "+money(k.p):"🍾 BOTELLA");
+async function loadAtt(){
+  const liga=$("#attLiga").value||"sabado", season=$("#attSeason").value||seasonOf();
+  try{ ATT=await rpc("a_board",{p_token:TOKEN,p_liga:liga,p_season:season}); }catch(e){ toast(e.message); return; }
+  $("#attSeason").innerHTML=seasonOpts(season,ATT.seasons);
+  $("#newOutBtn").classList.toggle("hide",!ATT.can_edit);
+  renderAtt();
+}
+["#attLiga","#attSeason"].forEach(q=>$(q).addEventListener("change",()=>{ $("#outForm").classList.add("hide"); loadAtt(); }));
+function renderAtt(){
+  const O=ATT.outings, inLiga=id=>{const x=MEMBERS.find(y=>y.id===id); return x&&(x.liga===ATT.liga||x.liga==="ambas");}, M=ATT.members.filter(m=>m.asist||m.noshows||inLiga(m.id));
+  if(!O.length){ $("#attBody").innerHTML=`<div class="card"><div class="note">No hay salidas registradas en ${seasonLabel(ATT.season)}.${ATT.can_edit?" Registra la primera con “Registrar salida”.":""}</div></div>`; return; }
+  const red=m=>{ const cells=O.map(o=>o.marks[m.id]?.s==="asistio"); const out=new Array(O.length).fill(false); let run=[];
+    cells.forEach((a,i)=>{ if(a){ if(run.length>=6) run.forEach(j=>out[j]=true); run=[]; } else run.push(i); }); if(run.length>=6) run.forEach(j=>out[j]=true); return out; };
+  const d2=d=>{const x=new Date(d+"T12:00:00");return x.toLocaleDateString("es-MX",{day:"2-digit",month:"short"}).replace(".","");};
+  const head=`<tr><th class="nm">Socio</th>${O.map(o=>`<th class="${ATT.can_edit?"ed":""}" data-out="${o.id}">${o.label?`<span class="lb">${esc(o.label)}</span> `:""}${d2(o.date)}</th>`).join("")}<th class="k">7a</th><th class="k">Tot</th></tr>`;
+  const rows=M.map(m=>{const r=red(m); return `<tr><td class="nm">${esc(m.name)}${m.id===ATT.me?" ·":""}</td>${O.map((o,i)=>{const k=o.marks[m.id]; return k?.s==="asistio"?`<td class="a">1</td>`:k?.s==="no_show"?`<td class="ns">NS</td>`:`<td class="${r[i]?"st":""}"></td>`;}).join("")}<td class="${m.ok7a?"ok":"ko"}">${m.ok7a?"✓":"✗"}</td><td>${m.asist}</td></tr>`;}).join("");
+  const gst=`<tr><td class="nm" style="font-weight:500">Invitados</td>${O.map(o=>`<td>${o.guests||""}</td>`).join("")}<td></td><td>${O.reduce((a,o)=>a+o.guests,0)||""}</td></tr>`;
+  const tot=`<tr><td class="nm" style="font-weight:500">Socios</td>${O.map(o=>`<td>${Object.values(o.marks).filter(k=>k.s==="asistio").length}</td>`).join("")}<td></td><td></td></tr>`;
+  const fails=M.filter(m=>!m.ok7a), ns=[];
+  O.forEach(o=>Object.entries(o.marks).forEach(([mid,k])=>{ if(k.s==="no_show"){ const mm=ATT.members.find(x=>x.id===mid); ns.push({o,mid,k,name:mm?mm.name:"?"}); } }));
+  const cnt={}; ns.forEach(x=>cnt[x.mid]=(cnt[x.mid]||0)+1);
+  let h=`<div class="card"><div class="h">${ATT.liga==="sabado"?"Liga Sabatina":"Liga Dominical"} <small>${O.length} salidas · ${ATT.can_edit?"toca una fecha para editar":seasonLabel(ATT.season)}</small></div>
+    <div class="grid"><table class="att" id="attTable">${head}${rows}${tot}${gst}</table></div>
+    <div class="note" style="margin-top:8px">1 = asistió · NS = No Call, No Show · rojo = 6 o más salidas seguidas sin jugar (incumple 7a).</div></div>`;
+  h+=`<div class="card"><div class="h">Regla 7a <small>${fails.length?fails.length+" la incumplen":"todos cumplen"}</small></div>${fails.length?fails.map(m=>`<div class="trow"><span class="nm2">${esc(m.name)}</span><span class="st2 late">${m.max_streak} SALIDAS SIN JUGAR</span></div>`).join(""):`<div class="note">Nadie lleva 6 salidas seguidas sin jugar.</div>`}</div>`;
+  h+=`<div class="card"><div class="h">No Call, No Show <small>${ns.length} en la temporada</small></div>${ns.length?ns.map(x=>`<div class="trow"><span class="nm2">${esc(x.name)}<div class="note">${esc(d2(x.o.date))}${x.o.label?" · "+esc(x.o.label):""} · ${nsLabel(x.k.n)}</div></span>
+      <span class="st2 ${x.k.paid?"ok":"late"}">${nsAmt(x.k)} ${x.k.paid?"PAGADO":"PENDIENTE"}</span>${ATT.can_edit?`<button class="btn sm ${x.k.paid?"ghost":""}" data-pen="${x.o.id}" data-mid="${x.mid}" data-on="${x.k.paid?0:1}">${x.k.paid?"Desmarcar":"Pagó"}</button>`:""}</div>`).join(""):`<div class="note">Sin no-shows esta temporada.</div>`}
+      <div class="note" style="margin-top:8px">1ª falta: botella de tequila en el hoyo 19 · reincidencia: botella + ${money(ATT.reinc)} al fondo · 3ª falta: descalificado de la temporada. Si no paga, no se le agenda.</div></div>`;
+  $("#attBody").innerHTML=h;
+}
+function outFormHTML(o){
+  const liga=$("#attLiga").value, fees=ATT.fees;
+  o=o||{date:new Date().toISOString().slice(0,10),tipo:"regular",label:"",fee:fees.regular,guests:0,notes:"",marks:{}};
+  OUTF={id:o.id||null,marks:Object.fromEntries(Object.entries(o.marks||{}).map(([k,v])=>[k,v.s]))};
+  const lg=m=>m.liga===liga||m.liga==="ambas"; const mem=MEMBERS.filter(m=>m.active||OUTF.marks[m.id]).sort((a,b)=>(lg(b)-lg(a))||a.name.localeCompare(b.name));
+  return `<div class="h">${o.id?"Editar salida":"Registrar salida"} <small>${liga==="sabado"?"Sabatina":"Dominical"}</small></div>
+    <div class="row2"><div><label class="f">Fecha</label><input class="t" id="oDate" type="date" value="${esc(o.date)}"></div>
+    <div><label class="f">Tipo</label><select class="t" id="oTipo">${Object.entries(TIPOS).map(([k,l])=>`<option value="${k}" ${o.tipo===k?"selected":""}>${l}</option>`).join("")}</select></div></div>
+    <div class="row3"><div><label class="f">Etiqueta</label><input class="t" id="oLabel" maxlength="6" value="${esc(o.label||"")}" placeholder="TP"></div>
+    <div><label class="f">Inscripción ($)</label><input class="t" id="oFee" type="number" value="${esc(o.fee)}"></div>
+    <div><label class="f">Invitados</label><input class="t" id="oGuests" type="number" value="${esc(o.guests)}"></div></div>
+    <div class="mt" style="margin-top:12px">Socios <span id="oCount"></span></div>
+    <div id="oMarks">${mem.map(m=>{const v=OUTF.marks[m.id]||""; return `<div class="mk2"><span>${esc(m.name)}</span><div class="seg" data-om="${m.id}"><button class="x ${!v?"on":""}" data-v="">—</button><button class="a ${v==="asistio"?"on":""}" data-v="asistio">Asistió</button><button class="n ${v==="no_show"?"on":""}" data-v="no_show">No-show</button></div></div>`;}).join("")}</div>
+    <button class="btn gold w" id="oSave" style="margin-top:14px">Guardar salida</button>
+    ${o.id?`<button class="btn w" id="oMail" style="margin-top:8px">${o.mailed_at?"Reenviar":"Enviar"} resumen por correo a todos</button><button class="btn danger w" id="oDel" style="margin-top:8px">Borrar salida</button>`:""}
+    <button class="btn ghost w" id="oCancel" style="margin-top:8px">Cerrar</button>`;
+}
+function oCount(){ const a=Object.values(OUTF.marks).filter(v=>v==="asistio").length, n=Object.values(OUTF.marks).filter(v=>v==="no_show").length; $("#oCount").textContent=`· ${a} asistieron${n?" · "+n+" no-show":""}`; }
+$("#newOutBtn").onclick=()=>{ $("#outForm").innerHTML=outFormHTML(null); $("#outForm").classList.remove("hide"); oCount(); window.scrollTo(0,$("#outForm").offsetTop-120); };
+document.addEventListener("change",e=>{ if(e.target.id==="oTipo"&&ATT){ $("#oFee").value=ATT.fees[e.target.value]??0; } });
+document.addEventListener("click",async e=>{
+  const th=e.target.closest("th[data-out]"); if(th&&ATT?.can_edit){ const o=ATT.outings.find(x=>x.id===th.dataset.out); $("#outForm").innerHTML=outFormHTML(o); $("#outForm").classList.remove("hide"); oCount(); window.scrollTo(0,$("#outForm").offsetTop-120); return; }
+  const sb=e.target.closest(".seg[data-om] button"); if(sb){ const seg=sb.parentElement; seg.querySelectorAll("button").forEach(b=>b.classList.toggle("on",b===sb)); if(sb.dataset.v) OUTF.marks[seg.dataset.om]=sb.dataset.v; else delete OUTF.marks[seg.dataset.om]; oCount(); return; }
+  const t=e.target;
+  if(t.id==="oCancel"){ $("#outForm").classList.add("hide"); return; }
+  if(t.id==="oSave"){ t.disabled=true; const d={id:OUTF.id,liga:$("#attLiga").value,date:$("#oDate").value,tipo:$("#oTipo").value,label:$("#oLabel").value,fee:Number($("#oFee").value||0),guests:Number($("#oGuests").value||0),
+      marks:Object.entries(OUTF.marks).map(([member_id,status])=>({member_id,status}))};
+    try{ ATT=await rpc("a_admin_save_outing",{p_token:TOKEN,p_data:d}); toast("Salida guardada ✓"); $("#attSeason").innerHTML=seasonOpts(ATT.season,ATT.seasons); renderAtt();
+      const o=ATT.outings.find(x=>x.date===d.date); $("#outForm").innerHTML=outFormHTML(o); oCount(); }
+    catch(err){ toast(err.message); t.disabled=false; } return; }
+  if(t.id==="oMail"){ if(!confirm("¿Mandar el resumen de esta salida y de la temporada a todos los socios?")) return; t.disabled=true;
+    try{ ATT=await rpc("a_admin_send_summary",{p_token:TOKEN,p_outing:OUTF.id}); toast("Resumen enviado ✓"); renderAtt(); t.textContent="Reenviar resumen por correo a todos"; }catch(err){ toast(err.message);} t.disabled=false; return; }
+  if(t.id==="oDel"){ if(!confirm("¿Borrar esta salida?")) return; try{ ATT=await rpc("a_admin_delete_outing",{p_token:TOKEN,p_id:OUTF.id}); toast("Salida borrada"); $("#outForm").classList.add("hide"); renderAtt(); }catch(err){ toast(err.message);} return; }
+  if(t.dataset.pen){ try{ ATT=await rpc("a_admin_penalty",{p_token:TOKEN,p_outing:t.dataset.pen,p_member:t.dataset.mid,p_paid:t.dataset.on==="1"}); toast(t.dataset.on==="1"?"Penalty pagado ✓":"Marcado como pendiente"); renderAtt(); if(VIEW==="treas") loadTreas(); }catch(err){ toast(err.message);} return; }
+});
+
+/* ===== tesorería ===== */
+let TR=null;
+async function loadTreas(){
+  const season=$("#trSeason").value||seasonOf();
+  try{ TR=await rpc("t_board",{p_token:TOKEN,p_season:season}); }catch(e){ toast(e.message); return; }
+  const [y,hh]=season.split("-"); const prev=hh==="1"?`${y-1}-2`:`${y}-1`, next=hh==="1"?`${y}-2`:`${+y+1}-1`;
+  $("#trSeason").innerHTML=seasonOpts(season,[prev,next,season]);
+  renderTreas();
+}
+$("#trSeason").addEventListener("change",loadTreas);
+function renderTreas(){
+  const c=TR.can_edit, late=TR.today>TR.deadline, dl=new Date(TR.deadline+"T12:00:00").toLocaleDateString("es-MX",{day:"numeric",month:"long"});
+  const dd=d=>new Date(d+"T12:00:00").toLocaleDateString("es-MX",{day:"numeric",month:"short"});
+  let h=`<div class="card"><div class="h">Resumen <small>${seasonLabel(TR.season)}</small></div>
+    <div class="stats"><div><b>${TR.dues_paid}/${TR.n_active}</b><span>INSCRIPCIONES</span></div><div><b>${money(TR.noshow.saldo)}</b><span>FONDO NO-SHOW</span></div><div><b>${money(TR.hio.saldo)}</b><span>FONDO HOLE-IN-ONE</span></div></div>
+    <ul class="rl"><li><i>Cuota</i><span>${money(TR.settings.dues_fee)} por semestre · fecha límite ${dl}${late?" (vencida)":""}.</span></li>
+    <li><i>Cobrado</i><span>${money(TR.dues_total)} en inscripciones de ${seasonLabel(TR.season)}.</span></li>
+    <li><i>No-show</i><span>${money(TR.noshow.cobrado)} cobrado · ${money(TR.noshow.pendiente)} pendiente · ${TR.noshow.bottles} botella${TR.noshow.bottles===1?"":"s"} 🍾 por cobrar${TR.noshow.movimientos?` · ${money(TR.noshow.movimientos)} en movimientos`:""}.</span></li></ul></div>`;
+  h+=`<div class="card"><div class="h">Inscripción semestral <small>${c?"toca para registrar pago":"tu estatus"}</small></div>${TR.dues.map(d=>`<div class="trow"><span class="nm2">${esc(d.name)}${d.member_id===TR.me?' <span class="me">TÚ</span>':""}</span>
+      <span class="st2 ${d.paid?"ok":late?"late":"pend"}">${d.paid?`PAGADO ${dd(d.paid_at)}`:late?"VENCIDO":"PENDIENTE"}</span>${c?`<button class="btn sm ${d.paid?"ghost":""}" data-due="${d.member_id}" data-on="${d.paid?0:1}">${d.paid?"Quitar":"Pagó"}</button>`:""}</div>`).join("")||`<div class="note">Sin socios activos.</div>`}</div>`;
+  const it=TR.noshow.items;
+  h+=`<div class="card"><div class="h">Fondo No-Show <small>${money(TR.noshow.saldo)} en caja</small></div>${it.length?it.map(x=>`<div class="trow"><span class="nm2">${esc(x.name)}<div class="note">${dd(x.date)}${x.label?" · "+esc(x.label):""} · ${x.liga==="sabado"?"Sabatina":"Dominical"} · ${x.nth}ª falta</div></span><span class="st2 ${x.paid?"ok":"late"}">${nsAmt({p:x.penalty})} ${x.paid?"PAGADO":"PENDIENTE"}</span>${c?`<button class="btn sm ${x.paid?"ghost":""}" data-pen="${x.outing_id}" data-mid="${x.member_id}" data-on="${x.paid?0:1}">${x.paid?"Desmarcar":"Pagó"}</button>`:""}</div>`).join(""):`<div class="note">${c?"No hay no-shows registrados.":"No tienes no-shows. 👌"}</div>`}
+    <div class="note" style="margin-top:8px">Se usa como premio en la Gran Finale a discreción del H. Presidente.</div></div>`;
+  const P=TR.hio.participants, inP=new Set(P.map(p=>p.member_id));
+  h+=`<div class="card"><div class="h">Seguro Hole-in-One <small>${TR.hio.year}</small></div>
+    <div class="stats" style="grid-template-columns:1fr 1fr"><div><b>${money(TR.hio.saldo)}</b><span>SALDO</span></div><div><b>${P.length}</b><span>PARTICIPANTES</span></div></div>
+    <div class="chips" style="margin-top:10px">${P.map(p=>`<span class="chip">${esc(p.name)}${c?` <b data-hio="${p.member_id}" data-on="0" style="cursor:pointer">✕</b>`:""}</span>`).join("")||`<span class="note">Sin participantes.</span>`}</div>
+    <div class="note" style="margin-top:8px">Aportación anual ${money(TR.settings.hio_fee)}.</div>
+    ${c?`<div class="row2" style="grid-template-columns:1fr auto;margin-top:10px"><select id="hioAdd" class="t">${TR.members.filter(m=>!inP.has(m.id)).map(m=>`<option value="${m.id}">${esc(m.name)}</option>`).join("")}</select><button class="btn" id="hioAddBtn">Sumar</button></div>`:""}</div>`;
+  if(c){
+    const fl={hio:"Hole-in-One",noshow:"No-Show",general:"General"};
+    h+=`<div class="card"><div class="h">Movimientos</div>
+      <div class="row2"><div><label class="f">Fondo</label><select class="t" id="mvFund"><option value="hio">Hole-in-One</option><option value="noshow">No-Show</option><option value="general">General</option></select></div><div><label class="f">Fecha</label><input class="t" id="mvDate" type="date" value="${TR.today}"></div></div>
+      <label class="f">Concepto</label><input class="t" id="mvConcept" placeholder="Ej. Aportación anual JR / Premio Gran Finale">
+      <div class="row2"><div><label class="f">Monto (+ entra / − sale)</label><input class="t" id="mvAmount" type="number" placeholder="500"></div><div><label class="f">Socio (opcional)</label><select class="t" id="mvMember"><option value="">—</option>${TR.members.map(m=>`<option value="${m.id}">${esc(m.name)}</option>`).join("")}</select></div></div>
+      <button class="btn w" id="mvSave" style="margin-top:10px">Registrar movimiento</button>
+      <div style="margin-top:12px">${TR.moves.map(m=>`<div class="trow"><span class="nm2">${esc(m.concept)}<div class="note">${dd(m.date)} · ${fl[m.fund]}${m.name?" · "+esc(m.name):""}</div></span><b style="color:${m.amount<0?"var(--claret)":"var(--ok)"}">${m.amount<0?"−":"+"}${money(Math.abs(m.amount))}</b><button class="btn sm danger" data-mvdel="${m.id}">✕</button></div>`).join("")||`<div class="note">Sin movimientos.</div>`}</div></div>
+    <div class="card"><div class="h">Ajustes de cuotas</div>
+      <div class="row2"><div><label class="f">Inscripción semestral</label><input class="t" id="sDues" type="number" value="${TR.settings.dues_fee}"></div><div><label class="f">Hole-in-One anual</label><input class="t" id="sHio" type="number" value="${TR.settings.hio_fee}"></div></div>
+      <div class="row3"><div><label class="f">Championship</label><input class="t" id="sNC" type="number" value="${TR.settings.fee_championship}"></div><div><label class="f">Gran Finale</label><input class="t" id="sNG" type="number" value="${TR.settings.fee_gran_finale}"></div><div><label class="f">Reincidencia NS</label><input class="t" id="sNR" type="number" value="${TR.settings.noshow_reinc}"></div></div>
+      <button class="btn ghost w" id="sSave" style="margin-top:10px">Guardar ajustes</button></div>`;
+  }
+  $("#trBody").innerHTML=h;
+}
+document.addEventListener("click",async e=>{
+  if(VIEW!=="treas"||!TR) return; const t=e.target, S=TR.season;
+  try{
+    if(t.dataset.due){ TR=await rpc("t_admin_due",{p_token:TOKEN,p_season:S,p_member:t.dataset.due,p_paid:t.dataset.on==="1",p_amount:null}); toast(t.dataset.on==="1"?"Inscripción registrada ✓":"Pago quitado"); renderTreas(); }
+    else if(t.dataset.hio){ TR=await rpc("t_admin_hio",{p_token:TOKEN,p_season:S,p_member:t.dataset.hio,p_on:false}); renderTreas(); }
+    else if(t.id==="hioAddBtn"){ TR=await rpc("t_admin_hio",{p_token:TOKEN,p_season:S,p_member:$("#hioAdd").value,p_on:true}); toast("Participante agregado ✓"); renderTreas(); }
+    else if(t.id==="mvSave"){ TR=await rpc("t_admin_move",{p_token:TOKEN,p_season:S,p_data:{fund:$("#mvFund").value,date:$("#mvDate").value,concept:$("#mvConcept").value,amount:Number($("#mvAmount").value||0),member_id:$("#mvMember").value}}); toast("Movimiento registrado ✓"); renderTreas(); }
+    else if(t.dataset.mvdel){ if(!confirm("¿Borrar este movimiento?")) return; TR=await rpc("t_admin_move",{p_token:TOKEN,p_season:S,p_data:{delete:t.dataset.mvdel}}); renderTreas(); }
+    else if(t.id==="sSave"){ TR=await rpc("t_admin_settings",{p_token:TOKEN,p_season:S,p_data:{dues_fee:+$("#sDues").value,hio_fee:+$("#sHio").value,noshow_reinc:+$("#sNR").value,fee_championship:+$("#sNC").value,fee_gran_finale:+$("#sNG").value}}); toast("Ajustes guardados ✓"); renderTreas(); }
+  }catch(err){ toast(err.message); }
+});
 
 /* ===== boot ===== */
 (async()=>{
