@@ -215,6 +215,10 @@ table.att td.ok{color:var(--ok);font-weight:700}table.att td.ko{color:var(--clar
 .trow .nm2{flex:1}
 .st2{font:700 10px Cinzel,serif;letter-spacing:.06em;padding:3px 6px;border-radius:2px;white-space:nowrap}
 .st2.ok{background:rgba(47,107,69,.18);color:var(--ok)}.st2.pend{background:#efe0b5;color:#7a5c1e}.st2.late{background:rgba(143,45,42,.15);color:var(--claret)}
+.calr{display:grid;grid-template-columns:54px 1fr auto;gap:8px;align-items:center;padding:8px 0;border-top:1px solid #dccb9e}
+.calr:first-child{border-top:0}.calr.past{opacity:.55}.calr.next{background:rgba(217,185,106,.22);margin:0 -8px;padding:8px}
+.calr .d{font:700 11px Cinzel,serif;color:var(--brass);text-align:center;line-height:1.15}.calr .d b{display:block;font:700 22px "Cormorant Garamond",serif;color:var(--green)}
+.calr .n{font:700 15px Cinzel,serif;color:var(--green)}.calr .s{font:italic 500 15px "Cormorant Garamond",serif;color:var(--ink2)}
 .code{font:700 30px "Cormorant Garamond",serif;letter-spacing:.5em;text-align:center}
 </style>
 </head>
@@ -254,12 +258,22 @@ table.att td.ok{color:var(--ok);font-weight:700}table.att td.ko{color:var(--clar
       </div>
       <div id="lgMsg" class="note" style="margin-top:10px"></div>
     </div>
+    <div class="card hide" id="crqApprove" style="text-align:center"><div class="h" style="justify-content:center" id="crqTitle">Solicitud de acceso</div><div id="crqMsg" style="margin-bottom:12px"></div><button class="btn gold w" id="crqBtn">Confirmar</button></div>
+    <div class="card" id="reqAccess">
+      <div class="h">¿Eres socio y no tienes acceso?</div>
+      <div class="note" style="margin-bottom:6px">Deja tu nombre y correo. El Presidente o Paco lo aprueban y te llega un correo para entrar.</div>
+      <label class="f" for="raName">Nombre (como te conocen en el grupo)</label><input id="raName" class="t" maxlength="40">
+      <label class="f" for="raEmail">Correo</label><input id="raEmail" class="t" type="email" inputmode="email">
+      <button class="btn ghost w" id="raBtn" style="margin-top:12px">Solicitar acceso</button>
+      <div id="raMsg" class="note" style="margin-top:10px"></div>
+    </div>
   </section>
 
   <!-- HOME -->
   <section class="view" id="v-home">
     <div class="hero"><img class="logo" alt="Hermanos McGregor"><h1 id="hiName">Bienvenido</h1><div class="sub" id="hiRole"></div></div>
     <div id="homeNext"></div>
+    <div class="card" id="calCard"><div class="h">Calendario Championships <small id="calYear"></small></div><div id="calList"><div class="note">Cargando…</div></div><div id="calAdmin"></div></div>
     <div class="tiles">
       <button class="tile" data-nav="bets"><i>🎲</i><b>Apuestas</b><span>Quinielas y torneos</span></button>
       <button class="tile" data-nav="att"><i>📋</i><b>Asistencias</b><span>Salidas y No-Show</span></button>
@@ -268,6 +282,10 @@ table.att td.ok{color:var(--ok);font-weight:700}table.att td.ko{color:var(--clar
       <button class="tile" data-nav="members"><i>🏌️</i><b>Miembros</b><span>Socios y roles</span></button>
       <button class="tile" id="tileLogout"><i>🚪</i><b>Salir</b><span>Cerrar sesión</span></button>
     </div>
+    <div class="card"><div class="h">Mi perfil <small id="pfMail"></small></div>
+      <div class="row2"><div><label class="f" for="pfHcp">HCP (18 Birdies)</label><input id="pfHcp" class="t" inputmode="decimal"></div>
+      <div><label class="f" for="pfLiga">Liga</label><select id="pfLiga" class="t"><option value="">—</option><option value="sabado">Sabatina</option><option value="domingo">Dominical</option><option value="ambas">Ambas</option></select></div></div>
+      <button class="btn ghost w" id="pfSave" style="margin-top:10px">Guardar mi perfil</button></div>
   </section>
 
   <!-- BETS LIST -->
@@ -318,6 +336,7 @@ table.att td.ok{color:var(--ok);font-weight:700}table.att td.ko{color:var(--clar
   <section class="view" id="v-members">
     <div class="plaque"><div class="pt">Miembros</div><div class="pn">Registro de Socios</div><div class="ps" id="memCount"></div></div>
     <button class="btn gold w hide" id="newMemBtn" style="margin-bottom:14px">+ Agregar miembro</button>
+    <div class="card hide" id="reqCard"><div class="h">Solicitudes de acceso <small id="reqN"></small></div><div id="reqList"></div></div>
     <div class="card hide" id="memForm"></div>
     <div class="card"><div class="h">Socios</div><div id="memList"></div></div>
   </section>
@@ -378,7 +397,7 @@ $("#lgSend").onclick=async()=>{
   const em=$("#lgEmail").value.trim(); if(!/^\S+@\S+\.\S+$/.test(em)) return toast("Correo no válido");
   $("#lgSend").disabled=true; $("#lgMsg").textContent="";
   try{ const r=await rpc("c_request_code",{p_email:em});
-    if(r==="no_registrado"){ $("#lgMsg").innerHTML="Ese correo no está registrado como socio. Pídele al Presidente o a Paco que te den de alta."; }
+    if(r==="no_registrado"){ $("#lgMsg").innerHTML="Ese correo no está registrado. Solicita acceso abajo 👇"; $("#raEmail").value=em; $("#raName").focus(); }
     else { $("#lgSent").innerHTML=`Te mandamos un código a <b>${esc(em)}</b>. Revisa también Spam o Promociones.`; $("#lgStep1").classList.add("hide"); $("#lgStep2").classList.remove("hide"); $("#lgCode").focus(); }
   }catch(e){ $("#lgMsg").textContent=e.message; } finally{ $("#lgSend").disabled=false; }
 };
@@ -406,7 +425,7 @@ function afterLogin(){
 
 /* ===== home ===== */
 async function renderHome(){
-  $("#hiName").textContent="Bienvenido, "+ME.name;
+  $("#hiName").textContent="Bienvenido, "+ME.name; fillProfile(); loadCal();
   $("#hiRole").textContent=[ROLES[ME.role], ME.fundador?"Fundador":null, ME.superadmin?"Administrador":ME.bet_admin?"Admin de apuestas":null].filter(Boolean).join(" · ");
   try{ EVENTS=await rpc("b_events_list",{p_token:TOKEN}); }catch{ EVENTS=[]; }
   const nx=EVENTS.filter(e=>!e.closed).sort((a,b)=>new Date(a.lock_at)-new Date(b.lock_at))[0];
@@ -703,6 +722,7 @@ $("#newEvBtn").onclick=()=>{ $("#evNext").closest(".card").insertAdjacentHTML("b
 /* ===== members ===== */
 async function loadMembers(){
   try{ MEMBERS=await rpc("c_members_list",{p_token:TOKEN}); }catch(e){ toast(e.message); return; }
+  loadRequests();
   const act=MEMBERS.filter(m=>m.active);
   $("#memCount").textContent=`${act.length} socios activos`;
   $("#newMemBtn").classList.toggle("hide",!isAdminMembers());
@@ -921,9 +941,57 @@ document.addEventListener("click",async e=>{
   }catch(err){ toast(err.message); }
 });
 
+
+/* ===== calendario, perfil, solicitudes ===== */
+let CAL=null; const MESES=["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+async function loadCal(y){ try{ CAL=await rpc("c_calendar_get",{p_token:TOKEN,p_year:y||new Date().getFullYear()}); renderCal(); }catch(e){ $("#calList").innerHTML=`<div class="note">${esc(e.message)}</div>`; } }
+function renderCal(){
+  $("#calYear").textContent=CAL.year;
+  const today=CAL.today, nx=CAL.items.find(c=>c.date>=today);
+  $("#calList").innerHTML=CAL.items.length?CAL.items.map(c=>`<div class="calr ${c.date<today?"past":""} ${nx&&c.id===nx.id?"next":""}" ${c.event_id?`data-ev="${c.event_id}" style="cursor:pointer"`:""}>
+      <div class="d">${MESES[c.month-1].toUpperCase()}<b>${esc(c.days)}</b></div>
+      <div><div class="n">${esc(c.name)}${c.tipo==="gran_finale"?" 🏆":""}</div><div class="s">En honor a ${esc(c.honorees||"—")}</div></div>
+      <div>${nx&&c.id===nx.id?'<span class="pill open">PRÓXIMO</span>':c.event_id?'<span class="pill fin">QUINIELA</span>':""}${CAL.can_edit?` <button class="btn sm ghost" data-caled="${c.id}">✎</button>`:""}</div></div>`).join(""):`<div class="note">Sin torneos en ${CAL.year}.</div>`;
+  $("#calAdmin").innerHTML=CAL.can_edit?`<button class="btn ghost sm" id="calAdd" style="margin-top:10px">+ Agregar torneo</button><div id="calForm"></div>`:"";
+}
+function calForm(c){ c=c||{date:"",days:"",name:"",honorees:"",tipo:"championship"};
+  return `<div style="margin-top:10px;border-top:1px solid #d4c08f;padding-top:8px"><div class="row2"><div><label class="f">Fecha</label><input class="t" id="cfDate" type="date" value="${esc(c.date)}"></div><div><label class="f">Días (ej. 14, 15)</label><input class="t" id="cfDays" value="${esc(c.days)}"></div></div>
+   <div class="row2"><div><label class="f">Torneo</label><input class="t" id="cfName" value="${esc(c.name)}"></div><div><label class="f">Tipo</label><select class="t" id="cfTipo"><option value="championship" ${c.tipo==="championship"?"selected":""}>Championship</option><option value="gran_finale" ${c.tipo==="gran_finale"?"selected":""}>Gran Finale</option></select></div></div>
+   <label class="f">En honor a</label><input class="t" id="cfHon" value="${esc(c.honorees||"")}">
+   <div class="row2" style="margin-top:10px"><button class="btn" id="cfSave" data-id="${c.id||""}">Guardar</button>${c.id?`<button class="btn danger" id="cfDel" data-id="${c.id}">Borrar</button>`:`<button class="btn ghost" id="cfCancel">Cancelar</button>`}</div></div>`; }
+document.addEventListener("click",async e=>{ const t=e.target;
+  if(t.id==="calAdd"){ $("#calForm").innerHTML=calForm(null); return; }
+  if(t.dataset.caled){ e.stopPropagation(); $("#calForm").innerHTML=calForm(CAL.items.find(c=>c.id===t.dataset.caled)); $("#calForm").scrollIntoView({block:"center"}); return; }
+  if(t.id==="cfCancel"){ $("#calForm").innerHTML=""; return; }
+  if(t.id==="cfSave"||t.id==="cfDel"){ try{ CAL=await rpc("c_admin_calendar",{p_token:TOKEN,p_data:t.id==="cfDel"?{delete:t.dataset.id}:{id:t.dataset.id||null,date:$("#cfDate").value,days:$("#cfDays").value,name:$("#cfName").value,honorees:$("#cfHon").value,tipo:$("#cfTipo").value}}); toast(t.id==="cfDel"?"Torneo borrado":"Calendario guardado ✓"); renderCal(); }catch(err){ toast(err.message);} return; }
+}, true);
+function fillProfile(){ $("#pfHcp").value=ME.hcp??""; $("#pfLiga").value=ME.liga||""; $("#pfMail").textContent=ME.email||""; }
+$("#pfSave").onclick=async()=>{ try{ ME=await rpc("c_update_me",{p_token:TOKEN,p_data:{hcp:$("#pfHcp").value.trim(),liga:$("#pfLiga").value}}); toast("Perfil guardado ✓"); fillProfile(); }catch(e){ toast(e.message); } };
+$("#raBtn").onclick=async()=>{ const n=$("#raName").value.trim(), em=$("#raEmail").value.trim(); if(!n) return toast("Escribe tu nombre"); if(!/^\S+@\S+\.\S+$/.test(em)) return toast("Correo no válido");
+  $("#raBtn").disabled=true; try{ const r=await rpc("c_request_access",{p_name:n,p_email:em});
+    $("#raMsg").innerHTML = r==="ya_registrado"?"Ese correo ya tiene acceso: pide tu código arriba.": r==="ya_pendiente"?"Ya tienes una solicitud pendiente. Te avisamos por correo al aprobarla.":"✅ Solicitud enviada. Te llega un correo cuando la aprueben."; }
+  catch(e){ $("#raMsg").textContent=e.message; } finally{ $("#raBtn").disabled=false; } };
+async function loadRequests(){ if(!isAdminMembers()){ $("#reqCard").classList.add("hide"); return; }
+  let R=[]; try{ R=await rpc("c_admin_requests",{p_token:TOKEN}); }catch{}
+  $("#reqCard").classList.toggle("hide",!R.length); $("#reqN").textContent=R.length+" pendiente"+(R.length===1?"":"s");
+  const noMail=MEMBERS.filter(m=>!m.email);
+  $("#reqList").innerHTML=R.map(r=>`<div class="ent"><span class="nm2">${esc(r.name)}<div class="note">${esc(r.email)}</div></span>
+    <select class="t" data-reqm="${r.id}" style="max-width:150px;padding:6px"><option value="">Socio nuevo</option>${noMail.map(m=>`<option value="${m.id}" ${m.name.toLowerCase()===r.name.toLowerCase()?"selected":""}>Es ${esc(m.name)}</option>`).join("")}</select>
+    <button class="btn sm" data-reqok="${r.id}">Aprobar</button><button class="btn sm danger" data-reqno="${r.id}">✕</button></div>`).join(""); }
+document.addEventListener("click",async e=>{ const t=e.target; const id=t.dataset.reqok||t.dataset.reqno; if(!id) return;
+  try{ await rpc("c_admin_resolve_request",{p_token:TOKEN,p_id:id,p_member:t.dataset.reqok?(document.querySelector(`[data-reqm="${id}"]`).value||null):null,p_approve:!!t.dataset.reqok});
+    toast(t.dataset.reqok?"Aprobado · le llega correo de bienvenida":"Solicitud rechazada"); loadMembers(); }catch(err){ toast(err.message); } });
+async function handleCreq(){ const q=new URLSearchParams(location.search), id=q.get("creq"), k=q.get("k"); if(!id||!k) return false; const ok=q.get("act")!=="no";
+  show("login"); $("#crqApprove").classList.remove("hide"); $("#crqTitle").textContent=ok?"Aprobar acceso":"Rechazar acceso"; $("#crqMsg").textContent=ok?"Confirma para darle acceso al club.":"Confirma para rechazar la solicitud.";
+  $("#crqBtn").onclick=async()=>{ $("#crqBtn").disabled=true; try{ const r=await rpc("c_resolve_request_link",{p_id:id,p_key:k,p_approve:ok});
+      $("#crqMsg").innerHTML=r.already?`La solicitud de <b>${esc(r.name)}</b> ya estaba ${esc(r.status)}.`:r.status==="aprobada"?`✅ <b>${esc(r.name)}</b> ya tiene acceso. Le llegó correo de bienvenida.`:`Solicitud de <b>${esc(r.name)}</b> rechazada.`;
+      $("#crqBtn").classList.add("hide"); history.replaceState(null,"",location.pathname); }catch(e){ $("#crqMsg").textContent=e.message; $("#crqBtn").disabled=false; } };
+  return true; }
+
 /* ===== boot ===== */
 (async()=>{
   document.querySelectorAll("img.logo").forEach(i=>i.src=STORE+"logo.webp"); $("#barLogo").src=STORE+"icon180.png";
+  if(await handleCreq()) return;
   if(TOKEN){ try{ ME=await rpc("c_me",{p_token:TOKEN}); }catch{ ME=null; TOKEN=null; store.set("mcg_token",null); } }
   if(ME){ try{ MEMBERS=await rpc("c_members_list",{p_token:TOKEN}); }catch{} afterLogin(); } else show("login");
   setInterval(async()=>{ if(document.hidden||!ME||dirty) return; if(VIEW==="event"&&ETAB!=="admin"){ try{ const y=window.scrollY; EV=await rpc("b_event_get",{p_token:TOKEN,p_event:EV.id}); renderEvent(); window.scrollTo(0,y);}catch{} } },30000);
