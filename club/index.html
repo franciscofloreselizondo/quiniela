@@ -231,6 +231,16 @@ table.att td.ok{color:var(--ok);font-weight:700}table.att td.ko{color:var(--bad)
 .kcode p{margin:4px 0;font-size:14px;color:var(--cream)}.kcode p b{color:var(--gold);margin-right:4px}
 .vbar{display:flex;height:8px;border-radius:5px;overflow:hidden;background:rgba(255,255,255,.08);margin:6px 0}
 .vbar .s{background:var(--ok)}.vbar .n{background:var(--red2)}
+.iconbtn{border:1px solid var(--gold);background:transparent;color:var(--cream);border-radius:999px;width:34px;height:30px;display:grid;place-items:center;padding:0}
+.who{display:flex;align-items:center;gap:6px;padding:3px 11px 3px 3px}
+.who img,.who .ini{width:24px;height:24px;border-radius:50%;object-fit:cover;background:var(--gold);color:var(--g);display:grid;place-items:center;font-size:11px;font-weight:700}
+.pfhead{text-align:center;padding:6px 0 14px}
+.avbig{width:110px;height:110px;border-radius:50%;margin:0 auto 10px;border:2px solid var(--gold);overflow:hidden;background:var(--g3);display:grid;place-items:center;font:700 40px "Cormorant Garamond",serif;color:var(--gold)}
+.avbig img{width:100%;height:100%;object-fit:cover}
+.pfname{font:700 28px "Cormorant Garamond",serif;margin-top:10px}
+.mav{width:30px;height:30px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:8px;border:1px solid var(--line)}
+nav.main{flex-wrap:wrap;justify-content:center;overflow:visible}
+nav.main button{flex:0 0 auto;padding:8px 9px;font-size:12.5px}
 .code{font:700 30px "Cormorant Garamond",serif;letter-spacing:.5em;text-align:center}
 </style>
 </head>
@@ -239,7 +249,8 @@ table.att td.ok{color:var(--ok);font-weight:700}table.att td.ko{color:var(--bad)
   <div class="bar">
     <img id="barLogo" alt="">
     <div class="t"><b>Hermanos McGregor</b><small>GOLF CLUB</small></div>
-    <button class="who hide" id="whoBtn"></button>
+    <button class="who hide" id="whoBtn" title="Mi perfil"></button>
+    <button class="iconbtn hide" id="logoutBtn" title="Salir" aria-label="Salir"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h-7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7"/><path d="M10 12h10"/><path d="M17 8l4 4-4 4"/></svg></button>
   </div>
   <nav class="main hide" id="mainNav">
     <button data-nav="home">Casa Club</button>
@@ -297,14 +308,22 @@ table.att td.ok{color:var(--ok);font-weight:700}table.att td.ko{color:var(--bad)
       <button class="tile" data-nav="code"><i>📖</i><b>El Código</b><span>Bro Code y votaciones</span></button>
       <button class="tile" data-nav="hist"><i>📜</i><b>Históricos</b><span>Tendencias y tu récord</span></button>
       <button class="tile" data-nav="members"><i>🏌️</i><b>Miembros</b><span>Socios y roles</span></button>
-      <button class="tile" id="tileLogout"><i>🚪</i><b>Salir</b><span>Cerrar sesión</span></button>
     </div>
     <div id="homeNext"></div>
-    <div class="card"><div class="h">Mi perfil <small id="pfMail"></small></div>
+
+  </section>
+
+  <!-- PERFIL -->
+  <section class="view" id="v-profile">
+    <div class="pfhead"><div class="avbig" id="pfAv"></div><button class="btn ghost sm" id="pfPhoto">Cambiar foto o logo</button><input type="file" id="pfFile" accept="image/*" class="hide">
+      <div class="pfname" id="pfName"></div><div class="note" id="pfMail"></div><div id="pfTags" style="margin-top:6px"></div></div>
+    <div class="card"><div class="h">Mi perfil</div>
+      <div class="stats" style="grid-template-columns:1fr 1fr"><div><b id="pfHcp">—</b><span>HCP 18 BIRDIES</span></div><div><b id="pfLigaTxt">—</b><span>LIGA</span></div></div>
+      <div class="note" style="margin-top:8px;text-align:center">El HCP lo actualiza el admin con tu registro de 18 Birdies.</div>
       <label class="f" for="pfNick">Apodo</label><input id="pfNick" class="t" maxlength="30">
-      <div class="row2"><div><label class="f" for="pfHcp">HCP (18 Birdies)</label><input id="pfHcp" class="t" inputmode="decimal"></div>
-      <div><label class="f" for="pfLiga">Liga</label><select id="pfLiga" class="t"><option value="">—</option><option value="sabado">Sabatina</option><option value="domingo">Dominical</option><option value="ambas">Ambas</option></select></div></div>
-      <button class="btn ghost w" id="pfSave" style="margin-top:10px">Guardar mi perfil</button></div>
+      <label class="f" for="pfLiga">Liga</label><select id="pfLiga" class="t"><option value="">—</option><option value="sabado">Sabatina</option><option value="domingo">Dominical</option><option value="ambas">Ambas</option></select>
+      <button class="btn gold w" id="pfSave" style="margin-top:12px">Guardar</button></div>
+    <button class="btn danger w" id="pfLogout">Cerrar sesión</button>
   </section>
 
   <!-- CALENDARIO -->
@@ -419,7 +438,7 @@ function show(v){
   VIEW=v; document.querySelectorAll(".view").forEach(s=>s.classList.toggle("on",s.id==="v-"+v));
   const nv = v==="event"?"bets":v;
   document.querySelectorAll("nav.main button").forEach(b=>b.classList.toggle("on",b.dataset.nav===nv));
-  $("#mainNav").classList.toggle("hide",v==="login"); $("#whoBtn").classList.toggle("hide",v==="login"||!ME);
+  $("#mainNav").classList.toggle("hide",v==="login"); $("#whoBtn").classList.toggle("hide",v==="login"||!ME); $("#logoutBtn").classList.toggle("hide",v==="login"||!ME);
   $("#saveBar").classList.toggle("hide",!(v==="event"&&ETAB==="picks"&&target&&!picksDisabled()));
   window.scrollTo(0,0);
 }
@@ -429,6 +448,7 @@ function go(v){
   if(v==="hist") loadHist();
   if(v==="members") loadMembers();
   if(v==="att") loadAtt();
+  if(v==="profile") fillProfile();
   if(v==="cal") loadCal(+($("#calSel").value||2026));
   if(v==="treas") loadTreas();
   if(v==="honor") loadHonor();
@@ -459,13 +479,16 @@ $("#lgVerify").onclick=async()=>{
   }catch(e){ $("#lgMsg").textContent=e.message; $("#lgCode").value=""; } finally{ $("#lgVerify").disabled=false; }
 };
 function logout(silent){ if(TOKEN&&!silent) rpc("c_logout",{p_token:TOKEN}).catch(()=>{}); TOKEN=null; ME=null; store.set("mcg_token",null); $("#lgStep2").classList.add("hide"); $("#lgStep1").classList.remove("hide"); show("login"); if(silent) toast("Tu sesión expiró. Vuelve a entrar."); }
-$("#tileLogout").onclick=()=>logout(false);
-$("#whoBtn").onclick=()=>go("home");
+$("#logoutBtn").onclick=()=>{ if(confirm("¿Cerrar sesión?")) logout(false); };
+$("#whoBtn").onclick=()=>go("profile");
+const ini=n=>String(n||"?").trim().split(/\s+/).map(w=>w[0]).slice(0,2).join("").toUpperCase();
+function avatarHTML(m,cls){ return m&&m.avatar?`<img src="${m.avatar}" alt="" ${cls?`class="${cls}"`:""}>`:`<span class="ini ${cls||""}">${esc(ini(m&&(m.nickname||m.name)))}</span>`; }
+function renderWho(){ $("#whoBtn").innerHTML=avatarHTML(ME)+`<span>${esc(ME.nickname||ME.name)}</span>`; }
 function isAdminBets(){ return ME&&(ME.superadmin||ME.bet_admin); }
 function isAdminMembers(){ return ME&&(ME.superadmin||ME.role==="presidente"||ME.role==="secretario"); }
 function canDelMembers(){ return ME&&(ME.superadmin||ME.role==="presidente"||ME.board); }
 async function afterLogin(){
-  $("#whoBtn").textContent=ME.name;
+  renderWho();
   if(!MEMBERS.length){ try{ MEMBERS=await rpc("c_members_list",{p_token:TOKEN}); }catch{} }
   const m=location.hash.match(/e=([0-9a-f-]{36})/);
   if(m) openEvent(m[1]); else if(location.hash==='#asistencias') go('att'); else if(location.hash==='#tesoreria') go('treas'); else if(location.hash==='#codigo') go('code'); else if(location.hash==='#honor') go('honor'); else go("home");
@@ -473,7 +496,7 @@ async function afterLogin(){
 
 /* ===== home ===== */
 async function renderHome(){
-  $("#hiName").textContent="Bienvenido, "+(ME.nickname||ME.name); fillProfile();
+  $("#hiName").textContent="Bienvenido, "+(ME.nickname||ME.name);
   $("#hiRole").textContent=[ROLES[ME.role], ME.fundador?"Fundador":null, ME.superadmin?"Administrador":ME.bet_admin?"Admin de apuestas":null].filter(Boolean).join(" · ");
   try{ EVENTS=await rpc("b_events_list",{p_token:TOKEN}); }catch{ EVENTS=[]; }
   const nx=EVENTS.filter(e=>!e.closed).sort((a,b)=>new Date(a.lock_at)-new Date(b.lock_at))[0];
@@ -776,7 +799,7 @@ async function loadMembers(){
   $("#newMemBtn").classList.toggle("hide",!isAdminMembers());
   const rk=m=>m.role==="presidente"?1:m.role==="tesorero"?2:m.role==="secretario"?3:m.board?4:5;
   const L=[...MEMBERS].sort((x,y)=>rk(x)-rk(y)||x.name.localeCompare(y.name));
-  $("#memList").innerHTML=L.map(m=>`<div class="mem" ${(isAdminMembers()||canDelMembers())?`data-medit="${m.id}" style="cursor:pointer"`:""}><div><div class="n">${esc(m.name)}${m.nickname?` <span style="color:var(--gold2);font-weight:500">“${esc(m.nickname)}”</span>`:""}${m.id===ME.id?'<span class="me">TÚ</span>':""}</div>
+  $("#memList").innerHTML=L.map(m=>`<div class="mem" ${(isAdminMembers()||canDelMembers())?`data-medit="${m.id}" style="cursor:pointer"`:""}><div><div class="n">${m.avatar?`<img class="mav" src="${m.avatar}" alt="">`:""}${esc(m.name)}${m.nickname?` <span style="color:var(--gold2);font-weight:500">“${esc(m.nickname)}”</span>`:""}${m.id===ME.id?'<span class="me">TÚ</span>':""}</div>
     <div class="s">${!m.active?"inactivo":""}${isAdminMembers()&&m.email?(m.active?"":" · ")+esc(m.email):""}</div></div>
     <div style="text-align:right">${["presidente","tesorero","secretario"].includes(m.role)?`<span class="badge g">${ROLES[m.role].toUpperCase()}</span>`:""}${m.board?`<span class="badge">BOARD</span>`:""}</div></div>`).join("");
 }
@@ -808,7 +831,7 @@ document.addEventListener("click",async e=>{
     try{ MEMBERS=await rpc("c_admin_save_member",{p_token:TOKEN,p_data:d});
       if($("#mBet")&&id&&(($("#mBet").value==="true")!==!!prev?.bet_admin)) MEMBERS=await rpc("c_admin_set_bet_admin",{p_token:TOKEN,p_id:id,p_on:$("#mBet").value==="true"});
       toast("Socio guardado ✓"); $("#memForm").classList.add("hide"); loadMembers();
-      if(id===ME.id){ ME=await rpc("c_me",{p_token:TOKEN}); $("#whoBtn").textContent=ME.name; } }
+      if(id===ME.id){ ME=await rpc("c_me",{p_token:TOKEN}); renderWho(); } }
     catch(err){ toast(err.message); e.target.disabled=false; } }
 });
 
@@ -1021,8 +1044,17 @@ document.addEventListener("click",async e=>{ const t=e.target;
   if(t.id==="cfCancel"){ $("#calForm").innerHTML=""; return; }
   if(t.id==="cfSave"||t.id==="cfDel"){ try{ CAL=await rpc("c_admin_calendar",{p_token:TOKEN,p_data:t.id==="cfDel"?{delete:t.dataset.id}:{id:t.dataset.id||null,date:$("#cfDate").value,days:$("#cfDays").value,name:$("#cfName").value,honorees:$("#cfHon").value,tipo:$("#cfTipo").value}}); toast(t.id==="cfDel"?"Torneo borrado":"Calendario guardado ✓"); renderCal(); }catch(err){ toast(err.message);} return; }
 }, true);
-function fillProfile(){ $("#pfNick").value=ME.nickname||""; $("#pfHcp").value=ME.hcp??""; $("#pfLiga").value=ME.liga||""; $("#pfMail").textContent=ME.email||""; }
-$("#pfSave").onclick=async()=>{ try{ ME=await rpc("c_update_me",{p_token:TOKEN,p_data:{nickname:$("#pfNick").value.trim(),hcp:$("#pfHcp").value.trim(),liga:$("#pfLiga").value}}); toast("Perfil guardado ✓"); fillProfile(); }catch(e){ toast(e.message); } };
+const LIGTXT={sabado:"Sabatina",domingo:"Dominical",ambas:"Ambas"};
+function fillProfile(){ if(!ME) return; $("#pfAv").innerHTML=ME.avatar?`<img src="${ME.avatar}" alt="">`:esc(ini(ME.nickname||ME.name)); $("#pfName").textContent=ME.name+(ME.nickname?` “${ME.nickname}”`:"");
+  $("#pfMail").textContent=ME.email||""; $("#pfHcp").textContent=ME.hcp??"—"; $("#pfLigaTxt").textContent=LIGTXT[ME.liga]||"—"; $("#pfNick").value=ME.nickname||""; $("#pfLiga").value=ME.liga||"";
+  $("#pfTags").innerHTML=(["presidente","tesorero","secretario"].includes(ME.role)?`<span class="badge g">${ROLES[ME.role].toUpperCase()}</span>`:"")+(ME.board?`<span class="badge">BOARD</span>`:""); }
+$("#pfSave").onclick=async()=>{ try{ ME=await rpc("c_update_me",{p_token:TOKEN,p_data:{nickname:$("#pfNick").value.trim(),liga:$("#pfLiga").value}}); toast("Perfil guardado ✓"); fillProfile(); renderWho(); }catch(e){ toast(e.message); } };
+$("#pfLogout").onclick=()=>logout(false);
+$("#pfPhoto").onclick=()=>$("#pfFile").click();
+$("#pfFile").addEventListener("change",async e=>{ const f=e.target.files[0]; e.target.value=""; if(!f) return; toast("Subiendo foto…");
+  try{ const img=await new Promise((ok,ko)=>{const i=new Image(); i.onload=()=>ok(i); i.onerror=ko; i.src=URL.createObjectURL(f);});
+    const z=Math.min(img.width,img.height), c=document.createElement("canvas"); c.width=c.height=256; c.getContext("2d").drawImage(img,(img.width-z)/2,(img.height-z)/2,z,z,0,0,256,256);
+    ME=await rpc("c_update_me",{p_token:TOKEN,p_data:{avatar:c.toDataURL("image/jpeg",.82)}}); toast("Foto actualizada ✓"); fillProfile(); renderWho(); }catch(err){ toast(err.message||"No se pudo subir"); } });
 $("#raBtn").onclick=async()=>{ const n=$("#raName").value.trim(), em=$("#raEmail").value.trim(); if(!n) return toast("Escribe tu nombre"); if(!/^\S+@\S+\.\S+$/.test(em)) return toast("Correo no válido");
   $("#raBtn").disabled=true; try{ const r=await rpc("c_request_access",{p_name:n,p_email:em});
     $("#raMsg").innerHTML = r==="ya_registrado"?"Ese correo ya tiene acceso: pide tu código arriba.": r==="ya_pendiente"?"Ya tienes una solicitud pendiente. Te avisamos por correo al aprobarla.":"✅ Solicitud enviada. Te llega un correo cuando la aprueben."; }
