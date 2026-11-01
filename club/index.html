@@ -73,6 +73,11 @@ input.t:focus,select.t:focus,textarea.t:focus{outline:2px solid var(--gold);bord
 .kpi b{display:block;font:700 34px/1 "Cormorant Garamond",serif;color:var(--cream)}
 .kpi span{display:block;margin-top:6px;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold2)}
 .kpi.wide{grid-column:1/-1}
+.soc{display:grid;gap:10px;margin-bottom:14px}
+.sc{display:flex;align-items:center;gap:14px;border:1px solid var(--line);border-radius:14px;padding:16px;color:var(--cream);text-decoration:none;background:rgba(255,255,255,.03)}
+.sc:hover{border-color:var(--gold)}.sc i{font-style:normal;font-size:24px}.sc div{flex:1}.sc b{display:block;font:700 20px "Cormorant Garamond",serif}
+.sc span{font-size:13px;color:var(--gold2)}.sc em{font-style:normal;font-size:12px;color:var(--mute)}
+@media(min-width:700px){.soc{grid-template-columns:1fr 1fr}}
 .fmt{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
 .fmt button{border:1px solid var(--line);border-radius:12px;padding:12px 10px;background:transparent;color:var(--cream);text-align:left}
 .fmt button b{display:block;font:700 17px "Cormorant Garamond",serif}.fmt button span{font-size:11.5px;color:var(--mute)}
@@ -288,6 +293,7 @@ nav.main button{flex:0 0 auto;padding:8px 9px;font-size:12.5px}
     <button data-nav="code">Código</button>
     <button data-nav="hist">Históricos</button>
     <button data-nav="members">Miembros</button>
+    <button data-nav="social">Redes</button>
   </nav>
 </div>
 <main>
@@ -331,10 +337,11 @@ nav.main button{flex:0 0 auto;padding:8px 9px;font-size:12.5px}
       <button class="tile" data-nav="bets"><i>🎲</i><b>Apuestas</b><span>Quinielas y torneos</span></button>
       <button class="tile" data-nav="att"><i>📋</i><b>Asistencias</b><span>Salidas y No-Show</span></button>
       <button class="tile" data-nav="treas"><i>💰</i><b>Tesorería</b><span>Cuotas y fondos</span></button>
-      <button class="tile" data-nav="honor"><i>🏆</i><b>Cuadro de Honor</b><span>Campeones y galería</span></button>
+      <button class="tile" data-nav="honor"><i>🏆</i><b>Cuadro de Honor</b><span>Campeones y reconocimientos</span></button>
       <button class="tile" data-nav="code"><i>📖</i><b>El Código</b><span>Bro Code y votaciones</span></button>
       <button class="tile" data-nav="hist"><i>📜</i><b>Históricos</b><span>Tendencias y tu récord</span></button>
       <button class="tile" data-nav="members"><i>🏌️</i><b>Miembros</b><span>Socios y roles</span></button>
+      <button class="tile" data-nav="social"><i>📣</i><b>Redes Sociales</b><span>Instagram, YouTube y TikTok</span></button>
     </div>
     <div id="homeNext"></div>
 
@@ -422,6 +429,18 @@ nav.main button{flex:0 0 auto;padding:8px 9px;font-size:12.5px}
   </section>
 
   <!-- MEMBERS -->
+  <section class="view" id="v-social">
+    <div class="plaque"><div class="pt">Hermanos McGregor</div><div class="pn">Redes Sociales</div><div class="ps">Síguenos, comparte y etiqueta al grupo</div></div>
+    <div class="soc">
+      <a class="sc" href="https://www.instagram.com/hermanosmcgregor/" target="_blank" rel="noopener"><i>📸</i><div><b>Instagram</b><span>@hermanosmcgregor</span></div><em>Abrir ›</em></a>
+      <a class="sc" href="https://www.youtube.com/@hermanosmcgregor" target="_blank" rel="noopener"><i>▶️</i><div><b>YouTube</b><span>@hermanosmcgregor</span></div><em>Abrir ›</em></a>
+      <a class="sc" href="https://www.tiktok.com/@hermanos.mcgregor" target="_blank" rel="noopener"><i>🎵</i><div><b>TikTok</b><span>@hermanos.mcgregor</span></div><em>Abrir ›</em></a>
+      <a class="sc" href="mailto:hermanosmcgregor@gmail.com"><i>✉️</i><div><b>Correo</b><span>hermanosmcgregor@gmail.com</span></div><em>Escribir ›</em></a>
+    </div>
+    <div class="card"><div class="h">Para etiquetar</div><div class="note">Instagram y YouTube: <b>@hermanosmcgregor</b> · TikTok: <b>@hermanos.mcgregor</b></div>
+      <button class="btn ghost w" id="socCopy" style="margin-top:10px">Copiar usuarios</button></div>
+  </section>
+
   <section class="view" id="v-members">
     <div class="plaque"><div class="pt">Miembros</div><div class="pn">Registro de Socios</div><div class="ps" id="memCount"></div></div>
     <button class="btn gold w hide" id="newMemBtn" style="margin-bottom:14px">+ Agregar miembro</button>
@@ -528,7 +547,7 @@ async function renderHome(){
   rpc("c_home_stats",{p_token:TOKEN}).then(k=>{ const n=x=>Number(x||0).toLocaleString("es-MX");
     $("#homeKpis").innerHTML=`<div class="kpi"><b>${n(k.hermanos)}</b><span>Hermanos</span></div><div class="kpi"><b>${n(k.torneos)}</b><span>Torneos jugados</span></div>
       <div class="kpi wide"><b>${money(k.hio)}</b><span>Bolsa Hole in One</span></div>
-      <div class="kpi"><b>${n(k.horas)}</b><span>Horas jugadas juntos</span></div><div class="kpi"><b>${k.asistencia==null?"—":k.asistencia+"%"}</b><span>Asistencia</span></div>`; }).catch(()=>{ $("#homeKpis").innerHTML=""; });
+      <div class="kpi"><b>${n(k.horas)}</b><span>Horas jugadas juntos</span></div><div class="kpi"><b>${n(k.honores)}</b><span>Reconocimientos</span></div>`; }).catch(()=>{ $("#homeKpis").innerHTML=""; });
   try{ EVENTS=await rpc("b_events_list",{p_token:TOKEN}); }catch{ EVENTS=[]; }
   const nx=EVENTS.filter(e=>!e.closed).sort((a,b)=>new Date(a.lock_at)-new Date(b.lock_at))[0];
   $("#homeNext").innerHTML = nx ? `<div class="card" data-ev="${nx.id}" style="cursor:pointer"><div class="h">${new Date(nx.lock_at)>new Date()?"Próximo torneo":"En juego"} <small>${esc(fdate(nx.event_date))}</small></div>
@@ -1266,6 +1285,7 @@ let HFPHOTO=null;
 async function shrink(file,max,q){ const img=await new Promise((ok,ko)=>{const i=new Image(); i.onload=()=>ok(i); i.onerror=ko; i.src=URL.createObjectURL(file);});
   const r=Math.min(1,max/Math.max(img.width,img.height)), c=document.createElement("canvas"); c.width=Math.round(img.width*r); c.height=Math.round(img.height*r);
   c.getContext("2d").drawImage(img,0,0,c.width,c.height); return c.toDataURL("image/jpeg",q); }
+$("#socCopy").onclick=async()=>{ const t="Instagram y YouTube: @hermanosmcgregor\nTikTok: @hermanos.mcgregor\nCorreo: hermanosmcgregor@gmail.com"; try{ await navigator.clipboard.writeText(t); toast("Copiado ✓"); }catch{ toast(t); } };
 $("#hnAdd").onclick=async()=>{ if(!MEMBERS.length){ try{ MEMBERS=await rpc("c_members_list",{p_token:TOKEN}); }catch{} } HFPHOTO=null; $("#hnForm").innerHTML=honorForm(null); $("#hnForm").classList.remove("hide"); $("#hnForm").scrollIntoView({block:"start"}); };
 $("#phFile").addEventListener("change",async e=>{ const f=e.target.files[0]; e.target.value=""; if(!f) return;
   try{ let data=await shrink(f,1400,.8); if(data.length>880000) data=await shrink(f,1000,.7); const thumb=await shrink(f,480,.7);
