@@ -219,6 +219,23 @@ table.att td.ok{color:var(--ok);font-weight:700}table.att td.ko{color:var(--clar
 .calr:first-child{border-top:0}.calr.past{opacity:.55}.calr.next{background:rgba(217,185,106,.22);margin:0 -8px;padding:8px}
 .calr .d{font:700 11px Cinzel,serif;color:var(--brass);text-align:center;line-height:1.15}.calr .d b{display:block;font:700 22px "Cormorant Garamond",serif;color:var(--green)}
 .calr .n{font:700 15px Cinzel,serif;color:var(--green)}.calr .s{font:italic 500 15px "Cormorant Garamond",serif;color:var(--ink2)}
+.board{margin-bottom:14px}
+.board .rowh{display:grid;grid-template-columns:90px 1fr;gap:10px;padding:7px 4px;border-top:1px solid rgba(217,185,106,.25);text-align:left;cursor:pointer}
+.board .rowh:first-of-type{border-top:0}
+.board .yr{font:600 12px Cinzel,serif;color:var(--brass);letter-spacing:.06em;padding-top:4px}
+.board .wn{font:700 18px Cinzel,serif;color:var(--gold2);letter-spacing:.04em;text-shadow:0 1px 0 #000}
+.board .ev{font:italic 500 14px "Cormorant Garamond",serif;color:#cdb68a}
+.board .cam{font-size:12px;color:#cdb68a}
+.pgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.pgrid img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:3px;border:2px solid #c9b07a;cursor:pointer;background:#e9dcbc}
+.lightbox{position:fixed;inset:0;background:rgba(20,12,6,.94);z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px}
+.lightbox img{max-width:100%;max-height:75vh;border:3px solid var(--brass)}
+.lightbox .cap{color:var(--gold2);font:italic 500 18px "Cormorant Garamond",serif;margin:10px 0;text-align:center}
+.kcode h3{font:700 14px Cinzel,serif;letter-spacing:.12em;color:var(--green);margin:16px 0 6px;border-bottom:1px solid #d4c08f;padding-bottom:4px}
+.kcode h3:first-child{margin-top:0}
+.kcode p{margin:4px 0;font-size:16px}.kcode p b{color:var(--brass);margin-right:4px}
+.vbar{display:flex;height:8px;border-radius:2px;overflow:hidden;background:#e0d1aa;margin:6px 0}
+.vbar .s{background:var(--ok)}.vbar .n{background:var(--claret)}
 .code{font:700 30px "Cormorant Garamond",serif;letter-spacing:.5em;text-align:center}
 </style>
 </head>
@@ -234,6 +251,8 @@ table.att td.ok{color:var(--ok);font-weight:700}table.att td.ko{color:var(--clar
     <button data-nav="bets">Apuestas</button>
     <button data-nav="att">Asistencias</button>
     <button data-nav="treas">Tesorería</button>
+    <button data-nav="honor">Honor</button>
+    <button data-nav="code">Código</button>
     <button data-nav="hist">Históricos</button>
     <button data-nav="members">Miembros</button>
   </nav>
@@ -278,6 +297,8 @@ table.att td.ok{color:var(--ok);font-weight:700}table.att td.ko{color:var(--clar
       <button class="tile" data-nav="bets"><i>🎲</i><b>Apuestas</b><span>Quinielas y torneos</span></button>
       <button class="tile" data-nav="att"><i>📋</i><b>Asistencias</b><span>Salidas y No-Show</span></button>
       <button class="tile" data-nav="treas"><i>💰</i><b>Tesorería</b><span>Cuotas y fondos</span></button>
+      <button class="tile" data-nav="honor"><i>🏆</i><b>Cuadro de Honor</b><span>Campeones y galería</span></button>
+      <button class="tile" data-nav="code"><i>📖</i><b>El Código</b><span>Bro Code y votaciones</span></button>
       <button class="tile" data-nav="hist"><i>📜</i><b>Históricos</b><span>Tendencias y tu récord</span></button>
       <button class="tile" data-nav="members"><i>🏌️</i><b>Miembros</b><span>Socios y roles</span></button>
       <button class="tile" id="tileLogout"><i>🚪</i><b>Salir</b><span>Cerrar sesión</span></button>
@@ -330,6 +351,23 @@ table.att td.ok{color:var(--ok);font-weight:700}table.att td.ko{color:var(--clar
     <div class="plaque"><div class="pt">Tesorería</div><div class="pn">Libro de Cuentas</div><div class="ps">Inscripciones y fondos del club</div></div>
     <div class="card"><label class="f" for="trSeason">Temporada</label><select id="trSeason" class="t"></select></div>
     <div id="trBody"></div>
+  </section>
+
+  <!-- HONOR -->
+  <section class="view" id="v-honor">
+    <div class="plaque"><div class="pt">Hermanos McGregor</div><div class="pn">Cuadro de Honor</div><div class="ps">Campeones, leyendas y memorabilia del club</div></div>
+    <div class="row2" style="margin-bottom:14px"><button class="btn gold" id="hnAdd">+ Agregar campeón</button><button class="btn gold" id="phAdd">+ Subir foto</button></div>
+    <input type="file" id="phFile" accept="image/*" class="hide">
+    <div class="card hide" id="hnForm"></div>
+    <div id="hnBoards"></div>
+    <div class="card"><div class="h">Galería <small id="phN"></small></div><div id="phGrid" class="pgrid"></div></div>
+  </section>
+
+  <!-- CODIGO -->
+  <section class="view" id="v-code">
+    <div class="plaque"><div class="pt">Hermanos McGregor</div><div class="pn">Old Golf Bro Code</div><div class="ps" id="kSub"></div></div>
+    <div class="etabs" id="kTabs"><button data-ktab="code" class="on">El Código</button><button data-ktab="prop">Propuestas</button><button data-ktab="hist">Versiones</button></div>
+    <div id="kBody"></div>
   </section>
 
   <!-- MEMBERS -->
@@ -387,6 +425,8 @@ function go(v){
   if(v==="members") loadMembers();
   if(v==="att") loadAtt();
   if(v==="treas") loadTreas();
+  if(v==="honor") loadHonor();
+  if(v==="code") loadCode();
   if(v==="home") renderHome();
   show(v);
 }
@@ -420,7 +460,7 @@ function isAdminMembers(){ return ME&&(ME.superadmin||ME.role==="presidente"||ME
 function afterLogin(){
   $("#whoBtn").textContent=ME.name;
   const m=location.hash.match(/e=([0-9a-f-]{36})/);
-  if(m) openEvent(m[1]); else if(location.hash==='#asistencias') go('att'); else if(location.hash==='#tesoreria') go('treas'); else go("home");
+  if(m) openEvent(m[1]); else if(location.hash==='#asistencias') go('att'); else if(location.hash==='#tesoreria') go('treas'); else if(location.hash==='#codigo') go('code'); else if(location.hash==='#honor') go('honor'); else go("home");
 }
 
 /* ===== home ===== */
@@ -987,6 +1027,108 @@ async function handleCreq(){ const q=new URLSearchParams(location.search), id=q.
       $("#crqMsg").innerHTML=r.already?`La solicitud de <b>${esc(r.name)}</b> ya estaba ${esc(r.status)}.`:r.status==="aprobada"?`✅ <b>${esc(r.name)}</b> ya tiene acceso. Le llegó correo de bienvenida.`:`Solicitud de <b>${esc(r.name)}</b> rechazada.`;
       $("#crqBtn").classList.add("hide"); history.replaceState(null,"",location.pathname); }catch(e){ $("#crqMsg").textContent=e.message; $("#crqBtn").disabled=false; } };
   return true; }
+
+
+/* ===== cuadro de honor ===== */
+let HN=null;
+const HCAT={liga_sabado:"Campeones · Liga Sabatina",liga_domingo:"Campeones · Liga Dominical",gran_finale:"Gran Finale",championship:"Championships",hole_in_one:"Hole-in-One",otro:"Leyendas y otros honores"};
+async function loadHonor(){ try{ HN=await rpc("h_list",{p_token:TOKEN}); }catch(e){ toast(e.message); return; } renderHonor(); }
+function renderHonor(){
+  const by={}; HN.honors.forEach(h=>(by[h.category]=by[h.category]||[]).push(h));
+  const when=h=>h.season?seasonLabel(h.season):h.date?new Date(h.date+"T12:00:00").toLocaleDateString("es-MX",{month:"short",year:"numeric"}):"";
+  $("#hnBoards").innerHTML=Object.keys(HCAT).filter(k=>by[k]).map(k=>`<div class="plaque board"><div class="pt">${HCAT[k]}</div><div class="rule"></div>
+    ${by[k].map(h=>`<div class="rowh" data-hn="${h.id}"><div class="yr">${esc(when(h))}</div><div><div class="wn">${esc(h.winner)}</div>${h.event_name||h.notes?`<div class="ev">${esc([h.event_name,h.notes].filter(Boolean).join(" · "))}</div>`:""}${h.photos?`<div class="cam">📷 ${h.photos}</div>`:""}</div></div>`).join("")}</div>`).join("")
+    || `<div class="card"><div class="note">El Cuadro de Honor está vacío. Agrega a los campeones de temporadas pasadas con “+ Agregar campeón”: cualquier socio puede hacerlo.</div></div>`;
+  $("#phN").textContent=HN.photos.length?HN.photos.length+" foto"+(HN.photos.length>1?"s":""):"";
+  $("#phGrid").innerHTML=HN.photos.length?HN.photos.map(p=>`<img src="${p.thumb}" data-ph="${p.id}" alt="${esc(p.caption||"")}">`).join(""):`<div class="note" style="grid-column:1/-1">Sube las fotos de torneos, campeones y momentos del grupo.</div>`;
+}
+function honorForm(h){ h=h||{category:"liga_sabado",season:"",event_name:"",date:"",member_id:"",winner:"",notes:""};
+  const yrs=[]; for(let y=new Date().getFullYear(); y>=2015; y--){ yrs.push(`${y}-2`,`${y}-1`); }
+  const champs=[...new Set((CAL?.items||[]).map(c=>c.name))];
+  return `<div class="h">${h.id?"Editar":"Agregar"} al Cuadro de Honor</div>
+   <label class="f">Categoría</label><select class="t" id="hfCat">${Object.entries(HCAT).map(([k,l])=>`<option value="${k}" ${h.category===k?"selected":""}>${l.replace("Campeones · ","Campeón ")}</option>`).join("")}</select>
+   <div class="row2"><div><label class="f">Temporada</label><select class="t" id="hfSeason"><option value="">—</option>${yrs.map(y=>`<option value="${y}" ${h.season===y?"selected":""}>${seasonLabel(y)}</option>`).join("")}</select></div><div><label class="f">Fecha (opcional)</label><input class="t" type="date" id="hfDate" value="${esc(h.date||"")}"></div></div>
+   <label class="f">Torneo / evento</label><input class="t" id="hfEvent" list="hfChamps" value="${esc(h.event_name||"")}" placeholder="Ej. Bear Fest"><datalist id="hfChamps">${champs.map(c=>`<option value="${esc(c)}">`).join("")}</datalist>
+   <div class="row2"><div><label class="f">Ganador (socio)</label><select class="t" id="hfMember"><option value="">— otro —</option>${MEMBERS.map(m=>`<option value="${m.id}" ${h.member_id===m.id?"selected":""}>${esc(m.name)}</option>`).join("")}</select></div>
+   <div><label class="f">o escribe el nombre</label><input class="t" id="hfWinner" value="${h.member_id?"":esc(h.winner||"")}" placeholder="Si no es socio"></div></div>
+   <label class="f">Notas (score, hoyo, anécdota)</label><input class="t" id="hfNotes" value="${esc(h.notes||"")}">
+   <button class="btn gold w" id="hfSave" data-id="${h.id||""}" style="margin-top:12px">Guardar</button>
+   ${h.id?`<button class="btn w" id="hfPhoto" data-id="${h.id}" style="margin-top:8px">📷 Subir foto de este campeón</button><button class="btn danger w" id="hfDel" data-id="${h.id}" style="margin-top:8px">Borrar</button>`:""}
+   <button class="btn ghost w" id="hfCancel" style="margin-top:8px">Cerrar</button>`; }
+let phHonor=null;
+async function shrink(file,max,q){ const img=await new Promise((ok,ko)=>{const i=new Image(); i.onload=()=>ok(i); i.onerror=ko; i.src=URL.createObjectURL(file);});
+  const r=Math.min(1,max/Math.max(img.width,img.height)), c=document.createElement("canvas"); c.width=Math.round(img.width*r); c.height=Math.round(img.height*r);
+  c.getContext("2d").drawImage(img,0,0,c.width,c.height); return c.toDataURL("image/jpeg",q); }
+$("#hnAdd").onclick=()=>{ $("#hnForm").innerHTML=honorForm(null); $("#hnForm").classList.remove("hide"); $("#hnForm").scrollIntoView({block:"start"}); };
+$("#phAdd").onclick=()=>{ phHonor=null; $("#phFile").click(); };
+$("#phFile").addEventListener("change",async e=>{ const f=e.target.files[0]; e.target.value=""; if(!f) return;
+  const cap=prompt("Descripción de la foto (opcional):","")??""; toast("Subiendo foto…");
+  try{ let data=await shrink(f,1400,.8); if(data.length>880000) data=await shrink(f,1000,.7); const thumb=await shrink(f,320,.7);
+    HN=await rpc("h_photo_add",{p_token:TOKEN,p_honor:phHonor,p_caption:cap,p_data:data,p_thumb:thumb}); toast("Foto subida ✓"); renderHonor(); }catch(err){ toast(err.message); } });
+document.addEventListener("click",async e=>{ if(VIEW!=="honor") return; const t=e.target;
+  const row=t.closest("[data-hn]"); if(row){ const h=HN.honors.find(x=>x.id===row.dataset.hn); const ph=HN.photos.filter(p=>p.honor_id===h.id);
+    if(!(HN.can_admin||h.created_by===HN.me)){ if(ph.length) openPhoto(ph[0].id); return; }
+    $("#hnForm").innerHTML=honorForm(h)+(ph.length?`<div class="pgrid" style="margin-top:10px">${ph.map(p=>`<img src="${p.thumb}" data-ph="${p.id}">`).join("")}</div>`:""); $("#hnForm").classList.remove("hide"); $("#hnForm").scrollIntoView({block:"start"}); return; }
+  const im=t.closest("[data-ph]"); if(im){ openPhoto(im.dataset.ph); return; }
+  if(t.id==="hfCancel"){ $("#hnForm").classList.add("hide"); return; }
+  if(t.id==="hfPhoto"){ phHonor=t.dataset.id; $("#phFile").click(); return; }
+  if(t.id==="hfSave"||t.id==="hfDel"){ t.disabled=true; if(t.id==="hfDel"&&!confirm("¿Borrar del Cuadro de Honor?")){ t.disabled=false; return; }
+    const d=t.id==="hfDel"?{delete:t.dataset.id}:{id:t.dataset.id||null,category:$("#hfCat").value,season:$("#hfSeason").value,date:$("#hfDate").value,event_name:$("#hfEvent").value,member_id:$("#hfMember").value,winner_name:$("#hfMember").value?"":$("#hfWinner").value,notes:$("#hfNotes").value};
+    try{ HN=await rpc("h_save",{p_token:TOKEN,p_data:d}); toast(t.id==="hfDel"?"Borrado":"Guardado en el Cuadro de Honor ✓"); $("#hnForm").classList.add("hide"); renderHonor(); }catch(err){ toast(err.message); t.disabled=false; } }
+});
+async function openPhoto(id){ const p=HN.photos.find(x=>x.id===id); const lb=document.createElement("div"); lb.className="lightbox";
+  lb.innerHTML=`<img src="${p.thumb}"><div class="cap">${esc(p.caption||"")}${p.by?`<br><small>Subida por ${esc(p.by)}</small>`:""}</div><div class="row2" style="width:100%;max-width:400px">${(HN.can_admin||p.uploaded_by===HN.me)?`<button class="btn danger" data-phdel="${id}">Borrar</button>`:"<span></span>"}<button class="btn gold" data-lbclose>Cerrar</button></div>`;
+  document.body.appendChild(lb); lb.addEventListener("click",async e=>{ if(e.target.dataset.lbclose!==undefined||e.target===lb) lb.remove();
+    if(e.target.dataset.phdel){ if(!confirm("¿Borrar esta foto?")) return; try{ HN=await rpc("h_photo_del",{p_token:TOKEN,p_id:id}); lb.remove(); renderHonor(); toast("Foto borrada"); }catch(err){ toast(err.message);} } });
+  try{ const full=await rpc("h_photo_get",{p_token:TOKEN,p_id:id}); if(full) lb.querySelector("img").src=full; }catch{} }
+
+/* ===== código ===== */
+let KC=null, KTAB="code", KVIEW=null;
+async function loadCode(){ try{ KC=await rpc("k_get",{p_token:TOKEN}); }catch(e){ toast(e.message); return; } KVIEW=KC.current; renderCode(); }
+function codeHTML(body){ return `<div class="kcode">${esc(body).split("\n").map(l=>l.startsWith("## ")?`<h3>${l.slice(3)}</h3>`:/^\d+\.\s/.test(l)?`<p><b>${l.match(/^\d+/)[0]}.</b>${l.replace(/^\d+\.\s/,"")}</p>`:l.trim()?`<p>${l}</p>`:"").join("")}</div>`; }
+function renderCode(){
+  document.querySelectorAll("#kTabs button").forEach(b=>b.classList.toggle("on",b.dataset.ktab===KTAB));
+  $("#kSub").textContent=KC.current?`Versión ${KC.current.label} vigente`:"";
+  let h="";
+  if(KTAB==="code"){ const v=KVIEW;
+    h=v?`<div class="card"><div class="h">Versión ${esc(v.label)} <small>${new Date(v.published_at+"T12:00:00").toLocaleDateString("es-MX",{day:"numeric",month:"long",year:"numeric"})}</small></div>${v.id!==KC.current?.id?`<div class="banner">Estás viendo una versión anterior. <a href="#" data-kcur>Ver la vigente</a></div>`:""}${codeHTML(v.body)}
+      ${v.pdf_url?`<a class="btn ghost w" style="margin-top:12px" href="${esc(v.pdf_url)}" target="_blank" rel="noopener">Ver PDF oficial</a>`:""}</div>
+      <div class="card"><div class="note">¿Algo que cambiar para la próxima temporada? El código no se modifica durante la temporada; las propuestas las revisa el board.</div><button class="btn gold w" data-ktab="prop" style="margin-top:10px">Proponer un cambio</button></div>`:`<div class="card"><div class="note">Aún no hay código publicado.</div></div>`;
+  }
+  if(KTAB==="prop"){
+    h=`<div class="card"><div class="h">Nueva propuesta</div>
+      <label class="f">Tipo</label><select class="t" id="kpKind"><option value="codigo">Cambio al Código (vota el board)</option><option value="admision">Nuevo miembro (votan todos, se requiere ¾)</option></select>
+      <label class="f">Título</label><input class="t" id="kpTitle" maxlength="120" placeholder="Ej. Gimmies en Major / Admitir a Juan Pérez">
+      <label class="f">Detalle</label><textarea class="t" id="kpBody" rows="3"></textarea>
+      <button class="btn gold w" id="kpSave" style="margin-top:10px">Enviar propuesta</button><div class="note" style="margin-top:6px">Se avisa por correo a quienes votan.</div></div>`;
+    h+=KC.proposals.map(p=>{ const tot=p.si+p.no, pct=x=>tot?x/tot*100:0, st={abierta:"open",aprobada:"open",incorporada:"fin",rechazada:"live"}[p.status];
+      return `<div class="card"><div class="h">${p.kind==="admision"?"Admisión":"Código"} <span class="pill ${st}">${p.status.toUpperCase()}</span></div>
+        <div style="font:700 17px Cinzel,serif;color:var(--green)">${esc(p.title)}</div>${p.body?`<div style="white-space:pre-wrap;margin:6px 0">${esc(p.body)}</div>`:""}
+        <div class="note">Propuso ${esc(p.author||"—")} · ${new Date(p.created_at).toLocaleDateString("es-MX",{day:"numeric",month:"short"})}</div>
+        <div class="vbar"><div class="s" style="width:${pct(p.si)}%"></div><div class="n" style="width:${pct(p.no)}%"></div></div>
+        <div class="note"><b style="color:var(--ok)">${p.si} a favor</b> · <b style="color:var(--claret)">${p.no} en contra</b> · se necesitan ${p.need} de ${p.voters} ${p.kind==="admision"?"miembros (¾)":"del board"}${p.si>=p.need?" · <b style='color:var(--ok)'>✓ alcanza</b>":""}</div>
+        ${p.can_vote?`<div class="row2" style="margin-top:10px"><button class="btn ${p.mine==="si"?"":"ghost"}" data-kv="${p.id}" data-v="si">👍 A favor${p.mine==="si"?" ✓":""}</button><button class="btn ${p.mine==="no"?"danger":"ghost"}" data-kv="${p.id}" data-v="no">👎 En contra${p.mine==="no"?" ✓":""}</button></div>`:p.status==="abierta"?`<div class="note" style="margin-top:6px">Votan los miembros del board.</div>`:""}
+        ${KC.can_admin?`<div class="row3" style="margin-top:8px">${["aprobada","rechazada","incorporada"].map(s=>`<button class="btn sm ghost" data-kd="${p.id}" data-s="${s}">${s[0].toUpperCase()+s.slice(1)}</button>`).join("")}</div>`:""}</div>`; }).join("")||"";
+  }
+  if(KTAB==="hist"){
+    h=`<div class="card"><div class="h">Versiones del Código</div>${KC.versions.map(v=>`<div class="trow"><span class="nm2"><b>Versión ${esc(v.label)}</b><div class="note">${new Date(v.published_at+"T12:00:00").toLocaleDateString("es-MX",{day:"numeric",month:"long",year:"numeric"})}${v.id===KC.current?.id?" · vigente":""}</div></span><button class="btn sm ghost" data-kver="${v.id}">Ver</button></div>`).join("")}</div>`;
+    if(KC.can_admin) h+=`<div class="card"><div class="h">Publicar nueva versión</div><div class="row2"><div><label class="f">Versión</label><input class="t" id="kvLabel" placeholder="2027"></div><div><label class="f">Vigente desde</label><input class="t" type="date" id="kvDate"></div></div>
+      <label class="f">Texto (## para secciones, 1. para reglas)</label><textarea class="t" id="kvBody" rows="10">${esc(KC.current?.body||"")}</textarea>
+      <label class="f">Liga al PDF (opcional)</label><input class="t" id="kvPdf"><button class="btn gold w" id="kvSave" style="margin-top:10px">Publicar versión</button></div>`;
+  }
+  $("#kBody").innerHTML=h;
+}
+document.addEventListener("click",async e=>{ if(VIEW!=="code") return; const t=e.target;
+  if(t.dataset.ktab){ KTAB=t.dataset.ktab; renderCode(); window.scrollTo(0,0); return; }
+  if(t.dataset.kcur!==undefined){ e.preventDefault(); KVIEW=KC.current; renderCode(); return; }
+  try{
+    if(t.dataset.kver){ KVIEW=await rpc("k_version_body",{p_token:TOKEN,p_id:t.dataset.kver}); KTAB="code"; renderCode(); window.scrollTo(0,0); }
+    else if(t.id==="kpSave"){ t.disabled=true; KC=await rpc("k_propose",{p_token:TOKEN,p_kind:$("#kpKind").value,p_title:$("#kpTitle").value,p_body:$("#kpBody").value}); toast("Propuesta enviada ✓"); renderCode(); }
+    else if(t.dataset.kv){ KC=await rpc("k_vote",{p_token:TOKEN,p_id:t.dataset.kv,p_vote:t.dataset.v}); toast("Voto registrado ✓"); renderCode(); }
+    else if(t.dataset.kd){ KC=await rpc("k_decide",{p_token:TOKEN,p_id:t.dataset.kd,p_status:t.dataset.s}); renderCode(); }
+    else if(t.id==="kvSave"){ if(!confirm("¿Publicar esta versión como la vigente?")) return; KC=await rpc("k_admin_version",{p_token:TOKEN,p_data:{label:$("#kvLabel").value,published_at:$("#kvDate").value,body:$("#kvBody").value,pdf_url:$("#kvPdf").value}}); KVIEW=KC.current; KTAB="code"; toast("Versión publicada ✓"); renderCode(); }
+  }catch(err){ toast(err.message); t.disabled=false; }
+});
 
 /* ===== boot ===== */
 (async()=>{
