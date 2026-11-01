@@ -260,6 +260,14 @@ table.att td.ok{color:var(--ok);font-weight:700}table.att td.ko{color:var(--bad)
 .kcode h3{font:700 20px "Cormorant Garamond",serif;color:var(--cream);margin:16px 0 6px;padding-bottom:4px;border-bottom:1px solid var(--line)}
 .kcode h3:first-child{margin-top:0}
 .kcode p{margin:4px 0;font-size:14px;color:var(--cream)}.kcode p b{color:var(--gold);margin-right:4px}
+.bdg{display:inline-block;min-width:22px;padding:2px 7px;border-radius:999px;background:var(--red2,#b3412f);color:#fff;font:700 12px Inter;vertical-align:middle;margin-left:4px;text-align:center}
+.vcard{border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:12px;background:rgba(255,255,255,.03)}
+.vcard.todo{border-color:var(--gold);background:rgba(164,161,106,.10)}
+.vcard .tt{font:700 21px/1.15 "Cormorant Garamond",serif;color:var(--cream);margin:4px 0 6px}
+.vcard .bd{white-space:pre-wrap;font-size:14px;margin:4px 0 8px;opacity:.9}
+.vcard .who{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}.vcard .who span{font-size:11.5px;padding:3px 8px;border-radius:999px;border:1px solid var(--line);color:var(--mute)}
+.vcard .who span.y{border-color:var(--gold);color:var(--cream)}
+.dl{font-size:12px;color:var(--gold2)}
 .vbar{display:flex;height:8px;border-radius:5px;overflow:hidden;background:rgba(255,255,255,.08);margin:6px 0}
 .vbar .s{background:var(--ok)}.vbar .n{background:var(--red2)}
 .iconbtn{border:1px solid var(--gold);background:transparent;color:var(--cream);border-radius:999px;width:34px;height:30px;display:grid;place-items:center;padding:0}
@@ -291,6 +299,7 @@ nav.main button{flex:0 0 auto;padding:8px 9px;font-size:12.5px}
     <button data-nav="treas">Tesorería</button>
     <button data-nav="honor">Honor</button>
     <button data-nav="code">Código</button>
+    <button data-nav="board" class="hide" id="navBoard">Board</button>
     <button data-nav="hist">Históricos</button>
     <button data-nav="members">Miembros</button>
     <button data-nav="social">Redes</button>
@@ -338,7 +347,8 @@ nav.main button{flex:0 0 auto;padding:8px 9px;font-size:12.5px}
       <button class="tile" data-nav="att"><i>📋</i><b>Asistencias</b><span>Salidas y No-Show</span></button>
       <button class="tile" data-nav="treas"><i>💰</i><b>Tesorería</b><span>Cuotas y fondos</span></button>
       <button class="tile" data-nav="honor"><i>🏆</i><b>Cuadro de Honor</b><span>Campeones y reconocimientos</span></button>
-      <button class="tile" data-nav="code"><i>📖</i><b>El Código</b><span>Bro Code y votaciones</span></button>
+      <button class="tile" data-nav="code"><i>📖</i><b>El Código</b><span>Bro Code y propuestas</span></button>
+      <button class="tile hide" data-nav="board" id="tileBoard"><i>🗳️</i><b>Board <span class="bdg hide" id="bdgBoard"></span></b><span>Votaciones del board</span></button>
       <button class="tile" data-nav="hist"><i>📜</i><b>Históricos</b><span>Tendencias y tu récord</span></button>
       <button class="tile" data-nav="members"><i>🏌️</i><b>Miembros</b><span>Socios y roles</span></button>
       <button class="tile" data-nav="social"><i>📣</i><b>Redes Sociales</b><span>Instagram, YouTube y TikTok</span></button>
@@ -429,6 +439,11 @@ nav.main button{flex:0 0 auto;padding:8px 9px;font-size:12.5px}
   </section>
 
   <!-- MEMBERS -->
+  <section class="view" id="v-board">
+    <div class="plaque"><div class="pt">Hermanos McGregor</div><div class="pn">Board</div><div class="ps" id="bdSub">Votaciones del board</div></div>
+    <div id="bdBody"></div>
+  </section>
+
   <section class="view" id="v-social">
     <div class="plaque"><div class="pt">Hermanos McGregor</div><div class="pn">Redes Sociales</div><div class="ps">Síguenos, comparte y etiqueta al grupo</div></div>
     <div class="soc">
@@ -499,6 +514,7 @@ function go(v){
   if(v==="treas") loadTreas();
   if(v==="honor") loadHonor();
   if(v==="code") loadCode();
+  if(v==="board") loadBoard();
   if(v==="home") renderHome();
   show(v);
 }
@@ -529,7 +545,7 @@ $("#logoutBtn").onclick=()=>{ if(confirm("¿Cerrar sesión?")) logout(false); };
 $("#whoBtn").onclick=()=>go("profile");
 const ini=n=>String(n||"?").trim().split(/\s+/).map(w=>w[0]).slice(0,2).join("").toUpperCase();
 function avatarHTML(m,cls){ return m&&m.avatar?`<img src="${m.avatar}" alt="" ${cls?`class="${cls}"`:""}>`:`<span class="ini ${cls||""}">${esc(ini(m&&(m.nickname||m.name)))}</span>`; }
-function renderWho(){ $("#whoBtn").innerHTML=avatarHTML(ME)+`<span>${esc(ME.nickname||ME.name)}</span>`; }
+function renderWho(){ $("#whoBtn").innerHTML=avatarHTML(ME)+`<span>${esc(ME.nickname||ME.name)}</span>`; $("#navBoard").classList.toggle("hide",!ME.board); $("#tileBoard").classList.toggle("hide",!ME.board); }
 function isAdminBets(){ return ME&&(ME.superadmin||ME.bet_admin); }
 function isAdminMembers(){ return ME&&(ME.superadmin||ME.role==="presidente"||ME.role==="secretario"); }
 function canDelMembers(){ return ME&&(ME.superadmin||ME.role==="presidente"||ME.board); }
@@ -537,7 +553,7 @@ async function afterLogin(){
   renderWho();
   if(!MEMBERS.length){ try{ MEMBERS=await rpc("c_members_list",{p_token:TOKEN}); }catch{} }
   const m=location.hash.match(/e=([0-9a-f-]{36})/);
-  if(m) openEvent(m[1]); else if(location.hash==='#asistencias') go('att'); else if(location.hash==='#tesoreria') go('treas'); else if(location.hash==='#codigo') go('code'); else if(location.hash==='#honor') go('honor'); else go("home");
+  if(m) openEvent(m[1]); else if(location.hash==='#asistencias') go('att'); else if(location.hash==='#tesoreria') go('treas'); else if(location.hash==='#codigo') go('code'); else if(location.hash==='#honor') go('honor'); else if(location.hash==='#board') go(ME.board?'board':'code'); else go("home");
 }
 
 /* ===== home ===== */
@@ -545,9 +561,10 @@ async function renderHome(){
   $("#hiName").textContent="Bienvenido, "+(ME.nickname||ME.name);
   $("#hiRole").textContent=[ROLES[ME.role], ME.fundador?"Fundador":null, ME.superadmin?"Administrador":ME.bet_admin?"Admin de apuestas":null].filter(Boolean).join(" · ");
   rpc("c_home_stats",{p_token:TOKEN}).then(k=>{ const n=x=>Number(x||0).toLocaleString("es-MX");
+    const bp=+k.board_pending||0; $("#bdgBoard").textContent=bp; $("#bdgBoard").classList.toggle("hide",!bp); $("#navBoard").textContent=bp?`Board (${bp})`:"Board";
     $("#homeKpis").innerHTML=`<div class="kpi"><b>${n(k.hermanos)}</b><span>Hermanos</span></div><div class="kpi"><b>${n(k.torneos)}</b><span>Torneos jugados</span></div>
       <div class="kpi wide"><b>${money(k.hio)}</b><span>Bolsa Hole in One</span></div>
-      <div class="kpi"><b>${n(k.horas)}</b><span>Horas jugadas juntos</span></div><div class="kpi"><b>${n(k.honores)}</b><span>Reconocimientos</span></div>`; }).catch(()=>{ $("#homeKpis").innerHTML=""; });
+      ${""}<div class="kpi"><b>${n(k.horas)}</b><span>Horas jugadas juntos</span></div><div class="kpi"><b>${n(k.honores)}</b><span>Reconocimientos</span></div>`; }).catch(()=>{ $("#homeKpis").innerHTML=""; });
   try{ EVENTS=await rpc("b_events_list",{p_token:TOKEN}); }catch{ EVENTS=[]; }
   const nx=EVENTS.filter(e=>!e.closed).sort((a,b)=>new Date(a.lock_at)-new Date(b.lock_at))[0];
   $("#homeNext").innerHTML = nx ? `<div class="card" data-ev="${nx.id}" style="cursor:pointer"><div class="h">${new Date(nx.lock_at)>new Date()?"Próximo torneo":"En juego"} <small>${esc(fdate(nx.event_date))}</small></div>
@@ -914,7 +931,7 @@ async function loadMembers(){
   loadRequests();
   const act=MEMBERS.filter(m=>m.active);
   $("#memCount").textContent=`${act.length} socios activos`;
-  $("#newMemBtn").classList.toggle("hide",!isAdminMembers());
+  $("#newMemBtn").classList.toggle("hide",!(isAdminMembers()||ME.board));
   const rk=m=>m.role==="presidente"?1:m.role==="tesorero"?2:m.role==="secretario"?3:m.board?4:5;
   const L=[...MEMBERS].sort((x,y)=>rk(x)-rk(y)||x.name.localeCompare(y.name));
   $("#memList").innerHTML=L.map(m=>`<div class="mem" ${(isAdminMembers()||canDelMembers())?`data-medit="${m.id}" style="cursor:pointer"`:""}><div><div class="n">${m.avatar?`<img class="mav" src="${m.avatar}" alt="">`:""}${esc(m.name)}${m.nickname?` <span style="color:var(--gold2);font-weight:500">“${esc(m.nickname)}”</span>`:""}${m.id===ME.id?'<span class="me">TÚ</span>':""}</div>
@@ -927,13 +944,13 @@ function memberForm(m){
   return `<div class="h">${m.id?"Editar socio":"Nuevo socio"}</div>
     <div class="row2"><div><label class="f">Nombre</label><input class="t" id="mName" value="${esc(m.name)}"></div><div><label class="f">Apodo</label><input class="t" id="mNick" maxlength="30" value="${esc(m.nickname||"")}" placeholder="Ej. La Bala"></div></div>
     <label class="f">Correo (para entrar)</label><input class="t" id="mEmail" type="email" value="${esc(m.email||"")}">
-    <div class="row2"><div><label class="f">Rol</label><select class="t" id="mRole">${opt(ROLES,m.role)}</select></div><div><label class="f">Liga</label><select class="t" id="mLiga"><option value="">—</option>${opt(LIGAS,m.liga)}</select></div></div>
+    ${isAdminMembers()?`<div class="row2"><div><label class="f">Rol</label><select class="t" id="mRole">${opt(ROLES,m.role)}</select></div><div><label class="f">Liga</label><select class="t" id="mLiga"><option value="">—</option>${opt(LIGAS,m.liga)}</select></div></div>`:`<label class="f">Liga</label><select class="t" id="mLiga"><option value="">—</option>${opt(LIGAS,m.liga)}</select>`}
     <div class="row2"><div><label class="f">HCP</label><input class="t" id="mHcp" inputmode="decimal" value="${esc(m.hcp??"")}"></div>
-    <div><label class="f">Fundador</label><select class="t" id="mFund"><option value="false">No</option><option value="true" ${m.fundador?"selected":""}>Sí</option></select></div></div>
-    <label class="f">Board (vota cambios al Código)</label><select class="t" id="mBoard"><option value="false">No</option><option value="true" ${m.board?"selected":""}>Sí</option></select>
+    ${isAdminMembers()?`<div><label class="f">Fundador</label><select class="t" id="mFund"><option value="false">No</option><option value="true" ${m.fundador?"selected":""}>Sí</option></select></div>`:"<div></div>"}</div>
+    ${isAdminMembers()?`<label class="f">Board (vota cambios al Código)</label><select class="t" id="mBoard"><option value="false">No</option><option value="true" ${m.board?"selected":""}>Sí</option></select>`:`<div class="note" style="margin-top:8px">Como miembro del board das de alta al nuevo hermano; roles y permisos los asigna el Presidente o el Secretario.</div>`}
     ${m.id&&!m.superadmin?`<label class="f">Estatus</label><select class="t" id="mAct"><option value="true">Activo</option><option value="false" ${m.active?"":"selected"}>Inactivo</option></select>`:""}
     ${ME.superadmin&&m.id&&!m.superadmin?`<label class="f">Admin de apuestas (puede abrir torneos)</label><select class="t" id="mBet"><option value="false">No</option><option value="true" ${m.bet_admin?"selected":""}>Sí</option></select>`:""}
-    ${isAdminMembers()?`<button class="btn gold w" id="mSave" data-id="${m.id||""}" style="margin-top:14px">Guardar</button>`:""}
+    ${isAdminMembers()||(ME.board&&!m.id)?`<button class="btn gold w" id="mSave" data-id="${m.id||""}" style="margin-top:14px">${m.id?"Guardar":"Dar de alta"}</button>`:""}
     ${m.id&&canDelMembers()&&!m.superadmin&&m.id!==ME.id?`<button class="btn danger w" id="mDel" data-id="${m.id}" style="margin-top:8px">Eliminar socio</button>`:""}
     <button class="btn ghost w" id="mCancel" style="margin-top:8px">Cancelar</button>`;
 }
@@ -944,7 +961,7 @@ document.addEventListener("click",async e=>{
   if(e.target.id==="mDel"){ const mm=MEMBERS.find(x=>x.id===e.target.dataset.id); if(!confirm(`¿Eliminar a ${mm?mm.name:"este socio"} del club? Ya no podrá entrar. Su historial de asistencias y quinielas se conserva.`)) return;
     try{ MEMBERS=await rpc("c_admin_delete_member",{p_token:TOKEN,p_id:e.target.dataset.id}); toast("Socio eliminado"); $("#memForm").classList.add("hide"); loadMembers(); }catch(err){ toast(err.message); } return; }
   if(e.target.id==="mSave"){ const id=e.target.dataset.id||null, prev=MEMBERS.find(m=>m.id===id);
-    const d={id,name:$("#mName").value.trim(),nickname:$("#mNick").value.trim(),email:$("#mEmail").value.trim(),role:$("#mRole").value,liga:$("#mLiga").value||null,hcp:$("#mHcp").value.trim(),fundador:$("#mFund").value==="true",board:$("#mBoard").value==="true",active:$("#mAct")?$("#mAct").value==="true":true};
+    const d={id,name:$("#mName").value.trim(),nickname:$("#mNick").value.trim(),email:$("#mEmail").value.trim(),role:$("#mRole")?$("#mRole").value:"miembro",liga:$("#mLiga").value||null,hcp:$("#mHcp").value.trim(),fundador:$("#mFund")?$("#mFund").value==="true":false,board:$("#mBoard")?$("#mBoard").value==="true":false,active:$("#mAct")?$("#mAct").value==="true":true};
     e.target.disabled=true;
     try{ MEMBERS=await rpc("c_admin_save_member",{p_token:TOKEN,p_data:d});
       if($("#mBet")&&id&&(($("#mBet").value==="true")!==!!prev?.bet_admin)) MEMBERS=await rpc("c_admin_set_bet_admin",{p_token:TOKEN,p_id:id,p_on:$("#mBet").value==="true"});
@@ -1323,18 +1340,15 @@ function renderCode(){
   }
   if(KTAB==="prop"){
     h=`<div class="card"><div class="h">Nueva propuesta</div>
-      <label class="f">Tipo</label><select class="t" id="kpKind"><option value="codigo">Cambio al Código (vota el board)</option><option value="admision">Nuevo miembro (votan todos, se requiere ¾)</option></select>
-      <label class="f">Título</label><input class="t" id="kpTitle" maxlength="120" placeholder="Ej. Gimmies en Major / Admitir a Juan Pérez">
-      <label class="f">Detalle</label><textarea class="t" id="kpBody" rows="3"></textarea>
-      <button class="btn gold w" id="kpSave" style="margin-top:10px">Enviar propuesta</button><div class="note" style="margin-top:6px">Se avisa por correo a quienes votan.</div></div>`;
-    h+=KC.proposals.map(p=>{ const tot=p.si+p.no, pct=x=>tot?x/tot*100:0, st={abierta:"open",aprobada:"open",incorporada:"fin",rechazada:"live"}[p.status];
+      ${propFormHTML()}<div class="note" style="margin-top:6px">El board vota en su módulo; se les avisa por correo. Los nuevos miembros los da de alta cualquier miembro del board en Miembros.</div></div>`;
+    if(KC.is_board) h+=`<div class="banner">Eres del board: vota en <a href="#" data-goboard>el módulo Board ›</a></div>`;
+    h+=KC.proposals.map(p=>{ const tot=p.si+p.no, pct=x=>tot?x/tot*100:0, st={abierta:"open",aprobada:"open",incorporada:"fin",rechazada:"live",vencida:"fin"}[p.status];
       return `<div class="card"><div class="h">${p.kind==="admision"?"Admisión":"Código"} <span class="pill ${st}">${p.status.toUpperCase()}</span></div>
         <div style="font:700 20px 'Cormorant Garamond',serif;color:var(--txt)">${esc(p.title)}</div>${p.body?`<div style="white-space:pre-wrap;margin:6px 0">${esc(p.body)}</div>`:""}
         <div class="note">Propuso ${esc(p.author||"—")} · ${new Date(p.created_at).toLocaleDateString("es-MX",{day:"numeric",month:"short"})}</div>
         <div class="vbar"><div class="s" style="width:${pct(p.si)}%"></div><div class="n" style="width:${pct(p.no)}%"></div></div>
         <div class="note"><b style="color:var(--ok)">${p.si} a favor</b> · <b style="color:var(--bad)">${p.no} en contra</b> · se necesitan ${p.need} de ${p.voters} ${p.kind==="admision"?"miembros (¾)":"del board"}${p.si>=p.need?" · <b style='color:var(--ok)'>✓ alcanza</b>":""}</div>
-        ${p.can_vote?`<div class="row2" style="margin-top:10px"><button class="btn ${p.mine==="si"?"":"ghost"}" data-kv="${p.id}" data-v="si">👍 A favor${p.mine==="si"?" ✓":""}</button><button class="btn ${p.mine==="no"?"danger":"ghost"}" data-kv="${p.id}" data-v="no">👎 En contra${p.mine==="no"?" ✓":""}</button></div>`:p.status==="abierta"?`<div class="note" style="margin-top:6px">Votan los miembros del board.</div>`:""}
-        ${KC.can_admin?`<div class="row3" style="margin-top:8px">${["aprobada","rechazada","incorporada"].map(s=>`<button class="btn sm ghost" data-kd="${p.id}" data-s="${s}">${s[0].toUpperCase()+s.slice(1)}</button>`).join("")}</div>`:""}</div>`; }).join("")||"";
+        ${p.status==="abierta"?`<div class="note" style="margin-top:6px">Vota el board${p.closes_at?" · cierra "+fdl(p.closes_at):""}.</div>`:""}</div>`; }).join("")||"";
   }
   if(KTAB==="hist"){
     h=`<div class="card"><div class="h">Versiones del Código</div>${KC.versions.map(v=>`<div class="trow"><span class="nm2"><b>Versión ${esc(v.label)}</b><div class="note">${new Date(v.published_at+"T12:00:00").toLocaleDateString("es-MX",{day:"numeric",month:"long",year:"numeric"})}${v.id===KC.current?.id?" · vigente":""}</div></span><button class="btn sm ghost" data-kver="${v.id}">Ver</button></div>`).join("")}</div>`;
@@ -1349,10 +1363,54 @@ document.addEventListener("click",async e=>{ if(VIEW!=="code") return; const t=e
   if(t.dataset.kcur!==undefined){ e.preventDefault(); KVIEW=KC.current; renderCode(); return; }
   try{
     if(t.dataset.kver){ KVIEW=await rpc("k_version_body",{p_token:TOKEN,p_id:t.dataset.kver}); KTAB="code"; renderCode(); window.scrollTo(0,0); }
-    else if(t.id==="kpSave"){ t.disabled=true; KC=await rpc("k_propose",{p_token:TOKEN,p_kind:$("#kpKind").value,p_title:$("#kpTitle").value,p_body:$("#kpBody").value}); toast("Propuesta enviada ✓"); renderCode(); }
-    else if(t.dataset.kv){ KC=await rpc("k_vote",{p_token:TOKEN,p_id:t.dataset.kv,p_vote:t.dataset.v}); toast("Voto registrado ✓"); renderCode(); }
-    else if(t.dataset.kd){ KC=await rpc("k_decide",{p_token:TOKEN,p_id:t.dataset.kd,p_status:t.dataset.s}); renderCode(); }
+    else if(t.id==="kpSave"){ t.disabled=true; KC=await rpc("k_propose",{p_token:TOKEN,p_kind:"codigo",p_title:$("#kpTitle").value,p_body:$("#kpBody").value,p_days:+$("#kpDays").value}); toast("Propuesta enviada al board ✓"); renderCode(); }
+    else if(t.dataset.goboard!==undefined){ e.preventDefault(); go("board"); }
     else if(t.id==="kvSave"){ if(!confirm("¿Publicar esta versión como la vigente?")) return; KC=await rpc("k_admin_version",{p_token:TOKEN,p_data:{label:$("#kvLabel").value,published_at:$("#kvDate").value,body:$("#kvBody").value,pdf_url:$("#kvPdf").value}}); KVIEW=KC.current; KTAB="code"; toast("Versión publicada ✓"); renderCode(); }
+  }catch(err){ toast(err.message); t.disabled=false; }
+});
+
+/* ===== board ===== */
+function fdl(d){ const x=new Date(d), ms=x-Date.now(); const f=x.toLocaleString("es-MX",{weekday:"short",day:"numeric",month:"short",hour:"numeric",minute:"2-digit"});
+  if(ms<=0) return f; const dd=Math.floor(ms/86400000), hh=Math.floor(ms%86400000/3600000); return `${f} (en ${dd?dd+"d ":""}${hh}h)`; }
+function propFormHTML(){ return `<label class="f">Título</label><input class="t" id="kpTitle" maxlength="120" placeholder="Ej. Gimmies dentro del grip en Major">
+  <label class="f">Detalle</label><textarea class="t" id="kpBody" rows="3"></textarea>
+  <label class="f">Plazo para votar</label><select class="t" id="kpDays"><option value="3">3 días</option><option value="7" selected>7 días</option><option value="14">14 días</option></select>
+  <button class="btn gold w" id="kpSave" style="margin-top:10px">Enviar al board</button>`; }
+let BTAB="vot";
+async function loadBoard(){ try{ KC=await rpc("k_get",{p_token:TOKEN}); }catch(e){ toast(e.message); return; } renderBoard(); }
+function vcardHTML(p,todo){
+  const tot=p.si+p.no, pct=x=>tot?x/tot*100:0, voted=new Set(p.voted||[]);
+  const st={aprobada:["open","APROBADA"],rechazada:["live","RECHAZADA"],vencida:["fin","VENCIÓ"],incorporada:["fin","INCORPORADA"],abierta:["open","EN VOTACIÓN"]}[p.status]||["fin",p.status];
+  return `<div class="vcard ${todo?"todo":""}" data-vc="${p.id}"><div style="display:flex;justify-content:space-between;align-items:center"><span class="dl">${p.status==="abierta"&&p.closes_at?"Cierra "+esc(fdl(p.closes_at)):p.decided_at?"Decidida "+new Date(p.decided_at).toLocaleDateString("es-MX",{day:"numeric",month:"short",year:"numeric"}):""}</span><span class="pill ${st[0]}">${st[1]}</span></div>
+    <div class="tt">${esc(p.title)}</div>${p.body?`<div class="bd">${esc(p.body)}</div>`:""}<div class="note">Propuso ${esc(p.author||"—")}</div>
+    <div class="vbar"><div class="s" style="width:${pct(p.si)}%"></div><div class="n" style="width:${pct(p.no)}%"></div></div>
+    <div class="note"><b style="color:var(--ok)">${p.si} a favor</b> · <b style="color:var(--bad)">${p.no} en contra</b> · mayoría: ${p.need} de ${p.voters}</div>
+    ${p.status==="abierta"?`<div class="who">${KC.board.map(b=>`<span class="${voted.has(b.id)?"y":""}">${voted.has(b.id)?"✓ ":""}${esc(b.nickname||b.name)}</span>`).join("")}</div>`:""}
+    ${p.can_vote?`<div class="row2" style="margin-top:12px"><button class="btn ${p.mine==="si"?"":"ghost"}" data-kv="${p.id}" data-v="si">👍 A favor${p.mine==="si"?" ✓":""}</button><button class="btn ${p.mine==="no"?"danger":"ghost"}" data-kv="${p.id}" data-v="no">👎 En contra${p.mine==="no"?" ✓":""}</button></div>`:""}
+    ${KC.can_admin&&p.kind==="codigo"?`<div class="row3" style="margin-top:8px">${(p.status==="abierta"?["aprobada","rechazada"]:p.status==="aprobada"?["incorporada","abierta"]:["abierta"]).map(s=>`<button class="btn sm ghost" data-kd="${p.id}" data-s="${s}">${{aprobada:"Aprobar",rechazada:"Rechazar",incorporada:"Ya está en el Código",abierta:"Reabrir"}[s]}</button>`).join("")}</div>`:""}</div>`;
+}
+function renderBoard(){
+  if(!KC.is_board){ $("#bdBody").innerHTML=`<div class="card"><div class="note">Este módulo es solo para los miembros del board.</div></div>`; return; }
+  $("#bdSub").textContent=KC.board.map(b=>b.nickname||b.name.split(" ")[0]).join(" · ");
+  const P=KC.proposals.filter(p=>p.kind==="codigo"), open=P.filter(p=>p.status==="abierta"), todo=open.filter(p=>!p.mine), done=open.filter(p=>p.mine), hist=P.filter(p=>p.status!=="abierta");
+  let h=`<div class="etabs" id="bdTabs"><button data-btab="vot" class="${BTAB==="vot"?"on":""}">Votaciones${todo.length?` (${todo.length})`:""}</button><button data-btab="new" class="${BTAB==="new"?"on":""}">Proponer</button><button data-btab="hist" class="${BTAB==="hist"?"on":""}">Historial</button></div>`;
+  if(BTAB==="vot"){
+    h+=`<div class="hnhead"><span class="t1">Te falta votar</span><small class="note">${todo.length}</small></div>`+(todo.length?todo.map(p=>vcardHTML(p,true)).join(""):`<div class="card"><div class="note">Estás al día. No tienes votos pendientes.</div></div>`);
+    if(done.length) h+=`<div class="hnhead" style="margin-top:6px"><span class="t1">Ya votaste · siguen abiertas</span></div>`+done.map(p=>vcardHTML(p,false)).join("");
+    h+=`<div class="card"><div class="h">Nuevo hermano</div><div class="note">Cualquier miembro del board da de alta a un nuevo miembro, sin votación.</div><button class="btn ghost w" id="bdNewMem" style="margin-top:10px">+ Dar de alta en Miembros</button></div>`;
+  }
+  if(BTAB==="new") h+=`<div class="card"><div class="h">Proponer cambio al Código</div>${propFormHTML()}<div class="note" style="margin-top:6px">Gana con mayoría del board (${Math.floor(KC.n_board/2)+1} de ${KC.n_board}); se cierra sola al alcanzarla. A quien no haya votado le llega un recordatorio diario.</div></div>`;
+  if(BTAB==="hist") h+=hist.length?hist.map(p=>vcardHTML(p,false)).join(""):`<div class="card"><div class="note">Aún no hay decisiones.</div></div>`;
+  $("#bdBody").innerHTML=h;
+}
+document.addEventListener("click",async e=>{ if(VIEW!=="board") return; const t=e.target;
+  if(t.dataset.btab){ BTAB=t.dataset.btab; renderBoard(); return; }
+  if(t.id==="bdNewMem"){ go("members"); setTimeout(()=>$("#newMemBtn").click(),400); return; }
+  try{
+    if(t.id==="kpSave"){ t.disabled=true; KC=await rpc("k_propose",{p_token:TOKEN,p_kind:"codigo",p_title:$("#kpTitle").value,p_body:$("#kpBody").value,p_days:+$("#kpDays").value}); toast("Propuesta enviada al board ✓"); BTAB="vot"; renderBoard(); }
+    else if(t.dataset.kv){ const before=KC.proposals.find(p=>p.id===t.dataset.kv)?.status; KC=await rpc("k_vote",{p_token:TOKEN,p_id:t.dataset.kv,p_vote:t.dataset.v}); const after=KC.proposals.find(p=>p.id===t.dataset.kv)?.status;
+      toast(after!==before?`Voto registrado · la propuesta quedó ${after.toUpperCase()}`:"Voto registrado ✓"); renderBoard(); renderHome(); }
+    else if(t.dataset.kd){ KC=await rpc("k_decide",{p_token:TOKEN,p_id:t.dataset.kd,p_status:t.dataset.s}); renderBoard(); }
   }catch(err){ toast(err.message); t.disabled=false; }
 });
 
