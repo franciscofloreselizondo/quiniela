@@ -763,7 +763,7 @@ async function loadMembers(){
   $("#newMemBtn").classList.toggle("hide",!isAdminMembers());
   $("#memList").innerHTML=MEMBERS.map(m=>`<div class="mem" ${isAdminMembers()?`data-medit="${m.id}" style="cursor:pointer"`:""}><div><div class="n">${esc(m.name)}${m.id===ME.id?'<span class="me">TÚ</span>':""}</div>
     <div class="s">${m.liga?esc(LIGAS[m.liga])+" · ":""}${m.hcp!=null?"HCP "+esc(m.hcp):"HCP —"}${!m.active?" · inactivo":""}${isAdminMembers()&&m.email?" · "+esc(m.email):""}</div></div>
-    <div style="text-align:right">${m.role!=="miembro"?`<span class="badge g">${ROLES[m.role].toUpperCase()}</span>`:""}${m.fundador?`<span class="badge c">FUNDADOR</span>`:""}${m.superadmin?`<span class="badge">ADMIN</span>`:m.bet_admin?`<span class="badge">APUESTAS</span>`:""}</div></div>`).join("");
+    <div style="text-align:right">${m.role!=="miembro"?`<span class="badge g">${ROLES[m.role].toUpperCase()}</span>`:""}${m.board?`<span class="badge">BOARD</span>`:""}${m.fundador?`<span class="badge c">FUNDADOR</span>`:""}${m.superadmin?`<span class="badge">ADMIN</span>`:m.bet_admin?`<span class="badge">APUESTAS</span>`:""}</div></div>`).join("");
 }
 function memberForm(m){
   m=m||{name:"",email:"",role:"miembro",fundador:false,liga:"",hcp:"",active:true,bet_admin:false};
@@ -774,6 +774,7 @@ function memberForm(m){
     <div class="row2"><div><label class="f">Rol</label><select class="t" id="mRole">${opt(ROLES,m.role)}</select></div><div><label class="f">Liga</label><select class="t" id="mLiga"><option value="">—</option>${opt(LIGAS,m.liga)}</select></div></div>
     <div class="row2"><div><label class="f">HCP</label><input class="t" id="mHcp" inputmode="decimal" value="${esc(m.hcp??"")}"></div>
     <div><label class="f">Fundador</label><select class="t" id="mFund"><option value="false">No</option><option value="true" ${m.fundador?"selected":""}>Sí</option></select></div></div>
+    <label class="f">Board (vota cambios al Código)</label><select class="t" id="mBoard"><option value="false">No</option><option value="true" ${m.board?"selected":""}>Sí</option></select>
     ${m.id&&!m.superadmin?`<label class="f">Estatus</label><select class="t" id="mAct"><option value="true">Activo</option><option value="false" ${m.active?"":"selected"}>Inactivo</option></select>`:""}
     ${ME.superadmin&&m.id&&!m.superadmin?`<label class="f">Admin de apuestas (puede abrir torneos)</label><select class="t" id="mBet"><option value="false">No</option><option value="true" ${m.bet_admin?"selected":""}>Sí</option></select>`:""}
     <button class="btn gold w" id="mSave" data-id="${m.id||""}" style="margin-top:14px">Guardar</button><button class="btn ghost w" id="mCancel" style="margin-top:8px">Cancelar</button>`;
@@ -783,7 +784,7 @@ document.addEventListener("click",async e=>{
   const ed=e.target.closest("[data-medit]"); if(ed){ $("#memForm").innerHTML=memberForm(MEMBERS.find(m=>m.id===ed.dataset.medit)); $("#memForm").classList.remove("hide"); window.scrollTo(0,0); return; }
   if(e.target.id==="mCancel"){ $("#memForm").classList.add("hide"); return; }
   if(e.target.id==="mSave"){ const id=e.target.dataset.id||null, prev=MEMBERS.find(m=>m.id===id);
-    const d={id,name:$("#mName").value.trim(),email:$("#mEmail").value.trim(),role:$("#mRole").value,liga:$("#mLiga").value||null,hcp:$("#mHcp").value.trim(),fundador:$("#mFund").value==="true",active:$("#mAct")?$("#mAct").value==="true":true};
+    const d={id,name:$("#mName").value.trim(),email:$("#mEmail").value.trim(),role:$("#mRole").value,liga:$("#mLiga").value||null,hcp:$("#mHcp").value.trim(),fundador:$("#mFund").value==="true",board:$("#mBoard").value==="true",active:$("#mAct")?$("#mAct").value==="true":true};
     e.target.disabled=true;
     try{ MEMBERS=await rpc("c_admin_save_member",{p_token:TOKEN,p_data:d});
       if($("#mBet")&&id&&(($("#mBet").value==="true")!==!!prev?.bet_admin)) MEMBERS=await rpc("c_admin_set_bet_admin",{p_token:TOKEN,p_id:id,p_on:$("#mBet").value==="true"});
