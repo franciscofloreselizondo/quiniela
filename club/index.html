@@ -243,6 +243,7 @@ table.att td.ok{color:var(--ok);font-weight:700}table.att td.ko{color:var(--bad)
   </div>
   <nav class="main hide" id="mainNav">
     <button data-nav="home">Casa Club</button>
+    <button data-nav="cal">Calendario</button>
     <button data-nav="bets">Apuestas</button>
     <button data-nav="att">Asistencias</button>
     <button data-nav="treas">Tesorería</button>
@@ -286,9 +287,9 @@ table.att td.ok{color:var(--ok);font-weight:700}table.att td.ko{color:var(--bad)
   <!-- HOME -->
   <section class="view" id="v-home">
     <div class="hero"><img class="logo" alt="Hermanos McGregor"><h1 id="hiName">Bienvenido</h1><div class="sub" id="hiRole"></div></div>
-    <div id="homeNext"></div>
-    <div class="card" id="calCard"><div class="h">Calendario Championships <small id="calYear"></small></div><div id="calList"><div class="note">Cargando…</div></div><div id="calAdmin"></div></div>
+
     <div class="tiles">
+      <button class="tile" data-nav="cal"><i>📅</i><b>Calendario</b><span>Championships del año</span></button>
       <button class="tile" data-nav="bets"><i>🎲</i><b>Apuestas</b><span>Quinielas y torneos</span></button>
       <button class="tile" data-nav="att"><i>📋</i><b>Asistencias</b><span>Salidas y No-Show</span></button>
       <button class="tile" data-nav="treas"><i>💰</i><b>Tesorería</b><span>Cuotas y fondos</span></button>
@@ -298,11 +299,19 @@ table.att td.ok{color:var(--ok);font-weight:700}table.att td.ko{color:var(--bad)
       <button class="tile" data-nav="members"><i>🏌️</i><b>Miembros</b><span>Socios y roles</span></button>
       <button class="tile" id="tileLogout"><i>🚪</i><b>Salir</b><span>Cerrar sesión</span></button>
     </div>
+    <div id="homeNext"></div>
     <div class="card"><div class="h">Mi perfil <small id="pfMail"></small></div>
       <label class="f" for="pfNick">Apodo</label><input id="pfNick" class="t" maxlength="30">
       <div class="row2"><div><label class="f" for="pfHcp">HCP (18 Birdies)</label><input id="pfHcp" class="t" inputmode="decimal"></div>
       <div><label class="f" for="pfLiga">Liga</label><select id="pfLiga" class="t"><option value="">—</option><option value="sabado">Sabatina</option><option value="domingo">Dominical</option><option value="ambas">Ambas</option></select></div></div>
       <button class="btn ghost w" id="pfSave" style="margin-top:10px">Guardar mi perfil</button></div>
+  </section>
+
+  <!-- CALENDARIO -->
+  <section class="view" id="v-cal">
+    <div class="plaque"><div class="pt">Hermanos McGregor</div><div class="pn">Calendario Championships</div><div class="ps">Torneos del año y a quién se dedican</div></div>
+    <div class="card"><label class="f" for="calSel" style="margin-top:0">Año</label><select id="calSel" class="t"></select></div>
+    <div class="card" id="calCard"><div class="h">Torneos <small id="calYear"></small></div><div id="calList"><div class="note">Cargando…</div></div><div id="calAdmin"></div></div>
   </section>
 
   <!-- BETS LIST -->
@@ -420,6 +429,7 @@ function go(v){
   if(v==="hist") loadHist();
   if(v==="members") loadMembers();
   if(v==="att") loadAtt();
+  if(v==="cal") loadCal(+($("#calSel").value||2026));
   if(v==="treas") loadTreas();
   if(v==="honor") loadHonor();
   if(v==="code") loadCode();
@@ -462,7 +472,7 @@ function afterLogin(){
 
 /* ===== home ===== */
 async function renderHome(){
-  $("#hiName").textContent="Bienvenido, "+(ME.nickname||ME.name); fillProfile(); loadCal();
+  $("#hiName").textContent="Bienvenido, "+(ME.nickname||ME.name); fillProfile();
   $("#hiRole").textContent=[ROLES[ME.role], ME.fundador?"Fundador":null, ME.superadmin?"Administrador":ME.bet_admin?"Admin de apuestas":null].filter(Boolean).join(" · ");
   try{ EVENTS=await rpc("b_events_list",{p_token:TOKEN}); }catch{ EVENTS=[]; }
   const nx=EVENTS.filter(e=>!e.closed).sort((a,b)=>new Date(a.lock_at)-new Date(b.lock_at))[0];
@@ -763,9 +773,11 @@ async function loadMembers(){
   const act=MEMBERS.filter(m=>m.active);
   $("#memCount").textContent=`${act.length} socios activos`;
   $("#newMemBtn").classList.toggle("hide",!isAdminMembers());
-  $("#memList").innerHTML=MEMBERS.map(m=>`<div class="mem" ${(isAdminMembers()||canDelMembers())?`data-medit="${m.id}" style="cursor:pointer"`:""}><div><div class="n">${esc(m.name)}${m.nickname?` <span style="color:var(--gold2);font-weight:500">“${esc(m.nickname)}”</span>`:""}${m.id===ME.id?'<span class="me">TÚ</span>':""}</div>
-    <div class="s">${m.liga?esc(LIGAS[m.liga])+" · ":""}${m.hcp!=null?"HCP "+esc(m.hcp):"HCP —"}${!m.active?" · inactivo":""}${isAdminMembers()&&m.email?" · "+esc(m.email):""}</div></div>
-    <div style="text-align:right">${m.role!=="miembro"?`<span class="badge g">${ROLES[m.role].toUpperCase()}</span>`:""}${m.board?`<span class="badge">BOARD</span>`:""}${m.fundador?`<span class="badge c">FUNDADOR</span>`:""}${m.superadmin?`<span class="badge">ADMIN</span>`:m.bet_admin?`<span class="badge">APUESTAS</span>`:""}</div></div>`).join("");
+  const rk=m=>m.role==="presidente"?1:m.role==="tesorero"?2:m.role==="secretario"?3:m.board?4:5;
+  const L=[...MEMBERS].sort((x,y)=>rk(x)-rk(y)||x.name.localeCompare(y.name));
+  $("#memList").innerHTML=L.map(m=>`<div class="mem" ${(isAdminMembers()||canDelMembers())?`data-medit="${m.id}" style="cursor:pointer"`:""}><div><div class="n">${esc(m.name)}${m.nickname?` <span style="color:var(--gold2);font-weight:500">“${esc(m.nickname)}”</span>`:""}${m.id===ME.id?'<span class="me">TÚ</span>':""}</div>
+    <div class="s">${!m.active?"inactivo":""}${isAdminMembers()&&m.email?(m.active?"":" · ")+esc(m.email):""}</div></div>
+    <div style="text-align:right">${["presidente","tesorero","secretario"].includes(m.role)?`<span class="badge g">${ROLES[m.role].toUpperCase()}</span>`:""}${m.board?`<span class="badge">BOARD</span>`:""}</div></div>`).join("");
 }
 function memberForm(m){
   m=m||{name:"",email:"",role:"miembro",fundador:false,liga:"",hcp:"",active:true,bet_admin:false};
@@ -986,9 +998,10 @@ document.addEventListener("click",async e=>{
 
 /* ===== calendario, perfil, solicitudes ===== */
 let CAL=null; const MESES=["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
-async function loadCal(y){ try{ CAL=await rpc("c_calendar_get",{p_token:TOKEN,p_year:y||new Date().getFullYear()}); renderCal(); }catch(e){ $("#calList").innerHTML=`<div class="note">${esc(e.message)}</div>`; } }
+async function loadCal(y){ try{ CAL=await rpc("c_calendar_get",{p_token:TOKEN,p_year:y||2026}); renderCal(); }catch(e){ $("#calList").innerHTML=`<div class="note">${esc(e.message)}</div>`; } }
 function renderCal(){
   $("#calYear").textContent=CAL.year;
+  const ys=[...new Set([2026,2027,...(CAL.years||[])])].sort(); $("#calSel").innerHTML=ys.map(y=>`<option value="${y}" ${y===CAL.year?"selected":""}>${y}</option>`).join("");
   const today=CAL.today, nx=CAL.items.find(c=>c.date>=today);
   $("#calList").innerHTML=CAL.items.length?CAL.items.map(c=>`<div class="calr ${c.date<today?"past":""} ${nx&&c.id===nx.id?"next":""}" ${c.event_id?`data-ev="${c.event_id}" style="cursor:pointer"`:""}>
       <div class="d">${MESES[c.month-1].toUpperCase()}<b>${esc(c.days)}</b></div>
@@ -1132,6 +1145,7 @@ document.addEventListener("click",async e=>{ if(VIEW!=="code") return; const t=e
   }catch(err){ toast(err.message); t.disabled=false; }
 });
 
+$("#calSel").addEventListener("change",e=>loadCal(+e.target.value));
 /* ===== boot ===== */
 (async()=>{
   document.querySelectorAll("img.logo").forEach(i=>i.src=STORE+"logo.webp"); $("#barLogo").src=STORE+"icon180.png";
