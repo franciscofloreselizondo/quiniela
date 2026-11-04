@@ -204,6 +204,11 @@ table.ht tr.mine td{background:rgba(164,161,106,.15)}
 textarea.copy{width:100%;min-height:150px;font:12px/1.4 ui-monospace,monospace;border:1px solid var(--line);border-radius:10px;padding:8px;margin-top:8px;background:rgba(0,0,0,.2);color:var(--cream)}
 .mrow{display:grid;grid-template-columns:1fr 56px 1fr 56px 62px 28px;gap:4px;margin-bottom:6px;align-items:center}
 .mrow input{padding:7px 6px;font-size:13px}
+.pairrow{display:grid;grid-template-columns:22px 1fr 48px 1fr 48px 74px 26px;gap:4px;margin-bottom:6px;align-items:center}
+.pmrow{display:grid;grid-template-columns:62px 1fr 1fr 58px 26px;gap:4px;margin-bottom:6px;align-items:center}
+.pairrow input,.pairrow select,.pmrow input,.pmrow select{padding:7px 5px;font-size:12.5px}
+.pjsc{display:grid;grid-template-columns:1fr 60px 60px;gap:6px;margin-bottom:5px;align-items:center}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .ent{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:8px 0;border-top:1px solid rgba(164,161,106,.2)}.ent:first-child{border-top:0}
 .ent .nm2{flex:1;min-width:110px}
 .grid{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -4px}
@@ -621,8 +626,18 @@ const POSL={p1:"1er lugar",p2:"2º lugar",p3:"3er lugar"};
 function KEYS(){ return ST()?["p1","p2","p3"]:EV.matches.map((_,i)=>"m"+(i+1)).concat(["team","ind1"]); }
 function LABEL(k){ return k==="team"?"Eq":k==="ind1"?"#1":/^p\d$/.test(k)?k.slice(1)+"º":"M"+k.slice(1); }
 function LONG(k){ return k==="team"?"Equipo":k==="ind1"?"1er lugar":POSL[k]||"Match "+k.slice(1); }
-function PLAYERS(){ return ST()?(EV.players||[]).map(p=>({n:p.n,h:p.h,c:""})):EV.matches.flatMap(m=>[{n:m.w[0],h:m.w[1],c:"w"},{n:m.r[0],h:m.r[1],c:"r"}]); }
+function PLAYERS(){ if(PJ()) return pairsOf().map(x=>({n:x.label,h:null,c:x.team===1?"r":"w"})); return ST()?(EV.players||[]).map(p=>({n:p.n,h:p.h,c:""})):EV.matches.flatMap(m=>[{n:m.w[0],h:m.w[1],c:"w"},{n:m.r[0],h:m.r[1],c:"r"}]); }
 function FIRSTK(){ return ST()?"p1":"ind1"; }
+function PJ(e){ return (e||EV)?.format==="parejas"; }
+function half(x){ return x%1?(Math.floor(x)||"")+"½":String(x); }
+function pairsOf(e){ e=e||EV; const m={}; (e.players||[]).forEach(p=>{ (m[p.pair]=m[p.pair]||{no:p.pair,team:p.team,ps:[]}).ps.push(p); }); return Object.values(m).map(x=>({...x,label:x.ps.map(p=>p.n).join(" / ")})).sort((a,b)=>a.no-b.no); }
+function pairCalc(e){ e=e||EV; const S={}; (e.scores||[]).forEach(x=>S[x.n]=x);
+  const P=pairsOf(e).map(x=>{ const d=k=>{ const v=x.ps.map(p=>S[p.n]?.[k]).filter(v=>v!=null); return v.length?Math.min(...v):null; }; const b1=d("d1"),b2=d("d2"); return {...x,b1,b2,tot:b1!=null&&b2!=null?b1+b2:null}; });
+  const by=no=>P.find(x=>x.no===no); let wp=0,rp=0;
+  const M=(e.matches||[]).map(m=>{ const k=m.d==2?"b2":"b1", wb=by(m.a)?.[k]??null, rb=by(m.b)?.[k]??null; let res=null;
+    if(wb!=null&&rb!=null){ res=wb<rb?"w":rb<wb?"r":"t"; if(res==="w") wp++; else if(res==="r") rp++; else { wp+=.5; rp+=.5; } } return {...m,wb,rb,res}; });
+  const ranked=P.filter(x=>x.tot!=null).sort((a,b)=>a.tot-b.tot||a.no-b.no); ranked.forEach(x=>x.rk=1+ranked.filter(y=>y.tot<x.tot).length);
+  return {P,M,wp,rp,ranked}; }
 function lockAt(){ return new Date(EV.lock_at).getTime(); }
 function locked(){ return Date.now()+skew>=lockAt(); }
 function ptOf(k){ const p=EV.pts; return /^m\d/.test(k)?p.match:p[k]; }
@@ -669,9 +684,10 @@ function principalHTML(){
   let h=`<div class="card"><div class="h">Reglas rápidas <small>${EV.closed?"evento cerrado":locked()?"picks cerrados":"cierran en "+fmtLeft(ms)}</small></div>
     <div class="stats"><div><b>${money(EV.aportacion)}</b><span>ENTRADA</span></div><div><b>${money(bolsa())}</b><span>BOLSA · ${n}</span></div><div><b>${maxPts()}</b><span>PUNTOS MÁX.</span></div></div>
     <ul class="rl">${ST()?`<li><i>Formato</i><span>Stroke net individual · ${PLAYERS().length} jugadores.</span></li><li><i>Picks</i><span>Podio net: 1º, 2º y 3º lugar.</span></li>
-    <li><i>Puntos</i><span>1º ${p.p1} · 2º ${p.p2} · 3º ${p.p3}.</span></li>`:`<li><i>Formato</i><span>Ryder · match play por equipos.</span></li><li><i>Picks</i><span>${EV.matches.length} matches, equipo ganador (${esc(EV.teams.join(" o "))}) y 1er lugar individual.</span></li>
+    <li><i>Puntos</i><span>1º ${p.p1} · 2º ${p.p2} · 3º ${p.p3}.</span></li>`:PJ()?`<li><i>Formato</i><span>Ryder de parejas · 2 días · salida Shamble. Gana el partido la pareja con el mejor net individual del día (best ball): 1 pt, empate ½.</span></li><li><i>Picks</i><span>${EV.matches.length} partidos, equipo ganador (${esc(EV.teams.join(" o "))}) y 1ª pareja (suma de best ball de los 2 días).</span></li>
+    <li><i>Puntos</i><span>Partido ${p.match} · Equipo ${p.team} · 1ª pareja ${p.ind1}.</span></li>`:`<li><i>Formato</i><span>Ryder · match play por equipos.</span></li><li><i>Picks</i><span>${EV.matches.length} matches, equipo ganador (${esc(EV.teams.join(" o "))}) y 1er lugar individual.</span></li>
     <li><i>Puntos</i><span>Match ${p.match} · Equipo ${p.team} · 1er lugar ${p.ind1}.</span></li>`}<li><i>Premios</i><span>${premios}</span></li>
-    <li><i>Empate</i><span>Gana quien más se acerque al score net del 1er lugar.</span></li>
+    <li><i>Empate</i><span>Gana quien más se acerque al ${PJ()?"net total de la 1ª pareja":"score net del 1er lugar"}.</span></li>
     <li><i>Cierre</i><span>${new Date(EV.lock_at).toLocaleString("es-MX",{weekday:"long",day:"numeric",month:"short",hour:"numeric",minute:"2-digit"})}. Todos los picks son públicos.</span></li></ul>
     ${cta?`<div style="margin-top:12px">${cta}</div>`:""}
     ${EV.convocatoria_url?`<a class="btn ghost w" style="margin-top:8px" href="${esc(EV.convocatoria_url)}" target="_blank" rel="noopener">Ver convocatoria</a>`:""}</div>`;
@@ -693,7 +709,7 @@ document.addEventListener("click",async e=>{ if(e.target.id!=="joinBtn") return;
 
 /* picks */
 function optBtn(name,h,c,sel,attrs,dis){return `<button class="opt ${c}${sel?" sel":""}" ${attrs} ${dis?"disabled":""}><b>${esc(name)}</b>${h!=null&&h!==""?`<i>HCP ${esc(h)}</i>`:""}</button>`;}
-function matchesHTML(src,p,dis){return EV.matches.map((m,i)=>{const k="m"+(i+1);return `<div class="mt">Match ${i+1}${m.t?" · "+esc(m.t):""}</div><div class="match">
+function matchesHTML(src,p,dis){return EV.matches.map((m,i)=>{const k="m"+(i+1);return `<div class="mt">${PJ()?"Partido":"Match"} ${i+1}${m.d?" · Día "+m.d:""}${m.t?" · "+esc(m.t):""}</div><div class="match">
   ${optBtn(m.w[0],m.w[1],"w",src[k]===m.w[0],`data-${p}="${k}" data-v="${esc(m.w[0])}"`,dis)}<div class="vs">vs</div>
   ${optBtn(m.r[0],m.r[1],"r",src[k]===m.r[0],`data-${p}="${k}" data-v="${esc(m.r[0])}"`,dis)}</div>`}).join("");}
 function teamHTML(src,p,dis){return EV.teams.map((t,i)=>`<button class="opt ${i?"r":"w"}${src.team===t?" sel":""}" data-${p}="team" data-v="${esc(t)}" ${dis?"disabled":""}><b>${esc(t)}</b></button>`).join("");}
@@ -713,10 +729,11 @@ function picksHTML(){
   if(ST()) return ban+["p1","p2","p3"].map(k=>`<div class="card"><div class="h">${LONG(k)} <small>${p[k]} pt${p[k]==1?"":"s"}</small></div><div class="grid3">${posHTML(form.picks,"p",k,dis)}</div></div>`).join("")
     +`<div class="card"><label class="f" for="tb">Desempate: score net del 1er lugar</label><input id="tb" class="t" type="number" inputmode="numeric" min="40" max="130" placeholder="Ej. 68" value="${esc(form.tb??"")}" ${dis?"disabled":""}>
     <div class="note" style="margin-top:6px">Solo cuenta si hay empate en puntos. Gana el más cercano. Un jugador solo puede ir en un lugar del podio.</div></div>`;
-  return ban+`<div class="card"><div class="h">${EV.matches.length} Matches <small>${p.match} pt c/u</small></div>${matchesHTML(form.picks,"p",dis)}</div>
+  const pj=PJ();
+  return ban+`<div class="card"><div class="h">${EV.matches.length} ${pj?"Partidos":"Matches"} <small>${p.match} pt c/u</small></div>${EV.matches.length?matchesHTML(form.picks,"p",dis):`<div class="note">Los partidos se publican cuando se definan los equipos.</div>`}</div>
     <div class="card"><div class="h">Equipo ganador <small>${p.team} pts</small></div><div class="teams">${teamHTML(form.picks,"p",dis)}</div></div>
-    <div class="card"><div class="h">1er lugar individual <small>${p.ind1} pts</small></div><div class="grid3">${indHTML(form.picks,"p",dis)}</div></div>
-    <div class="card"><label class="f" for="tb">Desempate: score net del 1er lugar</label><input id="tb" class="t" type="number" inputmode="numeric" min="40" max="130" placeholder="Ej. 68" value="${esc(form.tb??"")}" ${dis?"disabled":""}>
+    <div class="card"><div class="h">${pj?"1ª pareja (2 días)":"1er lugar individual"} <small>${p.ind1} pts</small></div><div class="${pj?"grid2":"grid3"}">${indHTML(form.picks,"p",dis)}</div></div>
+    <div class="card"><label class="f" for="tb">${pj?"Desempate: net total de la 1ª pareja (best ball, 2 días)":"Desempate: score net del 1er lugar"}</label><input id="tb" class="t" type="number" inputmode="numeric" min="40" max="${pj?400:130}" placeholder="${pj?"Ej. 138":"Ej. 68"}" value="${esc(form.tb??"")}" ${dis?"disabled":""}>
     <div class="note" style="margin-top:6px">Solo cuenta si hay empate en puntos. Gana el más cercano.</div></div>`;
 }
 function updateProg(){
@@ -767,20 +784,23 @@ function summaryHTML(){
     const st=(x,i)=>`<div class="st ${i===0?"p1":""} ${x?"":"empty"}"><div class="md">${i+1}º</div><div class="nm">${x?esc(x.n):"por definir"}</div><div class="sc">${x&&x.net!=null?"Net "+esc(x.net):"&nbsp;"}</div><div class="pz" style="background:none;color:var(--mute)">${x?pctOf("p"+(i+1),x.n)+"% le atinó":""}</div></div>`;
     h+=`<div class="card"><div class="h">Podio stroke net</div><div class="podium" id="podNet">${st(P[1],1)}${st(P[0],0)}${st(P[2],2)}</div></div>`; }
   else {
+  const PC=PJ()?pairCalc():null;
   let wN=0,rN=0; EV.matches.forEach((m,i)=>{const v=R["m"+(i+1)]; if(v===m.w[0])wN++; else if(v===m.r[0])rN++;});
-  const pend=EV.matches.length-wN-rN, cup=R.team;
+  let pend=EV.matches.length-wN-rN; if(PC){ wN=PC.wp; rN=PC.rp; pend=PC.M.filter(x=>!x.res).length; }
+  const cup=R.team;
   h+=`<div class="card"><div class="h">Marcador por equipos <small>${pend?pend+" por definir":EV.matches.length+"/"+EV.matches.length+" matches"}</small></div>
-    <div class="score" id="score"><div class="tm w ${cup===EV.teams[0]?"win":""}"><b>${wN}</b><span>${esc(EV.teams[0].toUpperCase())}</span></div><div class="x">vs</div><div class="tm r ${cup===EV.teams[1]?"win":""}"><b>${rN}</b><span>${esc(EV.teams[1].toUpperCase())}</span></div></div>
+    <div class="score" id="score"><div class="tm w ${cup===EV.teams[0]?"win":""}"><b>${half(wN)}</b><span>${esc(EV.teams[0].toUpperCase())}</span></div><div class="x">vs</div><div class="tm r ${cup===EV.teams[1]?"win":""}"><b>${half(rN)}</b><span>${esc(EV.teams[1].toUpperCase())}</span></div></div>
     <div class="cup">${cup?`🏆 Copa por equipos: <b>${esc(cup)}</b>`:"Copa por equipos: por definir"}</div>`;
-  h+=EV.matches.map((m,i)=>{const k="m"+(i+1),v=R[k];
+  h+=EV.matches.map((m,i)=>{const k="m"+(i+1),v=R[k], pm=PC?.M[i];
+    if(pm&&pm.res==="t") return `<div class="mres"><span class="n">P${i+1}</span><span>${esc(m.w[0])} <span class="lose">empató con</span> ${esc(m.r[0])} <span class="lose">(${pm.wb})</span></span><span class="pc">½ c/u</span></div>`;
     if(!v) return `<div class="mres"><span class="n">M${i+1}</span><span class="lose">${esc(m.w[0])} vs ${esc(m.r[0])} · por definir</span><span></span></div>`;
     const lo=v===m.w[0]?m.r[0]:m.w[0], pc=pctOf(k,v);
-    return `<div class="mres"><span class="n">M${i+1}</span><span><span class="dot ${teamOf(v)}"></span><b>${esc(v)}</b> <span class="lose">le ganó a ${esc(lo)}</span>${withP.length&&pc<35?'<span class="tag">SORPRESA</span>':""}</span><span class="pc">${pc}% le atinó</span></div>`;}).join("")+`</div>`;
+    return `<div class="mres"><span class="n">M${i+1}</span><span><span class="dot ${teamOf(v)}"></span><b>${esc(v)}</b> <span class="lose">le ganó a ${esc(lo)}${pm?` (${v===m.w[0]?pm.wb:pm.rb} vs ${v===m.w[0]?pm.rb:pm.wb})`:""}</span>${withP.length&&pc<35?'<span class="tag">SORPRESA</span>':""}</span><span class="pc">${pc}% le atinó</span></div>`;}).join("")+`</div>`;
   const P=[R.ind1?{n:R.ind1,net:EV.net_ganador}:null, EV.podio?.p2||null, EV.podio?.p3||null];
   if(P.some(Boolean)){ const st=(x,i)=>`<div class="st ${i===0?"p1":""} ${x?"":"empty"}"><div class="md">${i+1}º</div><div class="nm">${x?esc(x.n):"por definir"}</div><div class="sc">${x&&x.net!=null?"Net "+esc(x.net):"&nbsp;"}</div></div>`;
-    h+=`<div class="card"><div class="h">Podio net individual</div><div class="podium" id="podNet">${st(P[1],1)}${st(P[0],0)}${st(P[2],2)}</div></div>`; }
+    h+=`<div class="card"><div class="h">${PC?"Podio de parejas · 2 días":"Podio net individual"}</div><div class="podium" id="podNet">${st(P[1],1)}${st(P[0],0)}${st(P[2],2)}</div></div>`; }
   }
-  if((EV.scores||[]).length) h+=finalTableHTML();
+  if((EV.scores||[]).length) h+=PJ()?pairTableHTML():finalTableHTML();
   const rows=ranked(), top=rows.slice(0,3);
   const sq=(r,i)=>`<div class="st ${i===0?"p1":""} ${r?"":"empty"}"><div class="md">${i+1}º</div><div class="nm">${r?esc(r.e.name):"—"}</div><div class="sc">${r?r.p+" pts":"&nbsp;"}</div>${r&&r.prize>0&&r.p>0?`<div class="pz">${money(r.prize)}</div>`:""}</div>`;
   const pr=prizes();
@@ -802,6 +822,8 @@ function summaryHTML(){
   if(facts.length) h+=`<div class="card"><div class="h">Datos curiosos</div><ul class="facts">${facts.map(([i,t])=>`<li><i>${i}</i><div>${t}</div></li>`).join("")}</ul></div>`;
   return h;
 }
+function pairTableHTML(){ const PC=pairCalc(); const L=[...PC.P].sort((a,b)=>(a.tot??999)-(b.tot??999)||a.no-b.no);
+  return `<div class="card"><div class="h">Tabla de parejas <small>best ball net</small></div><table class="ht" id="pairTbl"><tr><th>Lugar</th><th>Pareja</th><th>Día 1</th><th>Día 2</th><th>Total</th></tr>${L.map(x=>`<tr><td>${x.rk?x.rk+"º":"—"}</td><td><span class="dot ${x.team===1?"r":"w"}"></span>${esc(x.label)}</td><td>${x.b1??"—"}</td><td>${x.b2??"—"}</td><td><b>${x.tot??"—"}</b></td></tr>`).join("")}</table></div>`; }
 function finalTableHTML(){ const S=[...(EV.scores||[])].sort((a,b)=>(a.pos??999)-(b.pos??999)||(a.net??999)-(b.net??999));
   return `<div class="card"><div class="h">Tabla final del torneo <small>${S.length} jugadores</small></div><table class="ht" id="finalTbl"><tr><th>Lugar</th><th>Jugador</th><th>Net</th></tr>${S.map(x=>`<tr><td>${x.pos?x.pos+"º":"—"}</td><td>${esc(x.n)}</td><td>${x.net??"—"}</td></tr>`).join("")}</table></div>`; }
 function rankingHTML(){
@@ -839,6 +861,12 @@ function adminHTML(){
     <div id="scTbl">${PLAYERS().map(x=>{const s=(EV.scores||[]).find(y=>y.n===x.n)||{}; return `<div class="srow" data-sc="${esc(x.n)}"><span class="nm2">${esc(x.n)}</span><input class="t" type="number" inputmode="numeric" min="1" value="${esc(s.pos??"")}" placeholder="#"><input class="t" type="number" inputmode="numeric" value="${esc(s.net??"")}" placeholder="Net"></div>`;}).join("")}</div>
     <button class="btn w" id="saveScores" style="margin-top:10px">Guardar tabla final</button></div>`;
   if(ST()) return scoreCard+adminRest(hasPicks,notIn);
+  if(PJ()){ const S={}; (EV.scores||[]).forEach(x=>S[x.n]=x);
+    return `<div class="card"><div class="h">Scores por día <small>net individual</small></div>
+    <div class="note" style="margin-bottom:8px">Captura el net de cada jugador por día. La app calcula el best ball de cada pareja, los partidos, el marcador, el equipo ganador y el podio de parejas.</div>
+    <div class="pjsc note"><span>Jugador</span><span>Día 1</span><span>Día 2</span></div>
+    <div id="pjTbl">${pairsOf().map(x=>`<div class="mt"><span class="dot ${x.team===1?"r":"w"}"></span>${esc(x.label)}</div>`+x.ps.map(p=>`<div class="pjsc" data-ps="${esc(p.n)}"><span class="nm2">${esc(p.n)}</span><input class="t" type="number" inputmode="numeric" value="${esc(S[p.n]?.d1??"")}" placeholder="Net"><input class="t" type="number" inputmode="numeric" value="${esc(S[p.n]?.d2??"")}" placeholder="Net"></div>`).join("")).join("")}</div>
+    <button class="btn w" id="savePairSc" style="margin-top:10px">Guardar scores y calcular</button></div>${adminRest(hasPicks,notIn)}`; }
   return `<div class="card"><div class="h">Resultados <small>toca para marcar</small></div>
     <div id="resM">${matchesHTML(res,"r",false)}</div><div class="mt">Equipo ganador</div><div class="teams">${teamHTML(res,"r",false)}</div>
     <div class="mt">1er lugar individual</div><div class="grid3">${indHTML(res,"r",false)}</div>
@@ -870,7 +898,7 @@ function eventFormHTML(e,lockMatches){
   const fb=(k,t,s)=>`<button type="button" data-fmt="${k}" class="${f===k?"on":""}" ${lockMatches?"disabled":""}><b>${t}</b><span>${s}</span></button>`;
   return `<div class="card" id="evForm" data-format="${f}"><div class="h">${e.id?"Datos del torneo":"Nuevo torneo"}</div>
     <label class="f" style="margin-top:0">Tipo de torneo ${lockMatches?"<small class='note'>(fijo: ya hay picks)</small>":""}</label>
-    <div class="fmt" id="fFmt">${fb("stroke","Stroke net individual","Podio 1º, 2º y 3º")}${fb("ryder","Ryder","Match play por equipos")}</div>
+    <div class="fmt" id="fFmt">${fb("stroke","Stroke net individual","Podio 1º, 2º y 3º")}${fb("ryder","Ryder","Match play por equipos")}${fb("parejas","Ryder parejas","2 días · best ball")}</div>
     <div id="fBody" class="${f?"":"hide"}">
     <label class="f">Nombre</label><input class="t" id="fName" value="${esc(e.name)}" placeholder="Ej. Copa de Invierno">
     <div class="row2"><div><label class="f">Campo</label><input class="t" id="fCourse" value="${esc(e.course||"")}" placeholder="Las Cañadas CC"></div><div><label class="f">Fecha</label><input class="t" id="fDate" type="date" value="${esc(e.event_date||"")}"></div></div>
@@ -893,10 +921,30 @@ function eventFormHTML(e,lockMatches){
     <div id="fMatches">${e.matches.map(m=>matchRow(m,lockMatches)).join("")}</div>
     ${lockMatches?"":`<button class="btn ghost sm" id="addMatch">+ Agregar match</button>`}
     </div>
+    <div class="fs-parejas ${f==="parejas"?"":"hide"}">
+    <div class="row3"><div><label class="f">Pts partido</label><input class="t" id="fQM" type="number" value="${pv("match",1)}"></div><div><label class="f">Pts equipo</label><input class="t" id="fQT" type="number" value="${pv("team",2)}"></div><div><label class="f">Pts 1ª pareja</label><input class="t" id="fQI" type="number" value="${pv("ind1",3)}"></div></div>
+    <div class="row2"><div><label class="f">Equipo 1</label><input class="t" id="fQ1" value="${esc(e.teams[0])}"></div><div><label class="f">Equipo 2</label><input class="t" id="fQ2" value="${esc(e.teams[1])}"></div></div>
+    <label class="f">Parejas ${lockMatches?"<small class='note'>(fijas: ya hay picks)</small>":""}</label>
+    <div class="note" style="margin-bottom:6px"># · Jugador · HCP · Jugador · HCP · Equipo (puede quedar por definir)</div>
+    <datalist id="memNames">${MEMBERS.filter(m=>m.active).map(m=>`<option value="${esc(m.name)}">`).join("")}</datalist>
+    <div id="fPairs">${(f==="parejas"?pairsOf(e):[]).map((x,i)=>pairRow(x,i,lockMatches,e.teams)).join("")||pairRow(null,0,false,e.teams)}</div>
+    ${lockMatches?"":`<button type="button" class="btn ghost sm" id="addPair">+ Agregar pareja</button>`}
+    <label class="f">Partidos ${lockMatches?"<small class='note'>(fijos: ya hay picks)</small>":""}</label>
+    <div class="note" style="margin-bottom:6px">Día · Pareja ${esc(e.teams[0])} · Pareja ${esc(e.teams[1])} · Hora. Se arman cuando las parejas tengan equipo.</div>
+    <div id="fPMatches">${(f==="parejas"?e.matches:[]).map(m=>{const ix=pairsOf(e).map(x=>x.no); return pmRow({d:m.d,a:ix.indexOf(m.a),b:ix.indexOf(m.b),t:m.t},lockMatches,pairsOf(e).map(x=>x.label));}).join("")}</div>
+    ${lockMatches?"":`<button type="button" class="btn ghost sm" id="addPM">+ Agregar partido</button>`}
+    </div>
     <label class="f">Liga de convocatoria (PDF, opcional)</label><input class="t" id="fConv" value="${esc(e.convocatoria_url||"")}" placeholder="https://…">
     <button class="btn gold w" id="saveEv" style="margin-top:14px">${e.id?"Guardar cambios":"Crear torneo"}</button></div></div>`;
 }
 let FPLAYERS=[];
+function pairRow(x,i,dis,teams){ const d=dis?"disabled":"", a=x?.ps?.[0]||{}, b=x?.ps?.[1]||{}, tm=x?.team; teams=teams||["Equipo 1","Equipo 2"];
+  return `<div class="pairrow"><span class="note pno">${i+1}</span><input class="t" ${d} list="memNames" value="${esc(a.n||"")}" placeholder="Jugador"><input class="t" ${d} value="${esc(a.h??"")}" placeholder="HCP" inputmode="decimal"><input class="t" ${d} list="memNames" value="${esc(b.n||"")}" placeholder="Jugador"><input class="t" ${d} value="${esc(b.h??"")}" placeholder="HCP" inputmode="decimal"><select class="t" ${d}><option value="">Por definir</option><option value="0" ${tm===0?"selected":""}>${esc(teams[0])}</option><option value="1" ${tm===1?"selected":""}>${esc(teams[1])}</option></select>${dis?"<span></span>":`<button type="button" class="btn sm danger" data-delpair>✕</button>`}</div>`; }
+function pairNames(){ return [...document.querySelectorAll("#fPairs .pairrow")].map(r=>{const i=r.querySelectorAll("input"); return [i[0].value.trim(),i[2].value.trim()].filter(Boolean).join(" / ")||"(vacía)";}); }
+function pmOpts(sel,names){ return `<option value="">Pareja</option>`+(names||pairNames()).map((n,i)=>`<option value="${i}" ${String(sel)===String(i)?"selected":""}>${i+1} · ${esc(n)}</option>`).join(""); }
+function pmRow(m,dis,names){ const d=dis?"disabled":""; return `<div class="pmrow"><select class="t" ${d}><option value="1" ${m.d==2?"":"selected"}>Día 1</option><option value="2" ${m.d==2?"selected":""}>Día 2</option></select><select class="t" data-pmsel ${d}>${pmOpts(m.a,names)}</select><select class="t" data-pmsel ${d}>${pmOpts(m.b,names)}</select><input class="t" ${d} value="${esc(m.t||"")}" placeholder="7:30">${dis?"<span></span>":`<button type="button" class="btn sm danger" data-delpm>✕</button>`}</div>`; }
+function refreshPM(){ document.querySelectorAll("#fPMatches [data-pmsel]").forEach(s=>{ const v=s.value; s.innerHTML=pmOpts(v); }); document.querySelectorAll("#fPairs .pno").forEach((x,i)=>x.textContent=i+1); }
+document.addEventListener("change",e=>{ if(e.target.closest("#fPairs")) refreshPM(); });
 function playersRows(dis){ return FPLAYERS.length?FPLAYERS.map((x,i)=>`<div class="prow"><span class="nm2">${esc(x.n)}</span><input class="t" data-ph="${i}" ${dis?"disabled":""} value="${esc(x.h??"")}" placeholder="HCP" inputmode="decimal">${dis?"<span></span>":`<button type="button" class="btn sm danger" data-delp="${i}">✕</button>`}</div>`).join(""):`<div class="note">Agrega al menos 3 jugadores.</div>`; }
 function refreshPlayers(){ const box=$("#fPlayers"); if(!box) return; box.innerHTML=playersRows(false);
   const sel=$("#fAddP"); if(sel) sel.innerHTML=addOpts(); }
@@ -910,6 +958,11 @@ function readEventForm(id){
   const v=s=>$(s).value.trim(), num=(s,d)=>{const x=parseInt($(s).value,10);return Number.isFinite(x)&&x>=0?x:d;};
   const matches=[...document.querySelectorAll("#fMatches .mrow")].map(r=>{const i=r.querySelectorAll("input");const h=x=>x.value.trim()===""?null:Number(x.value);return {w:[i[0].value.trim(),h(i[1])],r:[i[2].value.trim(),h(i[3])],t:i[4].value.trim()};}).filter(m=>m.w[0]||m.r[0]);
   const lk=new Date(v("#fLock"));
+  if(fmt==="parejas"){ const pl=[]; [...document.querySelectorAll("#fPairs .pairrow")].forEach((r,i)=>{ const x=r.querySelectorAll("input"), tm=r.querySelector("select").value, h=y=>y.value.trim()===""?null:Number(y.value);
+      [[x[0],x[1]],[x[2],x[3]]].forEach(([nI,hI])=>{ const n=nI.value.trim(); if(n){ const mm=MEMBERS.find(m=>m.name.toLowerCase()===n.toLowerCase()); pl.push({n,h:h(hI),pair:i+1,team:tm===""?null:Number(tm),member_id:mm?.id||null}); } }); });
+    const pm=[...document.querySelectorAll("#fPMatches .pmrow")].map(r=>{const s=r.querySelectorAll("select"); return {d:Number(s[0].value),a:s[1].value===""?null:Number(s[1].value)+1,b:s[2].value===""?null:Number(s[2].value)+1,t:r.querySelector("input").value.trim()};}).filter(m=>m.a||m.b);
+    return {id:id||null,format:fmt,name:v("#fName"),course:v("#fCourse"),event_date:v("#fDate")||null,lock_at:isNaN(lk)?null:lk.toISOString(),aportacion:num("#fAport",200),winners:Number($("#fWin").value),
+      pts:{match:num("#fQM",1),team:num("#fQT",2),ind1:num("#fQI",3)},teams:[v("#fQ1")||"Blanco",v("#fQ2")||"Rojo"],matches:pm,players:pl,convocatoria_url:v("#fConv")}; }
   return {id:id||null,format:fmt,name:v("#fName"),course:v("#fCourse"),event_date:v("#fDate")||null,lock_at:isNaN(lk)?null:lk.toISOString(),aportacion:num("#fAport",200),winners:Number($("#fWin").value),
     pts:fmt==="stroke"?{p1:num("#fP1",3),p2:num("#fP2",2),p3:num("#fP3",1)}:{match:num("#fPM",1),team:num("#fPT",2),ind1:num("#fPI",3)},teams:[v("#fT1")||"Blanco",v("#fT2")||"Rojo"],
     matches:fmt==="stroke"?[]:matches,players:fmt==="stroke"?FPLAYERS.map(x=>({n:x.n,h:x.h,member_id:x.member_id||null})):[],convocatoria_url:v("#fConv")};
@@ -917,23 +970,31 @@ function readEventForm(id){
 document.addEventListener("click",async e=>{
   const t=e.target;
   const fb=t.closest("[data-fmt]"); if(fb&&!fb.disabled){ const F=$("#evForm"); F.dataset.format=fb.dataset.fmt; F.querySelectorAll("[data-fmt]").forEach(b=>b.classList.toggle("on",b===fb));
-    $("#fBody").classList.remove("hide"); F.querySelector(".fs-stroke").classList.toggle("hide",fb.dataset.fmt!=="stroke"); F.querySelector(".fs-ryder").classList.toggle("hide",fb.dataset.fmt!=="ryder");
+    $("#fBody").classList.remove("hide"); F.querySelector(".fs-stroke").classList.toggle("hide",fb.dataset.fmt!=="stroke"); F.querySelector(".fs-ryder").classList.toggle("hide",fb.dataset.fmt!=="ryder"); F.querySelector(".fs-parejas").classList.toggle("hide",fb.dataset.fmt!=="parejas");
     if(fb.dataset.fmt==="stroke") refreshPlayers(); return; }
   if(t.id==="fAddPBtn"){ syncPlayerHcp(); addPlayerMember($("#fAddP").value); refreshPlayers(); return; }
   if(t.id==="fAddAll"){ syncPlayerHcp(); MEMBERS.filter(m=>m.active).forEach(m=>addPlayerMember(m.id)); refreshPlayers(); return; }
   if(t.id==="fAddPxBtn"){ const n=$("#fAddPx").value.trim(); if(!n) return; if(FPLAYERS.some(x=>x.n.toLowerCase()===n.toLowerCase())){ toast("Ya está en la lista"); return; } syncPlayerHcp(); FPLAYERS.push({n,h:null,member_id:null}); refreshPlayers(); return; }
   if(t.dataset.delp!=null){ syncPlayerHcp(); FPLAYERS.splice(+t.dataset.delp,1); refreshPlayers(); return; }
+  if(t.id==="addPair"){ $("#fPairs").insertAdjacentHTML("beforeend",pairRow(null,$("#fPairs").children.length,false,[$("#fQ1").value||"Equipo 1",$("#fQ2").value||"Equipo 2"])); refreshPM(); return; }
+  if(t.matches("[data-delpair]")){ t.closest(".pairrow").remove(); refreshPM(); return; }
+  if(t.id==="addPM"){ $("#fPMatches").insertAdjacentHTML("beforeend",pmRow({d:1,a:"",b:"",t:""},false)); return; }
+  if(t.matches("[data-delpm]")){ t.closest(".pmrow").remove(); return; }
   if(t.id==="addMatch"){ $("#fMatches").insertAdjacentHTML("beforeend",matchRow({w:["",""],r:["",""],t:""},false)); return; }
   if(t.matches("[data-delm]")){ t.closest(".mrow").remove(); return; }
   if(t.id==="saveEv"){ t.disabled=true;
     try{ const isNew=VIEW!=="event"; const d=readEventForm(isNew?null:EV.id); if(!d.format) throw new Error("Elige el tipo de torneo");
-      if(d.format==="ryder"&&!d.matches.length) throw new Error("Agrega al menos un match"); if(d.format==="stroke"&&d.players.length<3) throw new Error("Agrega al menos 3 jugadores");
+      if(d.format==="ryder"&&!d.matches.length) throw new Error("Agrega al menos un match"); if(d.format==="stroke"&&d.players.length<3) throw new Error("Agrega al menos 3 jugadores"); if(d.format==="parejas"&&d.players.length<4) throw new Error("Agrega al menos 2 parejas");
       EV=await rpc("b_admin_save_event",{p_token:TOKEN,p_data:d}); toast(isNew?"Torneo creado ✓":"Cambios guardados ✓");
       if(isNew){ openEvent(EV.id); } else { res={...EV.results}; renderEvent(); } }
     catch(err){ toast(err.message); t.disabled=false; } return; }
   if(VIEW!=="event"||ETAB!=="admin") return;
   const r=t.closest("[data-r]");
   if(r){ const k=r.dataset.r,v=r.dataset.v; if(res[k]===v) delete res[k]; else res[k]=v; const y=window.scrollY; const keep=readAdminExtras(); renderEvent(); writeAdminExtras(keep); window.scrollTo(0,y); return; }
+  if(t.id==="savePairSc"){ t.disabled=true;
+    const sc=[...document.querySelectorAll("#pjTbl [data-ps]")].map(r=>{const i=r.querySelectorAll("input"); const nv=x=>x.value===""?null:Math.round(Number(x.value)); return {n:r.dataset.ps,d1:nv(i[0]),d2:nv(i[1])};});
+    try{ EV=await rpc("b_admin_set_pair_scores",{p_token:TOKEN,p_event:EV.id,p_scores:sc}); res={...EV.results}; toast("Scores guardados ✓"); renderEvent(); }
+    catch(err){ toast(err.message); t.disabled=false; } return; }
   if(t.id==="saveScores"){ t.disabled=true;
     const sc=[...document.querySelectorAll("#scTbl [data-sc]")].map(r=>{const i=r.querySelectorAll("input"); const nv=x=>x.value===""?null:Math.round(Number(x.value)); return {n:r.dataset.sc,pos:nv(i[0]),net:nv(i[1])};});
     try{ const ps=sc.filter(x=>x.pos!=null).map(x=>x.pos); if(new Set(ps).size!==ps.length&&!confirm("Hay lugares repetidos (empate). ¿Guardar así?")){ t.disabled=false; return; }
@@ -1060,10 +1121,13 @@ document.addEventListener("click",e=>{const h=e.target.closest("[data-htab]"); i
 /* histórico como jugador: lugares, victorias, podios, net y match play */
 function playerResults(e){
   const out={}, put=(n,o)=>{ const k=e.pmap?.[n]||("n:"+n); const x=out[k]||(out[k]={key:k,n,pos:null,net:null,mw:0,ml:0,cup:null}); Object.entries(o).forEach(([a,b])=>{ if(b!=null) x[a]=b; }); return x; };
-  const names=(e.format==="stroke"||e.format==="stableford")?(e.players||[]).map(p=>p.n):e.matches.flatMap(m=>[m.w[0],m.r[0]]);
+  const names=(e.format==="stroke"||e.format==="stableford"||e.format==="parejas")?(e.players||[]).map(p=>p.n):e.matches.flatMap(m=>[m.w[0],m.r[0]]);
   names.forEach(n=>put(n,{}));
   const R=e.results||{};
   if(e.format==="stroke"){ ["p1","p2","p3"].forEach((k,i)=>{ if(R[k]) put(R[k],{pos:i+1}); }); if(R.p1&&e.net_ganador!=null) put(R.p1,{net:e.net_ganador}); }
+  else if(e.format==="parejas"){ const PC=pairCalc(e);
+    PC.M.forEach(m=>{ if(!m.res||m.res==="t") return; const W=PC.P.find(x=>x.no===(m.res==="w"?m.a:m.b)), L=PC.P.find(x=>x.no===(m.res==="w"?m.b:m.a)); W?.ps.forEach(p=>put(p.n,{}).mw++); L?.ps.forEach(p=>put(p.n,{}).ml++); });
+    if(R.team) PC.P.forEach(x=>x.ps.forEach(p=>{ put(p.n,{}).cup=(R.team===e.teams[x.team]); })); }
   else { if(R.ind1) put(R.ind1,{pos:1,net:e.net_ganador}); ["p2","p3"].forEach((k,i)=>{ const x=e.podio?.[k]; if(x?.n) put(x.n,{pos:i+2,net:x.net}); });
     e.matches.forEach((m,i)=>{ const v=R["m"+(i+1)]; if(!v) return; const lo=v===m.w[0]?m.r[0]:m.w[0]; put(v,{}).mw++; put(lo,{}).ml++; });
     if(R.team){ e.matches.forEach(m=>{ put(m.w[0],{}).cup=(R.team===e.teams[0]); put(m.r[0],{}).cup=(R.team===e.teams[1]); }); } }
@@ -1097,7 +1161,7 @@ function renderPlayerHist(evs){
     mine+=`<div class="stats"><div><b>${me.ev}</b><span>TORNEOS</span></div><div><b>${me.wins}</b><span>VICTORIAS</span></div><div><b>${me.pods}</b><span>PODIOS</span></div></div>
     <div class="stats" style="margin-top:8px"><div><b>${me.posN?(me.posS/me.posN).toFixed(1):"—"}</b><span>LUGAR PROM.</span></div><div><b>${me.best??"—"}</b><span>MEJOR NET</span></div><div><b>${me.mw+me.ml?me.mw+"-"+me.ml:"—"}</b><span>MATCH PLAY</span></div></div>
     <table class="ht" style="margin-top:12px"><tr><th>Torneo</th><th>Formato</th><th>Lugar</th><th>Net</th><th>Match</th></tr>
-    ${mineRows.map(({e,r})=>`<tr><td>${esc(e.name)}<div class="note">${esc(fdate(e.event_date))}</div></td><td>${e.format==="stroke"?"Stroke":e.format==="stableford"?"Stableford":"Ryder"}</td><td>${r.pos?r.pos+"º":"—"}</td><td>${r.net??(r.pts!=null?r.pts+" pts":"—")}</td><td>${e.format!=="ryder"?"—":(r.mw?"Ganó":r.ml?"Perdió":"—")}${r.cup?" 🛡️":""}</td></tr>`).join("")}</table>
+    ${mineRows.map(({e,r})=>`<tr><td>${esc(e.name)}<div class="note">${esc(fdate(e.event_date))}</div></td><td>${e.format==="stroke"?"Stroke":e.format==="stableford"?"Stableford":e.format==="parejas"?"Ryder parejas":"Ryder"}</td><td>${r.pos?r.pos+"º":"—"}</td><td>${r.net??(r.pts!=null?r.pts+" pts":"—")}</td><td>${e.format!=="ryder"?"—":(r.mw?"Ganó":r.ml?"Perdió":"—")}${r.cup?" 🛡️":""}</td></tr>`).join("")}</table>
     <div class="note" style="margin-top:8px">Vas ${pos}º de ${L.length} en esta tabla.</div>`; }
   mine+=`</div>`;
   const th=(k,l)=>`<th data-ps="${k}">${l}${pSort===k?" ▾":""}</th>`;
