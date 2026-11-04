@@ -104,6 +104,12 @@ input.t:focus,select.t:focus,textarea.t:focus{outline:2px solid var(--gold);bord
 .etabs button.on{background:var(--cream);color:var(--g);border-color:var(--cream)}
 .back{background:none;border:0;color:var(--gold);font:600 13px Inter;padding:0 0 10px}
 /* stats */
+.ubar{display:grid;grid-template-columns:110px 1fr 54px;gap:8px;align-items:center;font-size:13px;margin:5px 0}
+.ubar .tr{height:10px;border-radius:5px;background:rgba(255,255,255,.06);overflow:hidden}.ubar .tr i{display:block;height:100%;background:var(--gold);border-radius:5px}
+.ubar em{font-style:normal;text-align:right;color:var(--mute);font-size:12px}
+.ucols{display:flex;align-items:flex-end;gap:2px;height:110px;margin-top:8px}.ucols div{flex:1;background:var(--gold);border-radius:3px 3px 0 0;min-height:2px;opacity:.85}
+.uaxis{display:flex;justify-content:space-between;font-size:10.5px;color:var(--mute);margin-top:4px}
+.ulog{font-size:12.5px;max-height:420px;overflow:auto}.ulog div{display:grid;grid-template-columns:96px 1fr;gap:8px;padding:5px 0;border-bottom:1px solid rgba(164,161,106,.12)}.ulog time{color:var(--mute)}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;text-align:center}
 .stats b{display:block;font:700 26px/1.1 "Cormorant Garamond",serif;color:var(--cream)}
 .stats span{font-size:11px;color:var(--mute)}
@@ -324,6 +330,7 @@ nav.main button{flex:0 0 auto;padding:8px 9px;font-size:12.5px}
     <button data-nav="hist">Históricos</button>
     <button data-nav="members">Miembros</button>
     <button data-nav="social">Redes</button>
+    <button data-nav="usage" class="hide" id="navUsage">Uso</button>
   </nav>
 </div>
 <main>
@@ -471,6 +478,12 @@ nav.main button{flex:0 0 auto;padding:8px 9px;font-size:12.5px}
     <div id="bdBody"></div>
   </section>
 
+  <section class="view" id="v-usage">
+    <div class="plaque"><div class="pt">Solo superadmin</div><div class="pn">Uso de la app</div><div class="ps">Quién entra, cuándo y qué usa</div></div>
+    <div class="card"><label class="f" style="margin-top:0">Periodo</label><select class="t" id="uDays"><option value="7">Últimos 7 días</option><option value="30" selected>Últimos 30 días</option><option value="90">Últimos 90 días</option><option value="365">Último año</option></select></div>
+    <div id="uBody"></div>
+  </section>
+
   <section class="view" id="v-social">
     <div class="plaque"><div class="pt">Hermanos McGregor</div><div class="pn">Redes Sociales</div><div class="ps">Síguenos en redes</div></div>
     <div class="soc">
@@ -520,7 +533,11 @@ let TOKEN=store.get("mcg_token"), ME=null, VIEW="login";
 let EVENTS=[], EV=null, ETAB="principal", skew=0, form={picks:{},tb:""}, target=null, dirty=false, saving=false, openRow=null, res={}, MEMBERS=[], HIST=null, hSort="pct", HTAB="jug", pSort="wins";
 
 /* ===== routing ===== */
+let LOGIN_KIND="abrir", LASTV={v:"",t:0};
+function devName(){ const u=navigator.userAgent; return /iPhone/.test(u)?"iPhone":/iPad/.test(u)?"iPad":/Android/.test(u)?"Android":/Macintosh/.test(u)?"Mac":/Windows/.test(u)?"Windows":"Otro"; }
+function track(kind,view,detail){ if(!TOKEN) return; rpc("u_track",{p_token:TOKEN,p_kind:kind,p_view:view||null,p_detail:detail||null,p_device:devName()}).catch(()=>{}); }
 function show(v){
+  if(ME&&v!=="login"){ const det=v==="event"?EV?.name:null, key=v+"|"+(det||""), now=Date.now(); if(key!==LASTV.v||now-LASTV.t>60000){ LASTV={v:key,t:now}; track("vista",v,det); } }
   VIEW=v; document.querySelectorAll(".view").forEach(s=>s.classList.toggle("on",s.id==="v-"+v));
   const nv = v==="event"?"bets":v;
   document.querySelectorAll("nav.main button").forEach(b=>b.classList.toggle("on",b.dataset.nav===nv));
@@ -541,6 +558,7 @@ function go(v){
   if(v==="code") loadCode();
   if(v==="board") loadBoard();
   if(v==="home") renderHome();
+  if(v==="usage"){ if(!ME.superadmin){ v="home"; renderHome(); } else loadUsage(); }
   show(v);
 }
 document.addEventListener("click",e=>{const n=e.target.closest("[data-nav]"); if(n){ if(dirty&&!confirm("Tienes picks sin guardar. ¿Salir?")) return; dirty=false; go(n.dataset.nav);} });
@@ -575,7 +593,7 @@ async function oauthReturn(){
     if(r.error){ show("login"); $("#lgMsg").textContent=r.error; return true; }
     TOKEN=r.token; ME=r.me; store.set("mcg_token",TOKEN);
     try{ MEMBERS=await rpc("c_members_list",{p_token:TOKEN}); }catch{}
-    afterLogin(); return true;
+    LOGIN_KIND="login_google"; afterLogin(); return true;
   }catch(e){ show("login"); $("#lgMsg").textContent=e.message; return true; }
 }
 $("#lgEmail").addEventListener("keydown",e=>{if(e.key==="Enter")$("#lgSend").click();});
@@ -586,7 +604,7 @@ $("#lgVerify").onclick=async()=>{
   $("#lgVerify").disabled=true;
   try{ const r=await rpc("c_verify_code",{p_email:$("#lgEmail").value.trim(),p_code:code});
     if(r.error) throw new Error(r.error);
-    TOKEN=r.token; ME=r.me; store.set("mcg_token",TOKEN); $("#lgCode").value=""; afterLogin();
+    TOKEN=r.token; ME=r.me; store.set("mcg_token",TOKEN); $("#lgCode").value=""; LOGIN_KIND="login_codigo"; afterLogin();
   }catch(e){ $("#lgMsg").textContent=e.message; $("#lgCode").value=""; } finally{ $("#lgVerify").disabled=false; }
 };
 function logout(silent){ if(TOKEN&&!silent) rpc("c_logout",{p_token:TOKEN}).catch(()=>{}); TOKEN=null; ME=null; store.set("mcg_token",null); $("#lgStep2").classList.add("hide"); $("#lgStep1").classList.remove("hide"); show("login"); if(silent) toast("Tu sesión expiró. Vuelve a entrar."); }
@@ -594,7 +612,7 @@ $("#logoutBtn").onclick=()=>{ if(confirm("¿Cerrar sesión?")) logout(false); };
 $("#whoBtn").onclick=()=>go("profile");
 const ini=n=>String(n||"?").trim().split(/\s+/).map(w=>w[0]).slice(0,2).join("").toUpperCase();
 function avatarHTML(m,cls){ return m&&m.avatar?`<img src="${m.avatar}" alt="" ${cls?`class="${cls}"`:""}>`:`<span class="ini ${cls||""}">${esc(ini(m&&(m.nickname||m.name)))}</span>`; }
-function renderWho(){ $("#whoBtn").innerHTML=avatarHTML(ME)+`<span>${esc(ME.nickname||ME.name)}</span>`; $("#navBoard").classList.toggle("hide",!ME.board); $("#tileBoard").classList.toggle("hide",!ME.board); }
+function renderWho(){ $("#whoBtn").innerHTML=avatarHTML(ME)+`<span>${esc(ME.nickname||ME.name)}</span>`; $("#navBoard").classList.toggle("hide",!ME.board); $("#tileBoard").classList.toggle("hide",!ME.board); $("#navUsage").classList.toggle("hide",!ME.superadmin); }
 /* etiquetas del perfil: cargo, board, fundador, permisos y datos de juego */
 function memTags(m,full){ const t=[], L={sabado:"LIGA SÁB",domingo:"LIGA DOM",ambas:"LIGA SÁB+DOM"};
   if(["presidente","tesorero","secretario"].includes(m.role)) t.push(`<span class="badge g">${ROLES[m.role].toUpperCase()}</span>`);
@@ -609,7 +627,7 @@ function isAdminBets(){ return ME&&(ME.superadmin||ME.bet_admin); }
 function isAdminMembers(){ return ME&&(ME.superadmin||ME.role==="presidente"||ME.role==="secretario"); }
 function canDelMembers(){ return ME&&(ME.superadmin||ME.role==="presidente"||ME.board); }
 async function afterLogin(){
-  renderWho();
+  renderWho(); track(LOGIN_KIND); LOGIN_KIND="abrir";
   if(!MEMBERS.length){ try{ MEMBERS=await rpc("c_members_list",{p_token:TOKEN}); }catch{} }
   const m=location.hash.match(/e=([0-9a-f-]{36})/);
   if(m) openEvent(m[1]); else if(location.hash==='#asistencias') go('att'); else if(location.hash==='#tesoreria') go('treas'); else if(location.hash==='#codigo') go('code'); else if(location.hash==='#honor') go('honor'); else if(location.hash==='#board') go(ME.board?'board':'code'); else go("home");
@@ -1436,6 +1454,47 @@ async function handleCreq(){ const q=new URLSearchParams(location.search), id=q.
       $("#crqBtn").classList.add("hide"); history.replaceState(null,"",location.pathname); }catch(e){ $("#crqMsg").textContent=e.message; $("#crqBtn").disabled=false; } };
   return true; }
 
+
+/* ===== uso de la app (solo superadmin) ===== */
+const VNAME={home:"Casa Club",cal:"Calendario",bets:"Apuestas",event:"Torneo (quiniela)",att:"Asistencias",treas:"Tesorería",honor:"Honor",code:"Código",board:"Board",hist:"Históricos",members:"Miembros",social:"Redes",profile:"Mi perfil",usage:"Uso"};
+let US=null, ULOG="";
+async function loadUsage(){ $("#uBody").innerHTML=`<div class="card"><div class="note">Cargando…</div></div>`;
+  try{ US=await rpc("u_stats",{p_token:TOKEN,p_days:+$("#uDays").value}); }catch(e){ $("#uBody").innerHTML=`<div class="card"><div class="note">${esc(e.message)}</div></div>`; return; } renderUsage(); }
+document.addEventListener("change",e=>{ if(e.target.id==="uDays") loadUsage(); if(e.target.id==="uLogF"){ ULOG=e.target.value; renderUsage(); } });
+function renderUsage(){ const U=US, K=U.kpis, ago=t=>{ if(!t) return "nunca"; const d=(Date.now()-new Date(t))/864e5; return d<1/24?"hace minutos":d<1?"hace "+Math.round(d*24)+" h":d<2?"ayer":"hace "+Math.floor(d)+" días"; };
+  const fdt=t=>new Date(t).toLocaleString("es-MX",{day:"numeric",month:"short",hour:"numeric",minute:"2-digit"});
+  const bars=(L,lab,val,sub)=>{ const mx=Math.max(1,...L.map(val)); return L.map(x=>`<div class="ubar"><span>${lab(x)}</span><span class="tr"><i style="width:${val(x)/mx*100}%"></i></span><em>${val(x)}${sub?" · "+sub(x):""}</em></div>`).join("")||`<div class="note">Sin datos todavía.</div>`; };
+  const act=U.users.filter(x=>x.opens+x.views>0), never=U.users.filter(x=>!x.last_at), cold=U.users.filter(x=>x.last_at&&(Date.now()-new Date(x.last_at))/864e5>30);
+  const mxd=Math.max(1,...U.daily.map(x=>x.n)), H=Array.from({length:24},(_,h)=>U.hours.find(x=>x.h===h)?.n||0), mxh=Math.max(1,...H);
+  const DW=["","Lun","Mar","Mié","Jue","Vie","Sáb","Dom"];
+  const log=U.log.filter(x=>!ULOG||x.mid===ULOG);
+  const kn={login_codigo:"🔑 Entró con código",login_google:"🔑 Entró con Google",abrir:"📱 Abrió la app",vista:"👀"};
+  const lastAct=(U.daily.slice(-7).reduce((a,x)=>a+x.u,0));
+  $("#uBody").innerHTML=`<div class="card"><div class="h">Resumen <small>${U.days} días</small></div>
+    <div class="stats"><div><b>${K.users}/${K.members}</b><span>SOCIOS ACTIVOS EN LA APP</span></div><div><b>${K.opens}</b><span>ENTRADAS</span></div><div><b>${K.views}</b><span>PANTALLAS VISTAS</span></div></div>
+    <div class="stats" style="margin-top:10px"><div><b>${K.users?(K.opens/K.users).toFixed(1):"0"}</b><span>ENTRADAS POR SOCIO</span></div><div><b>${K.logins}</b><span>INICIOS DE SESIÓN</span><span style="display:block">${K.google} Google · ${K.codigo} código</span></div><div><b>${K.never}</b><span>NUNCA HAN ENTRADO</span></div></div></div>
+  <div class="card"><div class="h">Actividad diaria <small>pantallas vistas</small></div>
+    <div class="ucols">${U.daily.map(x=>`<div style="height:${x.n/mxd*100}%" title="${esc(x.d)}: ${x.n} vistas · ${x.u} socios"></div>`).join("")}</div>
+    <div class="uaxis"><span>${esc(U.daily[0]?.d||"")}</span><span>${esc(U.daily.at(-1)?.d||"")}</span></div></div>
+  <div class="card"><div class="h">Módulos más usados <small>vistas · socios</small></div>${bars(U.modules,x=>esc(VNAME[x.v]||x.v),x=>x.n,x=>x.u)}</div>
+  ${U.tournaments.length?`<div class="card"><div class="h">Torneos más vistos</div>${bars(U.tournaments,x=>esc(x.t),x=>x.n,x=>x.u)}</div>`:""}
+  <div class="card"><div class="h">¿A qué hora entran? <small>hora de Guadalajara</small></div>
+    <div class="ucols">${H.map((n,h)=>`<div style="height:${n/mxh*100}%" title="${h}:00 · ${n}"></div>`).join("")}</div><div class="uaxis"><span>0h</span><span>6h</span><span>12h</span><span>18h</span><span>23h</span></div>
+    <div class="mt" style="margin-top:12px">Por día de la semana</div>${bars([1,2,3,4,5,6,7].map(d=>({d,n:U.dow.find(x=>x.d===d)?.n||0})),x=>DW[x.d],x=>x.n)}</div>
+  <div class="card"><div class="h">Socios <small>${act.length} activos en el periodo</small></div>
+    <table class="ht" id="uUsers"><tr><th>Socio</th><th>Entradas</th><th>Días</th><th>Vistas</th><th>Última vez</th></tr>
+    ${U.users.map(x=>`<tr><td>${esc(x.name)}<div class="note">${x.top?"Usa más: "+esc(VNAME[x.top]||x.top):""}${x.device?(x.top?" · ":"")+esc(x.device):""}${x.picks?" · "+x.picks+" quiniela"+(x.picks>1?"s":""):""}${x.votes?" · "+x.votes+" voto"+(x.votes>1?"s":""):""}${x.honors?" · "+x.honors+" en Honor":""}</div></td><td>${x.opens}</td><td>${x.days_active}</td><td>${x.views}</td><td>${ago(x.last_at)}</td></tr>`).join("")}</table></div>
+  <div class="card"><div class="h">Para dar seguimiento</div>
+    <ul class="facts">${never.length?`<li><i>🚪</i><div><b>${never.length} nunca han entrado:</b> <span>${esc(never.map(x=>x.name).join(", "))}.</span></div></li>`:""}
+    ${cold.length?`<li><i>🧊</i><div><b>${cold.length} sin entrar en más de 30 días:</b> <span>${esc(cold.map(x=>x.name).join(", "))}.</span></div></li>`:""}
+    ${U.modules.length?`<li><i>📉</i><div><b>Menos usado:</b> <span>${esc(VNAME[U.modules.at(-1).v]||U.modules.at(-1).v)} (${U.modules.at(-1).n} vistas).</span></div></li>`:""}
+    <li><i>📱</i><div><b>Dispositivos:</b> <span>${U.devices.map(x=>esc(x.d)+" "+x.u).join(" · ")||"—"}.</span></div></li>
+    <li><i>📆</i><div><b>${lastAct}</b> <span>socio-días activos en la última semana.</span></div></li></ul></div>
+  <div class="card"><div class="h">Bitácora <small>últimos ${U.log.length} registros</small></div>
+    <select class="t" id="uLogF" style="margin-bottom:8px"><option value="">Todos los socios</option>${U.users.filter(x=>x.last_at).map(x=>`<option value="${x.id}" ${ULOG===x.id?"selected":""}>${esc(x.name)}</option>`).join("")}</select>
+    <div class="ulog" id="uLog">${log.map(x=>`<div><time>${fdt(x.at)}</time><span><b>${esc(x.name||"—")}</b> ${x.kind==="vista"?"👀 "+esc(VNAME[x.view]||x.view||"")+(x.detail?" · "+esc(x.detail):""):kn[x.kind]}${x.device?` <span class="note">· ${esc(x.device)}</span>`:""}</span></div>`).join("")||`<div class="note">Sin registros.</div>`}</div></div>
+  <div class="note" style="margin:4px 4px 16px">El registro empezó con esta versión: no hay datos de antes.</div>`;
+}
 
 /* ===== cuadro de honor ===== */
 let HN=null;
