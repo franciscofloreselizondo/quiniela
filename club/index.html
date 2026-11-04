@@ -639,6 +639,7 @@ function memTags(m,full){ const t=[], L={sabado:"LIGA SÁB",domingo:"LIGA DOM",a
   if(["presidente","tesorero","secretario"].includes(m.role)) t.push(`<span class="badge g">${ROLES[m.role].toUpperCase()}</span>`);
   if(m.board) t.push(`<span class="badge" title="Vota en el board y puede sumar socios">BOARD</span>`);
   if(m.fundador) t.push(`<span class="badge f" title="Socio fundador">★ FUNDADOR</span>`);
+  if(m.liga_status) t.push(m.liga_status==="en_liga"?`<span class="badge p" title="Pagó la liga de esta temporada">EN LIGA</span>`:m.liga_status==="no_juega"?`<span class="badge i" title="No juega la liga esta temporada">FUERA DE LIGA</span>`:`<span class="badge i" title="Aún no paga la liga de esta temporada">LIGA PENDIENTE</span>`);
   if(m.superadmin) t.push(`<span class="badge p" title="Acceso total a la app">SUPERADMIN</span>`);
   else { if(m.bet_admin) t.push(`<span class="badge p" title="Puede abrir y administrar torneos y quinielas">ABRE TORNEOS</span>`);
     if(m.role==="presidente"||m.role==="secretario") t.push(`<span class="badge p" title="Administra socios">ADMIN SOCIOS</span>`); }
@@ -1494,12 +1495,12 @@ function renderTreas(){
   const c=TR.can_edit, late=TR.today>TR.deadline, dl=new Date(TR.deadline+"T12:00:00").toLocaleDateString("es-MX",{day:"numeric",month:"long"});
   const dd=d=>new Date(d+"T12:00:00").toLocaleDateString("es-MX",{day:"numeric",month:"short"});
   let h=`<div class="card"><div class="h">Resumen <small>${seasonLabel(TR.season)}</small></div>
-    <div class="stats"><div><b>${TR.dues_paid}/${TR.n_active}</b><span>INSCRIPCIONES</span></div><div><b>${money(TR.noshow.saldo)}</b><span>FONDO NO-SHOW</span></div><div><b>${money(TR.hio.saldo)}</b><span>FONDO HOLE-IN-ONE</span></div></div>
+    <div class="stats"><div><b>${TR.dues_paid}/${TR.n_active}</b><span>INSCRIPCIONES${TR.n_optout?` · ${TR.n_optout} NO JUEGAN`:""}</span></div><div><b>${money(TR.noshow.saldo)}</b><span>FONDO NO-SHOW</span></div><div><b>${money(TR.hio.saldo)}</b><span>FONDO HOLE-IN-ONE</span></div></div>
     <ul class="rl"><li><i>Cuota</i><span>${money(TR.settings.dues_fee)} por semestre · fecha límite ${dl}${late?" (vencida)":""}.</span></li>
     <li><i>Cobrado</i><span>${money(TR.dues_total)} en inscripciones de ${seasonLabel(TR.season)}.</span></li>
     <li><i>No-show</i><span>${money(TR.noshow.cobrado)} cobrado · ${money(TR.noshow.pendiente)} pendiente · ${TR.noshow.bottles} botella${TR.noshow.bottles===1?"":"s"} 🍾 por cobrar${TR.noshow.movimientos?` · ${money(TR.noshow.movimientos)} en movimientos`:""}.</span></li></ul></div>`;
   h+=`<div class="card"><div class="h">Inscripción semestral <small>${c?"toca para registrar pago":"tu estatus"}</small></div>${TR.dues.map(d=>`<div class="trow"><span class="nm2">${esc(d.name)}${d.member_id===TR.me?' <span class="me">TÚ</span>':""}</span>
-      <span class="st2 ${d.paid?"ok":late?"late":"pend"}">${d.paid?`PAGADO ${dd(d.paid_at)}`:late?"VENCIDO":"PENDIENTE"}</span>${c?`<button class="btn sm ${d.paid?"ghost":""}" data-due="${d.member_id}" data-on="${d.paid?0:1}">${d.paid?"Quitar":"Pagó"}</button>`:""}</div>`).join("")||`<div class="note">Sin socios activos.</div>`}</div>`;
+      <span class="st2 ${d.paid?"ok":d.optout?"pend":late?"late":"pend"}">${d.paid?`PAGADO ${dd(d.paid_at)}`:d.optout?"NO JUEGA LIGA":late?"VENCIDO":"PENDIENTE"}</span>${c?(d.optout?`<button class="btn sm ghost" data-opt="${d.member_id}" data-on="0">Sí juega</button>`:`<button class="btn sm ${d.paid?"ghost":""}" data-due="${d.member_id}" data-on="${d.paid?0:1}">${d.paid?"Quitar":"Pagó"}</button>${d.paid?"":`<button class="btn sm ghost" data-opt="${d.member_id}" data-on="1" title="No juega la liga esta temporada (sigue en el grupo)">No juega</button>`}`):""}</div>`).join("")||`<div class="note">Sin socios activos.</div>`}</div>`;
   const it=TR.noshow.items;
   h+=`<div class="card"><div class="h">Fondo No-Show <small>${money(TR.noshow.saldo)} en caja</small></div>${it.length?it.map(x=>`<div class="trow"><span class="nm2">${esc(x.name)}<div class="note">${dd(x.date)}${x.label?" · "+esc(x.label):""} · ${x.liga==="sabado"?"Sabatina":"Dominical"} · ${x.nth}ª falta</div></span><span class="st2 ${x.paid?"ok":"late"}">${nsAmt({p:x.penalty})} ${x.paid?"PAGADO":"PENDIENTE"}</span>${c?`<button class="btn sm ${x.paid?"ghost":""}" data-pen="${x.outing_id}" data-mid="${x.member_id}" data-on="${x.paid?0:1}">${x.paid?"Desmarcar":"Pagó"}</button>`:""}</div>`).join(""):`<div class="note">${c?"No hay no-shows registrados.":"No tienes no-shows. 👌"}</div>`}
     <div class="note" style="margin-top:8px">Se usa como premio en la Gran Finale a discreción del H. Presidente.</div></div>`;
@@ -1527,6 +1528,7 @@ function renderTreas(){
 document.addEventListener("click",async e=>{
   if(VIEW!=="treas"||!TR) return; const t=e.target, S=TR.season;
   try{
+    if(t.dataset.opt){ TR=await rpc("t_admin_optout",{p_token:TOKEN,p_season:S,p_member:t.dataset.opt,p_on:t.dataset.on==="1"}); toast(t.dataset.on==="1"?"Marcado: no juega la liga esta temporada":"Vuelve a la liga ✓"); renderTreas(); }
     if(t.dataset.due){ TR=await rpc("t_admin_due",{p_token:TOKEN,p_season:S,p_member:t.dataset.due,p_paid:t.dataset.on==="1",p_amount:null}); toast(t.dataset.on==="1"?"Inscripción registrada ✓":"Pago quitado"); renderTreas(); }
     else if(t.dataset.hio){ TR=await rpc("t_admin_hio",{p_token:TOKEN,p_season:S,p_member:t.dataset.hio,p_on:false}); renderTreas(); }
     else if(t.id==="hioAddBtn"){ TR=await rpc("t_admin_hio",{p_token:TOKEN,p_season:S,p_member:$("#hioAdd").value,p_on:true}); toast("Participante agregado ✓"); renderTreas(); }
