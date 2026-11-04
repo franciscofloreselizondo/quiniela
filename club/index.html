@@ -636,7 +636,7 @@ function evStatus(e){ return e.closed?["fin","Final"]: e.locked?["live","En jueg
 async function loadEvents(){
   try{ EVENTS=await rpc("b_events_list",{p_token:TOKEN}); }catch(e){ toast(e.message); return; }
   $("#newEvBtn").classList.toggle("hide",!isAdminBets());
-  const row=e=>{const [c,l]=evStatus(e); const nk=e.format==="stroke"?3:e.matches.length+2;
+  const row=e=>{const [c,l]=evStatus(e); const nk=ST(e)?3:e.matches.length+2;
     return `<div class="ev" data-ev="${e.id}"><div><div class="n">${esc(e.name)}</div><div class="m">${esc(e.course||"")}${e.course?" · ":""}${esc(fdate(e.event_date))}</div>
     <div class="m">${e.n_entries} apostador${e.n_entries===1?"":"es"} · bolsa ${money(e.aportacion*e.n_entries)}${e.joined?` · <b>${e.my_n===nk?"tus picks ✓":"estás inscrito"}</b>`:""}</div></div><span class="pill ${c}">${l}</span></div>`;};
   const nxt=EVENTS.filter(e=>!e.closed), past=EVENTS.filter(e=>e.closed);
@@ -646,7 +646,9 @@ async function loadEvents(){
 document.addEventListener("click",e=>{const r=e.target.closest("[data-ev]"); if(r) openEvent(r.dataset.ev);});
 
 /* ===== event ===== */
-function ST(e){ return (e||EV)?.format==="stroke"; }
+function ST(e){ const f=(e||EV)?.format; return f==="stroke"||f==="stableford"; }
+function SB(e){ return (e||EV)?.format==="stableford"; }
+const UN=()=>SB()?"pts":"Net";
 const POSL={p1:"1er lugar",p2:"2º lugar",p3:"3er lugar"};
 function KEYS(){ return ST()?["p1","p2","p3"]:EV.matches.map((_,i)=>"m"+(i+1)).concat(["team","ind1"]); }
 function LABEL(k){ return k==="team"?"Eq":k==="ind1"?"#1":/^p\d$/.test(k)?k.slice(1)+"º":"M"+k.slice(1); }
@@ -708,11 +710,11 @@ function principalHTML(){
   if(!EV.closed && !locked()) cta = mine ? `<button class="btn gold w" data-etab="picks">${isComplete(mine.picks)?"Editar mis picks":"Llenar mis picks"}</button>` : `<button class="btn gold w" id="joinBtn">Sumarme a este torneo</button>`;
   let h=`<div class="card"><div class="h">Reglas rápidas <small>${EV.closed?"evento cerrado":locked()?"picks cerrados":"cierran en "+fmtLeft(ms)}</small></div>
     <div class="stats"><div><b>${money(EV.aportacion)}</b><span>ENTRADA</span></div><div><b>${money(bolsa())}</b><span>BOLSA · ${n}</span></div><div><b>${maxPts()}</b><span>PUNTOS MÁX.</span></div></div>
-    <ul class="rl">${ST()?`<li><i>Formato</i><span>Stroke net individual · ${PLAYERS().length} jugadores.</span></li><li><i>Picks</i><span>Podio net: 1º, 2º y 3º lugar.</span></li>
+    <ul class="rl">${ST()?`<li><i>Formato</i><span>Individual · ${SB()?"Stableford net (más puntos gana)":"Stroke net (menor score gana)"} · ${PLAYERS().length} jugadores.</span></li><li><i>Picks</i><span>Podio: 1º, 2º y 3º lugar.</span></li>
     <li><i>Puntos</i><span>1º ${p.p1} · 2º ${p.p2} · 3º ${p.p3}.</span></li>`:PJ()?`<li><i>Formato</i><span>Ryder de parejas · 2 días · salida Shamble. Gana el partido la pareja con el mejor net individual del día (best ball): 1 pt, empate ½.</span></li><li><i>Picks</i><span>${EV.matches.length} partidos, equipo ganador (${esc(EV.teams.join(" o "))}) y 1ª pareja (suma de best ball de los 2 días).</span></li>
     <li><i>Puntos</i><span>Partido ${p.match} · Equipo ${p.team} · 1ª pareja ${p.ind1}.</span></li>`:`<li><i>Formato</i><span>Ryder · match play por equipos.</span></li><li><i>Picks</i><span>${EV.matches.length} matches, equipo ganador (${esc(EV.teams.join(" o "))}) y 1er lugar individual.</span></li>
     <li><i>Puntos</i><span>Match ${p.match} · Equipo ${p.team} · 1er lugar ${p.ind1}.</span></li>`}<li><i>Premios</i><span>${premios}</span></li>
-    <li><i>Empate</i><span>Gana quien más se acerque al ${PJ()?"net total de la 1ª pareja":"score net del 1er lugar"}.</span></li>
+    <li><i>Empate</i><span>Gana quien más se acerque al ${PJ()?"net total de la 1ª pareja":SB()?"puntaje stableford del 1er lugar":"score net del 1er lugar"}.</span></li>
     <li><i>Cierre</i><span>${new Date(EV.lock_at).toLocaleString("es-MX",{weekday:"long",day:"numeric",month:"short",hour:"numeric",minute:"2-digit"})}. Todos los picks son públicos.</span></li></ul>
     ${cta?`<div style="margin-top:12px">${cta}</div>`:""}
     ${EV.convocatoria_url?`<a class="btn ghost w" style="margin-top:8px" href="${esc(EV.convocatoria_url)}" target="_blank" rel="noopener">Ver convocatoria</a>`:""}</div>`;
@@ -752,7 +754,7 @@ function picksHTML(){
     : locked() ? `<div class="banner red">Picks cerrados. Sigue el <b>Ranking</b> en vivo.</div>`
     : `<div class="banner">Puedes cambiar tus picks hasta el cierre. Los picks de todos son públicos.</div>`;
   if(ST()) return ban+["p1","p2","p3"].map(k=>`<div class="card"><div class="h">${LONG(k)} <small>${p[k]} pt${p[k]==1?"":"s"}</small></div><div class="grid3">${posHTML(form.picks,"p",k,dis)}</div></div>`).join("")
-    +`<div class="card"><label class="f" for="tb">Desempate: score net del 1er lugar</label><input id="tb" class="t" type="number" inputmode="numeric" min="40" max="130" placeholder="Ej. 68" value="${esc(form.tb??"")}" ${dis?"disabled":""}>
+    +`<div class="card"><label class="f" for="tb">Desempate: ${SB()?"puntos stableford":"score net"} del 1er lugar</label><input id="tb" class="t" type="number" inputmode="numeric" min="${SB()?0:40}" max="${SB()?100:130}" placeholder="${SB()?"Ej. 38":"Ej. 68"}" value="${esc(form.tb??"")}" ${dis?"disabled":""}>
     <div class="note" style="margin-top:6px">Solo cuenta si hay empate en puntos. Gana el más cercano. Un jugador solo puede ir en un lugar del podio.</div></div>`;
   const pj=PJ();
   return ban+`<div class="card"><div class="h">${EV.matches.length} ${pj?"Partidos":"Matches"} <small>${p.match} pt c/u</small></div>${EV.matches.length?matchesHTML(form.picks,"p",dis):`<div class="note">Los partidos se publican cuando se definan los equipos.</div>`}</div>
@@ -806,8 +808,8 @@ function summaryHTML(){
   const pctOf=(k,v)=>{const n=withP.filter(b=>b.picks?.[k]===v).length;return withP.length?Math.round(n/withP.length*100):0;};
   const netOf=n=>{const s=(EV.scores||[]).find(x=>x.n===n); return s?s.net:null;};
   if(ST()){ const P=["p1","p2","p3"].map(k=>R[k]?{n:R[k],net:k==="p1"&&EV.net_ganador!=null?EV.net_ganador:netOf(R[k])}:null);
-    const st=(x,i)=>`<div class="st ${i===0?"p1":""} ${x?"":"empty"}"><div class="md">${i+1}º</div><div class="nm">${x?esc(x.n):"por definir"}</div><div class="sc">${x&&x.net!=null?"Net "+esc(x.net):"&nbsp;"}</div><div class="pz" style="background:none;color:var(--mute)">${x?pctOf("p"+(i+1),x.n)+"% le atinó":""}</div></div>`;
-    h+=`<div class="card"><div class="h">Podio stroke net</div><div class="podium" id="podNet">${st(P[1],1)}${st(P[0],0)}${st(P[2],2)}</div></div>`; }
+    const st=(x,i)=>`<div class="st ${i===0?"p1":""} ${x?"":"empty"}"><div class="md">${i+1}º</div><div class="nm">${x?esc(x.n):"por definir"}</div><div class="sc">${x&&x.net!=null?(SB()?esc(x.net)+" pts":"Net "+esc(x.net)):"&nbsp;"}</div><div class="pz" style="background:none;color:var(--mute)">${x?pctOf("p"+(i+1),x.n)+"% le atinó":""}</div></div>`;
+    h+=`<div class="card"><div class="h">${SB()?"Podio stableford net":"Podio stroke net"}</div><div class="podium" id="podNet">${st(P[1],1)}${st(P[0],0)}${st(P[2],2)}</div></div>`; }
   else {
   const PC=PJ()?pairCalc():null;
   let wN=0,rN=0; EV.matches.forEach((m,i)=>{const v=R["m"+(i+1)]; if(v===m.w[0])wN++; else if(v===m.r[0])rN++;});
@@ -850,7 +852,7 @@ function summaryHTML(){
 function pairTableHTML(){ const PC=pairCalc(); const L=[...PC.P].sort((a,b)=>(a.tot??999)-(b.tot??999)||a.no-b.no);
   return `<div class="card"><div class="h">Tabla de parejas <small>best ball net</small></div><table class="ht" id="pairTbl"><tr><th>Lugar</th><th>Pareja</th><th>Día 1</th><th>Día 2</th><th>Total</th></tr>${L.map(x=>`<tr><td>${x.rk?x.rk+"º":"—"}</td><td><span class="dot ${x.team===1?"r":"w"}"></span>${esc(x.label)}</td><td>${x.b1??"—"}</td><td>${x.b2??"—"}</td><td><b>${x.tot??"—"}</b></td></tr>`).join("")}</table></div>`; }
 function finalTableHTML(){ const S=[...(EV.scores||[])].sort((a,b)=>(a.pos??999)-(b.pos??999)||(a.net??999)-(b.net??999));
-  return `<div class="card"><div class="h">Tabla final del torneo <small>${S.length} jugadores</small></div><table class="ht" id="finalTbl"><tr><th>Lugar</th><th>Jugador</th><th>Net</th></tr>${S.map(x=>`<tr><td>${x.pos?x.pos+"º":"—"}</td><td>${esc(x.n)}</td><td>${x.net??"—"}</td></tr>`).join("")}</table></div>`; }
+  return `<div class="card"><div class="h">Tabla final del torneo <small>${S.length} jugadores</small></div><table class="ht" id="finalTbl"><tr><th>Lugar</th><th>Jugador</th><th>${UN()}</th></tr>${S.map(x=>`<tr><td>${x.pos?x.pos+"º":"—"}</td><td>${esc(x.n)}</td><td>${x.net??"—"}</td></tr>`).join("")}</table></div>`; }
 function rankingHTML(){
   const K=KEYS(), nres=K.filter(k=>EV.results?.[k]).length, rows=ranked();
   const list = !rows.length?`<div class="note">Aún no hay apostadores.</div>`: rows.map(r=>{
@@ -870,7 +872,7 @@ function shareData(){
   const rows=ranked(), R=EV.results||{}, K=KEYS(), nres=K.filter(k=>R[k]).length, fin=EV.closed, live=!fin&&(nres>0||locked());
   const st=fin?"🏁 FINAL":nres?`🔥 EN VIVO · ${nres}/${K.length} resultados`:locked()?"⏳ Picks cerrados · esperando resultados":"🟢 Picks abiertos · cierran en "+fmtLeft(lockAt()-(Date.now()+skew));
   let marc="";
-  if(nres&&ST()) marc=`🏌️ Podio net: ${["p1","p2","p3"].map((k,i)=>["🥇","🥈","🥉"][i]+" "+(R[k]||"—")+(k==="p1"&&EV.net_ganador!=null?` (${EV.net_ganador})`:"")).join("  ")}`;
+  if(nres&&ST()) marc=`🏌️ Podio${SB()?" stableford":" net"}: ${["p1","p2","p3"].map((k,i)=>["🥇","🥈","🥉"][i]+" "+(R[k]||"—")+(k==="p1"&&EV.net_ganador!=null?` (${EV.net_ganador}${SB()?" pts":""})`:"")).join("  ")}`;
   else if(nres){ let w=0,r=0; if(PJ()){ const PC=pairCalc(); w=PC.wp; r=PC.rp; } else EV.matches.forEach((m,i)=>{const v=R["m"+(i+1)]; if(v===m.w[0])w++; else if(v===m.r[0])r++;});
     marc=`⚔️ ${EV.teams[0]} *${half(w)}* – *${half(r)}* ${EV.teams[1]}${R.team?`  ·  🏆 Copa: *${R.team}*`:""}${R.ind1?`\n${PJ()?"👥 1ª pareja":"⛳ 1er lugar"}: *${R.ind1}*${EV.net_ganador!=null?` (${EV.net_ganador})`:""}`:""}`; }
   // un dato con punch: la sorpresa (resultado que menos le atinaron) o el más acertado
@@ -924,10 +926,10 @@ function adminHTML(){
   const locD=d=>{const x=new Date(d),z=n=>String(n).padStart(2,"0");return `${x.getFullYear()}-${z(x.getMonth()+1)}-${z(x.getDate())}T${z(x.getHours())}:${z(x.getMinutes())}`;};
   const hasPicks=EV.entries.some(x=>Object.keys(x.picks||{}).length);
   const notIn=MEMBERS.filter(m=>m.active&&!EV.entries.some(x=>x.member_id===m.id));
-  const scoreCard=`<div class="card"><div class="h">Tabla final <small>lugar y net de todos</small></div>
-    <div class="note" style="margin-bottom:8px">${ST()?"El 1º, 2º y 3º de esta tabla son los resultados de la quiniela; el net del 1º es el desempate.":"Para el histórico como jugador: lugar y score net de cada jugador."}</div>
-    <div class="srow note"><span>Jugador</span><span>Lugar</span><span>Net</span></div>
-    <div id="scTbl">${PLAYERS().map(x=>{const s=(EV.scores||[]).find(y=>y.n===x.n)||{}; return `<div class="srow" data-sc="${esc(x.n)}"><span class="nm2">${esc(x.n)}</span><input class="t" type="number" inputmode="numeric" min="1" value="${esc(s.pos??"")}" placeholder="#"><input class="t" type="number" inputmode="numeric" value="${esc(s.net??"")}" placeholder="Net"></div>`;}).join("")}</div>
+  const scoreCard=`<div class="card"><div class="h">Tabla final <small>lugar y ${SB()?"puntos":"net"} de todos</small></div>
+    <div class="note" style="margin-bottom:8px">${ST()?"El 1º, 2º y 3º de esta tabla son los resultados de la quiniela; "+(SB()?"los puntos del 1º son":"el net del 1º es")+" el desempate.":"Para el histórico como jugador: lugar y score net de cada jugador."}</div>
+    <div class="srow note"><span>Jugador</span><span>Lugar</span><span>${UN()}</span></div>
+    <div id="scTbl">${PLAYERS().map(x=>{const s=(EV.scores||[]).find(y=>y.n===x.n)||{}; return `<div class="srow" data-sc="${esc(x.n)}"><span class="nm2">${esc(x.n)}</span><input class="t" type="number" inputmode="numeric" min="1" value="${esc(s.pos??"")}" placeholder="#"><input class="t" type="number" inputmode="numeric" value="${esc(s.net??"")}" placeholder="${UN()}"></div>`;}).join("")}</div>
     <button class="btn w" id="saveScores" style="margin-top:10px">Guardar tabla final</button></div>`;
   if(ST()) return scoreCard+adminRest(hasPicks,notIn);
   if(PJ()){ const S={}; (EV.scores||[]).forEach(x=>S[x.n]=x);
@@ -962,12 +964,12 @@ function podOpts(sel){ return `<option value="">— vacío —</option>`+PLAYERS
 function eventFormHTML(e,lockMatches){
   const locD=d=>{if(!d)return"";const x=new Date(d),z=n=>String(n).padStart(2,"0");return `${x.getFullYear()}-${z(x.getMonth()+1)}-${z(x.getDate())}T${z(x.getHours())}:${z(x.getMinutes())}`;};
   e=e||{name:"",course:"",event_date:"",lock_at:null,aportacion:200,winners:3,format:"",pts:{},teams:["Blanco","Rojo"],matches:[{w:["",""],r:["",""],t:""}],players:[],convocatoria_url:""};
-  const f=e.format||"", P=e.pts||{}, pv=(k,d)=>P[k]??d;
+  const f0=e.format||"", f=f0==="stableford"?"stroke":f0, mode=f0==="stableford"?"stableford":"stroke", P=e.pts||{}, pv=(k,d)=>P[k]??d;
   FPLAYERS=(e.players||[]).map(x=>({...x}));
   const fb=(k,t,s)=>`<button type="button" data-fmt="${k}" class="${f===k?"on":""}" ${lockMatches?"disabled":""}><b>${t}</b><span>${s}</span></button>`;
-  return `<div class="card" id="evForm" data-format="${f}"><div class="h">${e.id?"Datos del torneo":"Nuevo torneo"}</div>
+  return `<div class="card" id="evForm" data-format="${f}" data-mode="${mode}"><div class="h">${e.id?"Datos del torneo":"Nuevo torneo"}</div>
     <label class="f" style="margin-top:0">Tipo de torneo ${lockMatches?"<small class='note'>(fijo: ya hay picks)</small>":""}</label>
-    <div class="fmt" id="fFmt">${fb("stroke","Stroke net individual","Podio 1º, 2º y 3º")}${fb("ryder","Ryder","Match play por equipos")}${fb("parejas","Ryder parejas","2 días · best ball")}</div>
+    <div class="fmt" id="fFmt">${fb("stroke","Individual","Podio 1º, 2º y 3º · Stroke o Stableford")}${fb("ryder","Ryder","Match play por equipos")}${fb("parejas","Ryder parejas","2 días · best ball")}</div>
     <div id="fBody" class="${f?"":"hide"}">
     <label class="f">Nombre</label><input class="t" id="fName" value="${esc(e.name)}" placeholder="Ej. Copa de Invierno">
     <div class="row2"><div><label class="f">Campo</label><input class="t" id="fCourse" value="${esc(e.course||"")}" placeholder="Las Cañadas CC"></div><div><label class="f">Fecha</label><input class="t" id="fDate" type="date" value="${esc(e.event_date||"")}"></div></div>
@@ -975,6 +977,8 @@ function eventFormHTML(e,lockMatches){
     <div class="row2"><div><label class="f">Entrada ($)</label><input class="t" id="fAport" type="number" value="${esc(e.aportacion)}"></div>
     <div><label class="f">Ganadores</label><select class="t" id="fWin"><option value="1" ${e.winners==1?"selected":""}>1 · toda la bolsa</option><option value="2" ${e.winners==2?"selected":""}>2 · 70/30</option><option value="3" ${e.winners==3?"selected":""}>3 · resto/doble/reintegro</option></select></div></div>
     <div class="fs-stroke ${f==="stroke"?"":"hide"}">
+    <label class="f">Modalidad ${lockMatches?"<small class='note'>(fija: ya hay picks)</small>":""}</label>
+    <div class="teams" id="fMode"><button type="button" class="opt w${mode==="stroke"?" sel":""}" data-mode="stroke" ${lockMatches?"disabled":""}><b>Stroke Net</b><i>menor score gana</i></button><button type="button" class="opt r${mode==="stableford"?" sel":""}" data-mode="stableford" ${lockMatches?"disabled":""}><b>Stableford Net</b><i>más puntos gana</i></button></div>
     <div class="row3"><div><label class="f">Pts 1º</label><input class="t" id="fP1" type="number" value="${pv("p1",3)}"></div><div><label class="f">Pts 2º</label><input class="t" id="fP2" type="number" value="${pv("p2",2)}"></div><div><label class="f">Pts 3º</label><input class="t" id="fP3" type="number" value="${pv("p3",1)}"></div></div>
     <label class="f">Jugadores ${lockMatches?"<small class='note'>(fijos: ya hay picks)</small>":""}</label>
     <div id="fPlayers">${playersRows(lockMatches)}</div>
@@ -1023,7 +1027,7 @@ function addPlayerMember(id){ const m=MEMBERS.find(x=>x.id===id); if(!m||FPLAYER
 function syncPlayerHcp(){ document.querySelectorAll("[data-ph]").forEach(i=>{ const x=FPLAYERS[+i.dataset.ph]; if(x) x.h=i.value.trim()===""?null:Number(i.value); }); }
 function matchRow(m,dis){ const d=dis?"disabled":""; return `<div class="mrow"><input class="t" ${d} value="${esc(m.w[0])}" placeholder="Jugador"><input class="t" ${d} value="${esc(m.w[1]??"")}" placeholder="HCP" inputmode="decimal"><input class="t" ${d} value="${esc(m.r[0])}" placeholder="Jugador"><input class="t" ${d} value="${esc(m.r[1]??"")}" placeholder="HCP" inputmode="decimal"><input class="t" ${d} value="${esc(m.t||"")}" placeholder="7:30">${dis?"<span></span>":`<button class="btn sm danger" data-delm>✕</button>`}</div>`; }
 function readEventForm(id){
-  const fmt=$("#evForm").dataset.format; syncPlayerHcp();
+  const fmt0=$("#evForm").dataset.format, fmt=fmt0==="stroke"&&$("#evForm").dataset.mode==="stableford"?"stableford":fmt0; syncPlayerHcp();
   const v=s=>$(s).value.trim(), num=(s,d)=>{const x=parseInt($(s).value,10);return Number.isFinite(x)&&x>=0?x:d;};
   const matches=[...document.querySelectorAll("#fMatches .mrow")].map(r=>{const i=r.querySelectorAll("input");const h=x=>x.value.trim()===""?null:Number(x.value);return {w:[i[0].value.trim(),h(i[1])],r:[i[2].value.trim(),h(i[3])],t:i[4].value.trim()};}).filter(m=>m.w[0]||m.r[0]);
   const lk=new Date(v("#fLock"));
@@ -1033,8 +1037,8 @@ function readEventForm(id){
     return {id:id||null,format:fmt,name:v("#fName"),course:v("#fCourse"),event_date:v("#fDate")||null,lock_at:isNaN(lk)?null:lk.toISOString(),aportacion:num("#fAport",200),winners:Number($("#fWin").value),
       pts:{match:num("#fQM",1),team:num("#fQT",2),ind1:num("#fQI",3)},teams:[v("#fQ1")||"Blanco",v("#fQ2")||"Rojo"],matches:pm,players:pl,convocatoria_url:v("#fConv")}; }
   return {id:id||null,format:fmt,name:v("#fName"),course:v("#fCourse"),event_date:v("#fDate")||null,lock_at:isNaN(lk)?null:lk.toISOString(),aportacion:num("#fAport",200),winners:Number($("#fWin").value),
-    pts:fmt==="stroke"?{p1:num("#fP1",3),p2:num("#fP2",2),p3:num("#fP3",1)}:{match:num("#fPM",1),team:num("#fPT",2),ind1:num("#fPI",3)},teams:[v("#fT1")||"Blanco",v("#fT2")||"Rojo"],
-    matches:fmt==="stroke"?[]:matches,players:fmt==="stroke"?FPLAYERS.map(x=>({n:x.n,h:x.h,member_id:x.member_id||null})):[],convocatoria_url:v("#fConv")};
+    pts:fmt0==="stroke"?{p1:num("#fP1",3),p2:num("#fP2",2),p3:num("#fP3",1)}:{match:num("#fPM",1),team:num("#fPT",2),ind1:num("#fPI",3)},teams:[v("#fT1")||"Blanco",v("#fT2")||"Rojo"],
+    matches:fmt0==="stroke"?[]:matches,players:fmt0==="stroke"?FPLAYERS.map(x=>({n:x.n,h:x.h,member_id:x.member_id||null})):[],convocatoria_url:v("#fConv")};
 }
 document.addEventListener("click",async e=>{
   const t=e.target;
@@ -1049,11 +1053,12 @@ document.addEventListener("click",async e=>{
   if(t.matches("[data-delpair]")){ t.closest(".pairrow").remove(); refreshPM(); return; }
   if(t.id==="addPM"){ $("#fPMatches").insertAdjacentHTML("beforeend",pmRow({d:1,a:"",b:"",t:""},false)); return; }
   if(t.matches("[data-delpm]")){ t.closest(".pmrow").remove(); return; }
+  const md=t.closest("#fMode [data-mode]"); if(md&&!md.disabled){ $("#evForm").dataset.mode=md.dataset.mode; document.querySelectorAll("#fMode [data-mode]").forEach(b=>b.classList.toggle("sel",b===md)); return; }
   if(t.id==="addMatch"){ $("#fMatches").insertAdjacentHTML("beforeend",matchRow({w:["",""],r:["",""],t:""},false)); return; }
   if(t.matches("[data-delm]")){ t.closest(".mrow").remove(); return; }
   if(t.id==="saveEv"){ t.disabled=true;
     try{ const isNew=VIEW!=="event"; const d=readEventForm(isNew?null:EV.id); if(!d.format) throw new Error("Elige el tipo de torneo");
-      if(d.format==="ryder"&&!d.matches.length) throw new Error("Agrega al menos un match"); if(d.format==="stroke"&&d.players.length<3) throw new Error("Agrega al menos 3 jugadores"); if(d.format==="parejas"&&d.players.length<4) throw new Error("Agrega al menos 2 parejas");
+      if(d.format==="ryder"&&!d.matches.length) throw new Error("Agrega al menos un match"); if(ST(d)&&d.players.length<3) throw new Error("Agrega al menos 3 jugadores"); if(d.format==="parejas"&&d.players.length<4) throw new Error("Agrega al menos 2 parejas");
       EV=await rpc("b_admin_save_event",{p_token:TOKEN,p_data:d}); toast(isNew?"Torneo creado ✓":"Cambios guardados ✓");
       if(isNew){ openEvent(EV.id); } else { res={...EV.results}; renderEvent(); } }
     catch(err){ toast(err.message); t.disabled=false; } return; }
@@ -1145,8 +1150,8 @@ function renderHist(){
   const evs=all.filter(e=>Object.keys(e.results||{}).length);
   if(!evs.length){ $("#histBody").innerHTML=`<div class="card"><div class="note">No hay torneos con resultados en ese rango.</div></div>`; return; }
   const P={};
-  const EK=e=>(e.format==="stroke"?["p1","p2","p3"]:e.matches.map((_,i)=>"m"+(i+1)).concat(["team","ind1"])).filter(k=>e.results[k]);
-  evs.forEach(e=>{ const K=EK(e), FK=e.format==="stroke"?"p1":"ind1";
+  const EK=e=>(ST(e)?["p1","p2","p3"]:e.matches.map((_,i)=>"m"+(i+1)).concat(["team","ind1"])).filter(k=>e.results[k]);
+  evs.forEach(e=>{ const K=EK(e), FK=ST(e)?"p1":"ind1";
     const winR=e.results.team;
     e.entries.forEach(x=>{ const s=e.standings.find(y=>y.member_id===x.member_id)||{}; const p=P[x.member_id]||(P[x.member_id]={id:x.member_id,name:x.name,ev:0,hits:0,tot:0,pts:0,wins:0,pods:0,money:0,team:0,teamN:0,ind:0,best:null});
       if(!Object.keys(x.picks||{}).length) return;
@@ -1193,7 +1198,7 @@ function playerResults(e){
   const names=(e.format==="stroke"||e.format==="stableford"||e.format==="parejas")?(e.players||[]).map(p=>p.n):e.matches.flatMap(m=>[m.w[0],m.r[0]]);
   names.forEach(n=>put(n,{}));
   const R=e.results||{};
-  if(e.format==="stroke"){ ["p1","p2","p3"].forEach((k,i)=>{ if(R[k]) put(R[k],{pos:i+1}); }); if(R.p1&&e.net_ganador!=null) put(R.p1,{net:e.net_ganador}); }
+  if(ST(e)){ ["p1","p2","p3"].forEach((k,i)=>{ if(R[k]) put(R[k],{pos:i+1}); }); if(R.p1&&e.net_ganador!=null) put(R.p1,SB(e)?{pts:e.net_ganador}:{net:e.net_ganador}); }
   else if(e.format==="parejas"){ const PC=pairCalc(e);
     PC.M.forEach(m=>{ if(!m.res||m.res==="t") return; const W=PC.P.find(x=>x.no===(m.res==="w"?m.a:m.b)), L=PC.P.find(x=>x.no===(m.res==="w"?m.b:m.a)); W?.ps.forEach(p=>put(p.n,{}).mw++); L?.ps.forEach(p=>put(p.n,{}).ml++); });
     if(R.team) PC.P.forEach(x=>x.ps.forEach(p=>{ put(p.n,{}).cup=(R.team===e.teams[x.team]); })); }
