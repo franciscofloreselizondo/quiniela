@@ -534,13 +534,22 @@ $("#lgSend").onclick=async()=>{
   }catch(e){ $("#lgMsg").textContent=e.message; } finally{ $("#lgSend").disabled=false; }
 };
 $("#lgGoogle").onclick=()=>{ location.href=SB_URL+"/auth/v1/authorize?provider=google&redirect_to="+encodeURIComponent(location.origin+location.pathname); };
+let GREQ=null;
+document.addEventListener("click",async e=>{ if(e.target.id!=="lgReqG"||!GREQ) return; const b=e.target;
+  let n=GREQ.name; if(!n){ n=(prompt("¿Cómo te conocen en el grupo?","")||"").trim(); if(!n) return; }
+  b.disabled=true; try{ const r=await rpc("c_request_access",{p_name:n,p_email:GREQ.email});
+    $("#lgMsg").innerHTML = r==="ya_registrado"?"Ese correo ya tiene acceso: vuelve a intentar con Google.": r==="ya_pendiente"?"Ya tienes una solicitud pendiente. Te avisamos por correo cuando la aprueben.":`✅ Solicitud enviada, <b>${esc(n)}</b>. Te llega un correo a ${esc(GREQ.email)} cuando el board la apruebe.`; }
+  catch(err){ toast(err.message); b.disabled=false; } });
 async function oauthReturn(){
   const h=new URLSearchParams(location.hash.replace(/^#/,"")); const at=h.get("access_token"), er=h.get("error_description")||h.get("error");
   if(!at&&!er) return false;
   history.replaceState(null,"",location.pathname+location.search);
   if(er){ show("login"); $("#lgMsg").textContent="No se completó la entrada con Google. Intenta de nuevo o entra con código."; return true; }
   try{ const r=await rpc("c_login_oauth",{},at);
-    if(r.error==="no_registrado"){ show("login"); $("#lgMsg").innerHTML=`Tu cuenta de Google <b>${esc(r.email)}</b> no está registrada en el club. Entra con el correo que tienes registrado o pide acceso.`; return true; }
+    if(r.error==="no_registrado"){ show("login"); GREQ={name:r.name||"",email:r.email};
+      $("#lgMsg").innerHTML=`Tu cuenta de Google <b>${esc(r.email)}</b> no está registrada en el club.`+(r.pendiente?`<div style="margin-top:8px">Ya tienes una solicitud pendiente. Te avisamos por correo cuando la aprueben.</div>`
+        :`<div style="margin-top:6px">Si eres hermano, entra con el correo que tienes registrado, o pide acceso:</div><button class="btn gold w" id="lgReqG" style="margin-top:10px">Pedir acceso${r.name?" como "+esc(r.name):""}</button>`);
+      $("#raEmail").value=r.email; if(r.name) $("#raName").value=r.name; return true; }
     if(r.error){ show("login"); $("#lgMsg").textContent=r.error; return true; }
     TOKEN=r.token; ME=r.me; store.set("mcg_token",TOKEN);
     try{ MEMBERS=await rpc("c_members_list",{p_token:TOKEN}); }catch{}
