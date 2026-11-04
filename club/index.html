@@ -332,10 +332,13 @@ nav.main button{flex:0 0 auto;padding:8px 9px;font-size:12.5px}
     <div class="card hide" id="crqApprove" style="text-align:center"><div class="h" style="justify-content:center" id="crqTitle">Solicitud de acceso</div><div id="crqMsg" style="margin-bottom:12px"></div><button class="btn gold w" id="crqBtn">Confirmar</button></div>
     <div class="card" id="reqAccess">
       <div class="h">¿Eres socio y no tienes acceso?</div>
-      <div class="note" style="margin-bottom:6px">Deja tu nombre y correo. El Presidente lo aprueba y te llega un correo para entrar.</div>
-      <label class="f" for="raName">Nombre (como te conocen en el grupo)</label><input id="raName" class="t" maxlength="40">
-      <label class="f" for="raEmail">Correo</label><input id="raEmail" class="t" type="email" inputmode="email">
-      <button class="btn ghost w" id="raBtn" style="margin-top:12px">Solicitar acceso</button>
+      <button class="btn ghost w" id="raOpen">Solicitar acceso</button>
+      <div id="raForm" class="hide">
+        <div class="note" style="margin-bottom:6px">Deja tu nombre y correo. El board lo aprueba y te llega un correo para entrar.</div>
+        <label class="f" for="raName">Nombre (como te conocen en el grupo)</label><input id="raName" class="t" maxlength="40">
+        <label class="f" for="raEmail">Correo</label><input id="raEmail" class="t" type="email" inputmode="email">
+        <button class="btn gold w" id="raBtn" style="margin-top:12px">Enviar solicitud</button>
+      </div>
       <div id="raMsg" class="note" style="margin-top:10px"></div>
     </div>
   </section>
@@ -449,15 +452,13 @@ nav.main button{flex:0 0 auto;padding:8px 9px;font-size:12.5px}
   </section>
 
   <section class="view" id="v-social">
-    <div class="plaque"><div class="pt">Hermanos McGregor</div><div class="pn">Redes Sociales</div><div class="ps">Síguenos, comparte y etiqueta al grupo</div></div>
+    <div class="plaque"><div class="pt">Hermanos McGregor</div><div class="pn">Redes Sociales</div><div class="ps">Síguenos en redes</div></div>
     <div class="soc">
       <a class="sc" href="https://www.instagram.com/hermanosmcgregor/" target="_blank" rel="noopener"><i>📸</i><div><b>Instagram</b><span>@hermanosmcgregor</span></div><em>Abrir ›</em></a>
       <a class="sc" href="https://www.youtube.com/@hermanosmcgregor" target="_blank" rel="noopener"><i>▶️</i><div><b>YouTube</b><span>@hermanosmcgregor</span></div><em>Abrir ›</em></a>
       <a class="sc" href="https://www.tiktok.com/@hermanos.mcgregor" target="_blank" rel="noopener"><i>🎵</i><div><b>TikTok</b><span>@hermanos.mcgregor</span></div><em>Abrir ›</em></a>
       <a class="sc" href="mailto:club@hermanosmcgregor.com"><i>✉️</i><div><b>Correo</b><span>club@hermanosmcgregor.com</span></div><em>Escribir ›</em></a>
     </div>
-    <div class="card"><div class="h">Para etiquetar</div><div class="note">Instagram y YouTube: <b>@hermanosmcgregor</b> · TikTok: <b>@hermanos.mcgregor</b></div>
-      <button class="btn ghost w" id="socCopy" style="margin-top:10px">Copiar usuarios</button></div>
   </section>
 
   <section class="view" id="v-members">
@@ -529,7 +530,7 @@ $("#lgSend").onclick=async()=>{
   const em=$("#lgEmail").value.trim(); if(!/^\S+@\S+\.\S+$/.test(em)) return toast("Correo no válido");
   $("#lgSend").disabled=true; $("#lgMsg").textContent="";
   try{ const r=await rpc("c_request_code",{p_email:em});
-    if(r==="no_registrado"){ $("#lgMsg").innerHTML="Ese correo no está registrado. Solicita acceso abajo 👇"; $("#raEmail").value=em; $("#raName").focus(); }
+    if(r==="no_registrado"){ $("#lgMsg").innerHTML="Ese correo no está registrado. Solicita acceso abajo 👇"; $("#raEmail").value=em; raShow(); $("#raName").focus(); }
     else { $("#lgSent").innerHTML=`Te mandamos un código a <b>${esc(em)}</b>. Revisa también Spam o Promociones.`; $("#lgStep1").classList.add("hide"); $("#lgStep2").classList.remove("hide"); $("#lgCode").focus(); }
   }catch(e){ $("#lgMsg").textContent=e.message; } finally{ $("#lgSend").disabled=false; }
 };
@@ -1273,6 +1274,8 @@ $("#pfFile").addEventListener("change",async e=>{ const f=e.target.files[0]; e.t
   try{ const img=await new Promise((ok,ko)=>{const i=new Image(); i.onload=()=>ok(i); i.onerror=ko; i.src=URL.createObjectURL(f);});
     const z=Math.min(img.width,img.height), c=document.createElement("canvas"); c.width=c.height=256; c.getContext("2d").drawImage(img,(img.width-z)/2,(img.height-z)/2,z,z,0,0,256,256);
     ME=await rpc("c_update_me",{p_token:TOKEN,p_data:{avatar:c.toDataURL("image/jpeg",.82)}}); toast("Foto actualizada ✓"); fillProfile(); renderWho(); }catch(err){ toast(err.message||"No se pudo subir"); } });
+function raShow(){ $("#raOpen").classList.add("hide"); $("#raForm").classList.remove("hide"); }
+$("#raOpen").onclick=()=>{ raShow(); ($("#raName").value?$("#raEmail"):$("#raName")).focus(); };
 $("#raBtn").onclick=async()=>{ const n=$("#raName").value.trim(), em=$("#raEmail").value.trim(); if(!n) return toast("Escribe tu nombre"); if(!/^\S+@\S+\.\S+$/.test(em)) return toast("Correo no válido");
   $("#raBtn").disabled=true; try{ const r=await rpc("c_request_access",{p_name:n,p_email:em});
     $("#raMsg").innerHTML = r==="ya_registrado"?"Ese correo ya tiene acceso: pide tu código arriba.": r==="ya_pendiente"?"Ya tienes una solicitud pendiente. Te avisamos por correo al aprobarla.":"✅ Solicitud enviada. Te llega un correo cuando la aprueben."; }
@@ -1329,7 +1332,6 @@ let HFPHOTO=null;
 async function shrink(file,max,q){ const img=await new Promise((ok,ko)=>{const i=new Image(); i.onload=()=>ok(i); i.onerror=ko; i.src=URL.createObjectURL(file);});
   const r=Math.min(1,max/Math.max(img.width,img.height)), c=document.createElement("canvas"); c.width=Math.round(img.width*r); c.height=Math.round(img.height*r);
   c.getContext("2d").drawImage(img,0,0,c.width,c.height); return c.toDataURL("image/jpeg",q); }
-$("#socCopy").onclick=async()=>{ const t="Instagram y YouTube: @hermanosmcgregor\nTikTok: @hermanos.mcgregor\nCorreo: club@hermanosmcgregor.com"; try{ await navigator.clipboard.writeText(t); toast("Copiado ✓"); }catch{ toast(t); } };
 $("#hnAdd").onclick=async()=>{ if(!MEMBERS.length){ try{ MEMBERS=await rpc("c_members_list",{p_token:TOKEN}); }catch{} } HFPHOTO=null; $("#hnForm").innerHTML=honorForm(null); $("#hnForm").classList.remove("hide"); $("#hnForm").scrollIntoView({block:"start"}); };
 $("#phFile").addEventListener("change",async e=>{ const f=e.target.files[0]; e.target.value=""; if(!f) return;
   try{ let data=await shrink(f,1400,.8); if(data.length>880000) data=await shrink(f,1000,.7); const thumb=await shrink(f,480,.7);
