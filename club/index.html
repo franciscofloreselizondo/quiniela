@@ -1596,7 +1596,7 @@ async function handleCreq(){ const q=new URLSearchParams(location.search), id=q.
 
 
 /* ===== uso de la app (solo superadmin) ===== */
-const VNAME={home:"Casa Club",cal:"Calendario",bets:"Apuestas",event:"Torneo (quiniela)",att:"Asistencias",treas:"Tesorería",honor:"Honor",code:"Código",board:"Board",hist:"Históricos",members:"Miembros",social:"Redes",profile:"Mi perfil",usage:"Uso"};
+const VNAME={home:"Casa Club",cal:"Calendario",bets:"Apuestas",event:"Torneo (quiniela)",att:"Asistencias",treas:"Tesorería",honor:"Honor",code:"Código",board:"Board",hist:"Históricos",members:"Miembros",social:"Redes",profile:"Mi perfil",usage:"Uso",tee:"Salidas"};
 let US=null, ULOG="";
 async function loadUsage(){ $("#uBody").innerHTML=`<div class="card"><div class="note">Cargando…</div></div>`;
   try{ US=await rpc("u_stats",{p_token:TOKEN,p_days:+$("#uDays").value}); }catch(e){ $("#uBody").innerHTML=`<div class="card"><div class="note">${esc(e.message)}</div></div>`; return; } renderUsage(); }
@@ -1613,8 +1613,8 @@ function renderUsage(){ const U=US, K=U.kpis, ago=t=>{ if(!t) return "nunca"; co
   $("#uBody").innerHTML=`<div class="card"><div class="h">Resumen <small>${U.days} días</small></div>
     <div class="stats"><div><b>${K.users}/${K.members}</b><span>SOCIOS ACTIVOS EN LA APP</span></div><div><b>${K.opens}</b><span>ENTRADAS</span></div><div><b>${K.views}</b><span>PANTALLAS VISTAS</span></div></div>
     <div class="stats" style="margin-top:10px"><div><b>${K.users?(K.opens/K.users).toFixed(1):"0"}</b><span>ENTRADAS POR SOCIO</span></div><div><b>${K.logins}</b><span>INICIOS DE SESIÓN</span><span style="display:block">${K.google} Google · ${K.codigo} código</span></div><div><b>${K.never}</b><span>NUNCA HAN ENTRADO</span></div></div></div>
-  <div class="card"><div class="h">Actividad diaria <small>pantallas vistas</small></div>
-    <div class="uchart">${yax(mxd)}<div><div class="ucols">${U.daily.map(x=>`<div style="height:${x.n/mxd*100}%" title="${esc(x.d)}: ${x.n} vistas · ${x.u} socios"></div>`).join("")}</div>
+  <div class="card"><div class="h">Actividad diaria <small>entradas + pantallas vistas</small></div>
+    <div class="uchart">${yax(mxd)}<div><div class="ucols">${U.daily.map(x=>`<div style="height:${x.n/mxd*100}%" title="${esc(x.d)}: ${x.n} registros · ${x.u} socios"></div>`).join("")}</div>
     <div class="uaxis"><span>${esc(U.daily[0]?.d||"")}</span><span>${esc(U.daily.at(-1)?.d||"")}</span></div></div></div></div>
   <div class="card"><div class="h">Módulos más usados <small>vistas · socios</small></div>${bars(U.modules,x=>esc(VNAME[x.v]||x.v),x=>x.n,x=>x.u)}</div>
   ${U.tournaments.length?`<div class="card"><div class="h">Torneos más vistos</div>${bars(U.tournaments,x=>esc(x.t),x=>x.n,x=>x.u)}</div>`:""}
