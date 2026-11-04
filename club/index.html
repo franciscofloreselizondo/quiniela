@@ -167,6 +167,7 @@ input.t:focus,select.t:focus,textarea.t:focus{outline:2px solid var(--gold);bord
 .mres .n{color:var(--gold);font-weight:700;font-size:11px}
 .mres .dot{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:6px}
 .mres .dot.w{background:var(--cream2)}.mres .dot.r{background:var(--red2)}
+.tblue .opt.w{background:#2f5fb3;color:#fff;border-color:#2f5fb3}.tblue .fbar .w{background:#2f5fb3}.tblue .score .tm.w{background:#2f5fb3;color:#fff}.tblue .dot.w{background:#2f5fb3}
 .mres .lose{color:var(--mute);font-size:12px}
 .mres .pc{font-size:11.5px;color:var(--mute);text-align:right}
 .tag{font-size:10px;font-weight:700;letter-spacing:.06em;border-radius:6px;padding:2px 6px;margin-left:4px;background:rgba(229,154,143,.2);color:var(--bad)}
@@ -744,7 +745,7 @@ async function openEvent(id, keepTab){
 function loadForm(entry){ form={picks:{...(entry?.picks||{})},tb:entry?.tb??""}; dirty=false; }
 function setETab(t){ ETAB=t; renderEvent(); show("event"); }
 function renderEvent(){
-  const [c,l]=evStatus(EV);
+  const [c,l]=evStatus(EV); $("#v-event").classList.toggle("tblue",/azul|blue/i.test(EV.teams?.[0]||""));
   $("#evPlaque").innerHTML=`<div class="pt">${esc(l)}</div><div class="pn">${esc(EV.name)}</div><div class="ps">${esc(EV.course||"")}${EV.course?" · ":""}${esc(fdate(EV.event_date))}</div>`;
   const tabs=[["principal","Principal"],["picks","Mis picks"],["ranking","Ranking"]].concat(EV.can_admin?[["admin","Admin"]]:[]);
   $("#evTabs").innerHTML=tabs.map(([k,t])=>`<button class="${ETAB===k?"on":""}" data-etab="${k}">${t}</button>`).join("");
@@ -995,7 +996,9 @@ function adminHTML(){
     <div class="note" style="margin-bottom:8px">Captura el net de cada jugador por día. La app calcula el best ball de cada pareja, los partidos, el marcador, el equipo ganador y el podio de parejas.</div>
     <div class="pjsc note"><span>Jugador</span><span>Día 1</span><span>Día 2</span></div>
     <div id="pjTbl">${pairsOf().map(x=>`<div class="mt"><span class="dot ${x.team===1?"r":"w"}"></span>${esc(x.label)}</div>`+x.ps.map(p=>`<div class="pjsc" data-ps="${esc(p.n)}"><span class="nm2">${esc(p.n)}</span><input class="t" type="number" inputmode="numeric" value="${esc(S[p.n]?.d1??"")}" placeholder="Net"><input class="t" type="number" inputmode="numeric" value="${esc(S[p.n]?.d2??"")}" placeholder="Net"></div>`).join("")).join("")}</div>
-    <button class="btn w" id="savePairSc" style="margin-top:10px">Guardar scores y calcular</button></div>
+    <button class="btn w" id="savePairSc" style="margin-top:10px">Guardar scores y calcular</button>
+    <button class="btn ghost w" id="mailPairSc" style="margin-top:8px" ${(EV.scores||[]).length?"":"disabled"}>📧 Enviar resumen del día por correo</button>
+    <div class="note" style="margin-top:6px">Manda a apostadores y jugadores el marcador ${esc(EV.teams[0])} vs ${esc(EV.teams[1])}, los partidos, la tabla de parejas con premios y el ranking de la quiniela.</div></div>
     <div class="card"><div class="h">Bolsas del torneo <small>cuota por jugador, aparte de la quiniela</small></div>
     <div class="row2"><div><label class="f">${esc(EV.teams[0])} vs ${esc(EV.teams[1])} ($)</label><input class="t" id="bqEq" type="number" value="${esc(EV.bolsas?.equipos??"")}" placeholder="0"></div><div><label class="f">Podio de parejas ($)</label><input class="t" id="bqPo" type="number" value="${esc(EV.bolsas?.podio??"")}" placeholder="0"></div></div>
     <button class="btn w" id="saveBolsas" style="margin-top:10px">Guardar bolsas</button></div>${adminRest(hasPicks,notIn)}`; }
@@ -1127,6 +1130,7 @@ document.addEventListener("click",async e=>{
   const r=t.closest("[data-r]");
   if(r){ const k=r.dataset.r,v=r.dataset.v; if(res[k]===v) delete res[k]; else res[k]=v; const y=window.scrollY; const keep=readAdminExtras(); renderEvent(); writeAdminExtras(keep); window.scrollTo(0,y); return; }
   if(t.id==="saveBolsas"){ t.disabled=true; try{ EV=await rpc("b_admin_set_bolsas",{p_token:TOKEN,p_event:EV.id,p_bolsas:{equipos:+$("#bqEq").value||0,podio:+$("#bqPo").value||0}}); toast("Bolsas guardadas ✓"); renderEvent(); }catch(err){ toast(err.message); t.disabled=false; } return; }
+  if(t.id==="mailPairSc"){ if(!confirm("¿Mandar el resumen por correo a apostadores y jugadores?")) return; t.disabled=true; try{ const r=await rpc("b_mail_pair_summary",{p_token:TOKEN,p_event:EV.id}); toast(`Resumen enviado a ${r.sent} ✓`); }catch(err){ toast(err.message); } finally{ t.disabled=false; } return; }
   if(t.id==="savePairSc"){ t.disabled=true;
     const sc=[...document.querySelectorAll("#pjTbl [data-ps]")].map(r=>{const i=r.querySelectorAll("input"); const nv=x=>x.value===""?null:Math.round(Number(x.value)); return {n:r.dataset.ps,d1:nv(i[0]),d2:nv(i[1])};});
     try{ EV=await rpc("b_admin_set_pair_scores",{p_token:TOKEN,p_event:EV.id,p_scores:sc}); res={...EV.results}; toast("Scores guardados ✓"); renderEvent(); }
@@ -1311,7 +1315,7 @@ function renderPlayerHist(evs){
 
 /* ===== asistencias ===== */
 /* ===== salidas y carritos ===== */
-const CARTS=[{k:"",n:"Rentado (blanco)",c:"#efe7cb"},{k:"Damiano",n:"Damiano",c:"#8c8c8c"},{k:"Coronel",n:"Coronel",c:"#29a6df"},{k:"Peter",n:"Peter",c:"#1f48b6"},{k:"Juanfer",n:"Juanfer",c:"#53b0ae"},{k:"Fabian",n:"Fabián",c:"#c0392b"},{k:"Ivan",n:"Iván",c:"#3a3a3a"}];
+const CARTS=[{k:"",n:"Rentado (blanco)",c:"#efe7cb"},{k:"Damiano",n:"Damiano",c:"#8c8c8c"},{k:"Coronel",n:"Coronel",c:"#29a6df"},{k:"Peter",n:"Peter",c:"#1f48b6"},{k:"Juanfer",n:"Juanfer",c:"#53b0ae"},{k:"Fabian",n:"Fabián",c:"#1e1e1e"},{k:"Ivan",n:"Iván",c:"#1e1e1e"}];
 const TEE_DEF={6:["07:30","07:40","08:00"],0:["07:50","08:00"]};
 let TEE=null;
 function nextPlayDay(){ const d=new Date(); for(let i=0;i<8;i++){ const x=new Date(d.getFullYear(),d.getMonth(),d.getDate()+i); if(x.getDay()===6||x.getDay()===0) return `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,"0")}-${String(x.getDate()).padStart(2,"0")}`; } }
