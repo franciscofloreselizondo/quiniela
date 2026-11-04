@@ -315,7 +315,7 @@ nav.main button{flex:0 0 auto;padding:8px 9px;font-size:12.5px}
         <label class="f" for="lgEmail">Tu correo</label>
         <input id="lgEmail" class="t" type="email" inputmode="email" autocomplete="email" placeholder="tu@correo.com">
         <button class="btn w" id="lgSend" style="margin-top:12px">Enviarme código</button>
-        <div class="note" style="margin-top:10px">Te llega un código de 6 dígitos de hermanosmcgregor@gmail.com. Sin contraseñas.</div>
+        <div class="note" style="margin-top:10px">Te llega un código de 6 dígitos de club@hermanosmcgregor.com. Sin contraseñas.</div>
       </div>
       <div id="lgStep2" class="hide">
         <div class="note" id="lgSent"></div>
@@ -450,7 +450,7 @@ nav.main button{flex:0 0 auto;padding:8px 9px;font-size:12.5px}
       <a class="sc" href="https://www.instagram.com/hermanosmcgregor/" target="_blank" rel="noopener"><i>📸</i><div><b>Instagram</b><span>@hermanosmcgregor</span></div><em>Abrir ›</em></a>
       <a class="sc" href="https://www.youtube.com/@hermanosmcgregor" target="_blank" rel="noopener"><i>▶️</i><div><b>YouTube</b><span>@hermanosmcgregor</span></div><em>Abrir ›</em></a>
       <a class="sc" href="https://www.tiktok.com/@hermanos.mcgregor" target="_blank" rel="noopener"><i>🎵</i><div><b>TikTok</b><span>@hermanos.mcgregor</span></div><em>Abrir ›</em></a>
-      <a class="sc" href="mailto:hermanosmcgregor@gmail.com"><i>✉️</i><div><b>Correo</b><span>hermanosmcgregor@gmail.com</span></div><em>Escribir ›</em></a>
+      <a class="sc" href="mailto:club@hermanosmcgregor.com"><i>✉️</i><div><b>Correo</b><span>club@hermanosmcgregor.com</span></div><em>Escribir ›</em></a>
     </div>
     <div class="card"><div class="h">Para etiquetar</div><div class="note">Instagram y YouTube: <b>@hermanosmcgregor</b> · TikTok: <b>@hermanos.mcgregor</b></div>
       <button class="btn ghost w" id="socCopy" style="margin-top:10px">Copiar usuarios</button></div>
@@ -1302,7 +1302,7 @@ let HFPHOTO=null;
 async function shrink(file,max,q){ const img=await new Promise((ok,ko)=>{const i=new Image(); i.onload=()=>ok(i); i.onerror=ko; i.src=URL.createObjectURL(file);});
   const r=Math.min(1,max/Math.max(img.width,img.height)), c=document.createElement("canvas"); c.width=Math.round(img.width*r); c.height=Math.round(img.height*r);
   c.getContext("2d").drawImage(img,0,0,c.width,c.height); return c.toDataURL("image/jpeg",q); }
-$("#socCopy").onclick=async()=>{ const t="Instagram y YouTube: @hermanosmcgregor\nTikTok: @hermanos.mcgregor\nCorreo: hermanosmcgregor@gmail.com"; try{ await navigator.clipboard.writeText(t); toast("Copiado ✓"); }catch{ toast(t); } };
+$("#socCopy").onclick=async()=>{ const t="Instagram y YouTube: @hermanosmcgregor\nTikTok: @hermanos.mcgregor\nCorreo: club@hermanosmcgregor.com"; try{ await navigator.clipboard.writeText(t); toast("Copiado ✓"); }catch{ toast(t); } };
 $("#hnAdd").onclick=async()=>{ if(!MEMBERS.length){ try{ MEMBERS=await rpc("c_members_list",{p_token:TOKEN}); }catch{} } HFPHOTO=null; $("#hnForm").innerHTML=honorForm(null); $("#hnForm").classList.remove("hide"); $("#hnForm").scrollIntoView({block:"start"}); };
 $("#phFile").addEventListener("change",async e=>{ const f=e.target.files[0]; e.target.value=""; if(!f) return;
   try{ let data=await shrink(f,1400,.8); if(data.length>880000) data=await shrink(f,1000,.7); const thumb=await shrink(f,480,.7);
