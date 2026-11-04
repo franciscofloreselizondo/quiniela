@@ -75,6 +75,7 @@ input.t:focus,select.t:focus,textarea.t:focus{outline:2px solid var(--gold);bord
 .kpi b{display:block;font:700 34px/1 "Cormorant Garamond",serif;color:var(--cream)}
 .kpi span{display:block;margin-top:6px;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold2)}
 .kpi.wide{grid-column:1/-1}
+.kpi .ksub{display:block;margin-top:4px;font-size:11.5px;color:var(--mute)}
 .soc{display:grid;gap:10px;margin-bottom:14px}
 .sc{display:flex;align-items:center;gap:14px;border:1px solid var(--line);border-radius:14px;padding:16px;color:var(--cream);text-decoration:none;background:rgba(255,255,255,.03)}
 .sc:hover{border-color:var(--gold)}.sc i{font-style:normal;font-size:24px}.sc div{flex:1}.sc b{display:block;font:700 20px "Cormorant Garamond",serif}
@@ -640,8 +641,8 @@ async function renderHome(){
   rpc("c_home_stats",{p_token:TOKEN}).then(k=>{ const n=x=>Number(x||0).toLocaleString("es-MX");
     const bp=+k.board_pending||0; $("#bdgBoard").textContent=bp; $("#bdgBoard").classList.toggle("hide",!bp); $("#navBoard").textContent=bp?`Board (${bp})`:"Board";
     $("#homeKpis").innerHTML=`<div class="kpi"><b>${n(k.hermanos)}</b><span>Hermanos</span></div><div class="kpi"><b>${n(k.torneos)}</b><span>Torneos jugados</span></div>
-      <div class="kpi wide"><b>${money(k.hio)}</b><span>Bolsa Hole in One</span></div>
-      ${""}<div class="kpi"><b>${n(k.horas)}</b><span>Horas jugadas juntos</span></div><div class="kpi"><b>${n(k.honores)}</b><span>Reconocimientos</span></div>`; }).catch(()=>{ $("#homeKpis").innerHTML=""; });
+      ${k.quinielas!=null?`<div class="kpi wide"><b>${money(k.quinielas)}</b><span>Total apostado en quinielas</span><small class="ksub">${n(k.apuestas)} apuestas en ${n(k.n_quinielas)} quiniela${k.n_quinielas==1?"":"s"}</small></div>
+      <div class="kpi"><b>${money(k.hio)}</b><span>Bolsa Hole in One</span></div>`:`<div class="kpi wide"><b>${money(k.hio)}</b><span>Bolsa Hole in One</span></div><div class="kpi"><b>${n(k.horas)}</b><span>Horas jugadas juntos</span></div>`}<div class="kpi"><b>${n(k.honores)}</b><span>Reconocimientos</span></div>`; }).catch(()=>{ $("#homeKpis").innerHTML=""; });
   try{ EVENTS=await rpc("b_events_list",{p_token:TOKEN}); }catch{ EVENTS=[]; }
   const nx=EVENTS.filter(e=>!e.closed).sort((a,b)=>new Date(a.lock_at)-new Date(b.lock_at))[0];
   $("#homeNext").innerHTML = nx ? `<div class="card" data-ev="${nx.id}" style="cursor:pointer"><div class="h">${new Date(nx.lock_at)>new Date()?"Próximo torneo":"En juego"} <small>${esc(fdate(nx.event_date))}</small></div>
