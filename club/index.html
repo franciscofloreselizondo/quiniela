@@ -676,6 +676,24 @@ function LONG(k){ return k==="team"?"Equipo":k==="ind1"?"1er lugar":POSL[k]||"Ma
 function PLAYERS(){ if(PJ()) return pairsOf().map(x=>({n:x.label,h:null,c:x.team===1?"r":"w"})); return ST()?(EV.players||[]).map(p=>({n:p.n,h:p.h,c:""})):EV.matches.flatMap(m=>[{n:m.w[0],h:m.w[1],c:"w"},{n:m.r[0],h:m.r[1],c:"r"}]); }
 function FIRSTK(){ return ST()?"p1":"ind1"; }
 function PJ(e){ return (e||EV)?.format==="parejas"; }
+function TB(){ const B=EV.bolsas||{}, nP=(EV.players||[]).length, eq=+B.equipos||0, po=+B.podio||0; return {eq,po,nP,eqPot:eq*nP,poPot:po*nP,on:PJ()&&(eq>0||po>0)}; }
+function podioPrizes(T){ return [Math.max(T.poPot-6*T.po,0),4*T.po,2*T.po]; }
+function torneoCard(){ const T=TB(); if(!T.on) return ""; const x=EV.aportacion, n=EV.entries.length, pq=prizes(), pp=podioPrizes(T);
+  return `<div class="card"><div class="h">¿Cómo funciona la bolsa? <small>${money(x+T.eq+T.po)} por jugador</small></div>
+  <table class="ht" id="bolsaTbl"><tr><th>Bolsa</th><th>Cuota</th><th>Total</th><th>Premios</th></tr>
+  <tr><td>🎯 <b>Quiniela</b><div class="note">Individual · más puntos con tus picks</div></td><td>${money(x)}</td><td>${money(x*n)}<div class="note">${n} inscrito${n===1?"":"s"}</div></td><td style="text-align:left">${pq.map((v,i)=>`${i+1}º ${money(v)}`).join("<br>")}</td></tr>
+  ${T.eq?`<tr><td>⚔️ <b>${esc(EV.teams[0])} vs ${esc(EV.teams[1])}</b><div class="note">Gana el equipo con más puntos de los ${EV.matches.length} partidos</div></td><td>${money(T.eq)}</td><td>${money(T.eqPot)}<div class="note">${T.nP} jugadores</div></td><td style="text-align:left">${money(T.eqPot/(T.nP/2||1))} por jugador ganador<div class="note">Empate: se regresa</div></td></tr>`:""}
+  ${T.po?`<tr><td>🏆 <b>Podio de parejas</b><div class="note">Best ball net, suma de los 2 días</div></td><td>${money(T.po)}</td><td>${money(T.poPot)}</td><td style="text-align:left">1ª ${money(pp[0])} <span class="note">(${money(pp[0]/2)} c/u)</span><br>2ª ${money(pp[1])} <span class="note">(${money(pp[1]/2)} c/u)</span><br>3ª ${money(pp[2])} <span class="note">(${money(pp[2]/2)} c/u)</span></td></tr>`:""}
+  <tr><td><b>Total</b></td><td><b>${money(x+T.eq+T.po)}</b></td><td><b>${money(x*n+T.eqPot+T.poPot)}</b></td><td></td></tr></table>
+  <div class="note" style="margin-top:8px">La quiniela se reparte entre quienes se inscriban aquí. Las bolsas del torneo las ponen los ${T.nP} jugadores. Empates en el podio: se suman los premios de esos lugares y se dividen.</div></div>`; }
+function torneoResultsCard(){ const T=TB(); if(!T.on) return ""; const PC=pairCalc(), R=EV.results||{}, done=PC.M.length&&PC.M.every(m=>m.res); let h="";
+  if(T.eq){ const wt=R.team?EV.teams.indexOf(R.team):-1, nw=wt<0?0:(EV.players||[]).filter(p=>p.team===wt).length;
+    h+=`<div class="pzl"><span>⚔️ ${esc(EV.teams[0])} vs ${esc(EV.teams[1])}</span><b>${wt>=0?esc(R.team)+": "+money(T.eqPot/(nw||1))+" c/u":done?"Empate: se regresa":"por definir"}</b></div>`; }
+  if(T.po){ const pp=podioPrizes(T), L=PC.ranked, all=PC.P.length&&PC.P.every(x=>x.tot!=null);
+    if(!all) h+=`<div class="pzl"><span>🏆 Podio de parejas</span><b>por definir</b></div>`;
+    else { const out=[]; let i=0; while(i<L.length&&i<3){ let j=i; while(j+1<L.length&&L[j+1].tot===L[i].tot) j++; let sum=0; for(let k=i;k<=j;k++) sum+=pp[k]||0; for(let k=i;k<=j;k++) out.push({x:L[k],p:sum/(j-i+1),pos:i+1}); i=j+1; }
+      h+=out.map(o=>`<div class="pzl"><span>🏆 ${o.pos}ª · ${esc(o.x.label)} (${o.x.tot})</span><b>${money(o.p)}</b></div>`).join(""); } }
+  return `<div class="card"><div class="h">Premios del torneo <small>${EV.closed?"final":"en vivo"}</small></div>${h}</div>`; }
 function half(x){ return x%1?(Math.floor(x)||"")+"½":String(x); }
 function pairsOf(e){ e=e||EV; const m={}; (e.players||[]).forEach(p=>{ (m[p.pair]=m[p.pair]||{no:p.pair,team:p.team,ps:[]}).ps.push(p); }); return Object.values(m).map(x=>({...x,label:x.ps.map(p=>p.n).join(" / ")})).sort((a,b)=>a.no-b.no); }
 function pairCalc(e){ e=e||EV; const S={}; (e.scores||[]).forEach(x=>S[x.n]=x);
@@ -738,6 +756,7 @@ function principalHTML(){
     <li><i>Cierre</i><span>${new Date(EV.lock_at).toLocaleString("es-MX",{weekday:"long",day:"numeric",month:"short",hour:"numeric",minute:"2-digit"})}. Todos los picks son públicos.</span></li></ul>
     ${cta?`<div style="margin-top:12px">${cta}</div>`:""}
     ${EV.convocatoria_url?`<a class="btn ghost w" style="margin-top:8px" href="${esc(EV.convocatoria_url)}" target="_blank" rel="noopener">Ver convocatoria</a>`:""}</div>`;
+  h+=torneoCard();
   const withP=EV.entries.filter(x=>Object.keys(x.picks||{}).length);
   if(withP.length){
     const cnt=k=>{const c={};withP.forEach(b=>{const v=b.picks?.[k];if(v)c[v]=(c[v]||0)+1;});return c;};
@@ -848,6 +867,7 @@ function summaryHTML(){
     h+=`<div class="card"><div class="h">${PC?"Podio de parejas · 2 días":"Podio net individual"}</div><div class="podium" id="podNet">${st(P[1],1)}${st(P[0],0)}${st(P[2],2)}</div></div>`; }
   }
   if((EV.scores||[]).length) h+=PJ()?pairTableHTML():finalTableHTML();
+  if(PJ()) h+=torneoResultsCard();
   const rows=ranked(), top=rows.slice(0,3);
   const sq=(r,i)=>`<div class="st ${i===0?"p1":""} ${r?"":"empty"}"><div class="md">${i+1}º</div><div class="nm">${r?esc(r.e.name):"—"}</div><div class="sc">${r?r.p+" pts":"&nbsp;"}</div>${r&&r.prize>0&&r.p>0?`<div class="pz">${money(r.prize)}</div>`:""}</div>`;
   const pr=prizes();
@@ -957,7 +977,10 @@ function adminHTML(){
     <div class="note" style="margin-bottom:8px">Captura el net de cada jugador por día. La app calcula el best ball de cada pareja, los partidos, el marcador, el equipo ganador y el podio de parejas.</div>
     <div class="pjsc note"><span>Jugador</span><span>Día 1</span><span>Día 2</span></div>
     <div id="pjTbl">${pairsOf().map(x=>`<div class="mt"><span class="dot ${x.team===1?"r":"w"}"></span>${esc(x.label)}</div>`+x.ps.map(p=>`<div class="pjsc" data-ps="${esc(p.n)}"><span class="nm2">${esc(p.n)}</span><input class="t" type="number" inputmode="numeric" value="${esc(S[p.n]?.d1??"")}" placeholder="Net"><input class="t" type="number" inputmode="numeric" value="${esc(S[p.n]?.d2??"")}" placeholder="Net"></div>`).join("")).join("")}</div>
-    <button class="btn w" id="savePairSc" style="margin-top:10px">Guardar scores y calcular</button></div>${adminRest(hasPicks,notIn)}`; }
+    <button class="btn w" id="savePairSc" style="margin-top:10px">Guardar scores y calcular</button></div>
+    <div class="card"><div class="h">Bolsas del torneo <small>cuota por jugador, aparte de la quiniela</small></div>
+    <div class="row2"><div><label class="f">${esc(EV.teams[0])} vs ${esc(EV.teams[1])} ($)</label><input class="t" id="bqEq" type="number" value="${esc(EV.bolsas?.equipos??"")}" placeholder="0"></div><div><label class="f">Podio de parejas ($)</label><input class="t" id="bqPo" type="number" value="${esc(EV.bolsas?.podio??"")}" placeholder="0"></div></div>
+    <button class="btn w" id="saveBolsas" style="margin-top:10px">Guardar bolsas</button></div>${adminRest(hasPicks,notIn)}`; }
   return `<div class="card"><div class="h">Resultados <small>toca para marcar</small></div>
     <div id="resM">${matchesHTML(res,"r",false)}</div><div class="mt">Equipo ganador</div><div class="teams">${teamHTML(res,"r",false)}</div>
     <div class="mt">1er lugar individual</div><div class="grid3">${indHTML(res,"r",false)}</div>
@@ -1085,6 +1108,7 @@ document.addEventListener("click",async e=>{
   if(VIEW!=="event"||ETAB!=="admin") return;
   const r=t.closest("[data-r]");
   if(r){ const k=r.dataset.r,v=r.dataset.v; if(res[k]===v) delete res[k]; else res[k]=v; const y=window.scrollY; const keep=readAdminExtras(); renderEvent(); writeAdminExtras(keep); window.scrollTo(0,y); return; }
+  if(t.id==="saveBolsas"){ t.disabled=true; try{ EV=await rpc("b_admin_set_bolsas",{p_token:TOKEN,p_event:EV.id,p_bolsas:{equipos:+$("#bqEq").value||0,podio:+$("#bqPo").value||0}}); toast("Bolsas guardadas ✓"); renderEvent(); }catch(err){ toast(err.message); t.disabled=false; } return; }
   if(t.id==="savePairSc"){ t.disabled=true;
     const sc=[...document.querySelectorAll("#pjTbl [data-ps]")].map(r=>{const i=r.querySelectorAll("input"); const nv=x=>x.value===""?null:Math.round(Number(x.value)); return {n:r.dataset.ps,d1:nv(i[0]),d2:nv(i[1])};});
     try{ EV=await rpc("b_admin_set_pair_scores",{p_token:TOKEN,p_event:EV.id,p_scores:sc}); res={...EV.results}; toast("Scores guardados ✓"); renderEvent(); }
