@@ -109,6 +109,7 @@ input.t:focus,select.t:focus,textarea.t:focus{outline:2px solid var(--gold);bord
 .ubar .tr{height:10px;border-radius:5px;background:rgba(255,255,255,.06);overflow:hidden}.ubar .tr i{display:block;height:100%;background:var(--gold);border-radius:5px}
 .ubar em{font-style:normal;text-align:right;color:var(--mute);font-size:12px}
 .ucols{display:flex;align-items:flex-end;gap:2px;height:110px;margin-top:8px}.ucols div{flex:1;background:var(--gold);border-radius:3px 3px 0 0;min-height:2px;opacity:.85}
+.uchart{display:grid;grid-template-columns:auto 1fr;gap:6px}.uy{display:flex;flex-direction:column;justify-content:space-between;height:110px;margin-top:8px;font-size:10.5px;color:var(--mute);text-align:right}
 .uaxis{display:flex;justify-content:space-between;font-size:10.5px;color:var(--mute);margin-top:4px}
 .ulog{font-size:12.5px;max-height:420px;overflow:auto}.ulog div{display:grid;grid-template-columns:96px 1fr;gap:8px;padding:5px 0;border-bottom:1px solid rgba(164,161,106,.12)}.ulog time{color:var(--mute)}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;text-align:center}
@@ -1270,7 +1271,7 @@ function renderPlayerHist(evs){
 let ATT=null, OUTF=null;
 const seasonOf=d=>{const x=d?new Date(d+"T12:00:00"):new Date(); return x.getFullYear()+"-"+(x.getMonth()<6?1:2);};
 const seasonLabel=s=>{const [y,h]=s.split("-"); return (h==="1"?"1er semestre ":"2º semestre ")+y;};
-function seasonOpts(sel,extra){ const set=new Set([seasonOf(),...(extra||[])]); return [...set].sort().reverse().map(x=>`<option value="${x}" ${x===sel?"selected":""}>${seasonLabel(x)}</option>`).join(""); }
+function seasonOpts(sel,extra){ const set=new Set([seasonOf(),...(extra||[])].filter(x=>x&&x>="2020")); return [...set].sort().reverse().map(x=>`<option value="${x}" ${x===sel?"selected":""}>${seasonLabel(x)}</option>`).join(""); }
 const TIPOS={regular:"Regular",major:"Major",championship:"Championship",gran_finale:"Gran Finale"};
 const nsLabel=n=>n>=3?`<b style='color:var(--bad)'>${n}ª falta (2ª reincidencia): expulsado de la temporada</b>`:n===2?"<b style='color:var(--bad)'>2ª falta: última advertencia</b>":"1ª falta";
 const nsAmt=k=>(k.p>0?"🍾 + "+money(k.p):"🍾 BOTELLA");
@@ -1282,6 +1283,24 @@ async function loadAtt(){
   renderAtt();
 }
 ["#attLiga","#attSeason"].forEach(q=>$(q).addEventListener("change",()=>{ $("#outForm").classList.add("hide"); loadAtt(); }));
+/* exportar la tabla de asistencias tal cual se ve (socio × fechas, 7a, total, socios e invitados) */
+function attMatrix(){ const O=ATT.outings, inLiga=id=>{const x=MEMBERS.find(y=>y.id===id); return x&&(x.liga===ATT.liga||x.liga==="ambas");}, M=ATT.members.filter(m=>m.asist||m.noshows||inLiga(m.id));
+  const d2=d=>{const x=new Date(d+"T12:00:00");return x.toLocaleDateString("es-MX",{day:"2-digit",month:"short"}).replace(".","");};
+  const rows=[["Socio",...O.map(o=>(o.label?o.label+" ":"")+d2(o.date)),"7a","Tot"]];
+  M.forEach(m=>rows.push([m.name,...O.map(o=>{const k=o.marks[m.id]; return k?.s==="asistio"?1:k?.s==="no_show"?"NS":"";}),m.ok7a?"✓":"✗",m.asist]));
+  rows.push(["Socios",...O.map(o=>Object.values(o.marks).filter(k=>k.s==="asistio").length),"",""]);
+  rows.push(["Invitados",...O.map(o=>o.guests||""),"",O.reduce((a,o)=>a+o.guests,0)||""]);
+  return rows; }
+function attFile(ext){ return `Asistencias ${ATT.liga==="sabado"?"Liga Sabatina":"Liga Dominical"} ${seasonLabel(ATT.season)}.${ext}`; }
+function dlBlob(blob,name){ const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),4000); }
+function attCSV(){ const q=v=>{ v=v==null?"":String(v); return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; }; return "\ufeff"+attMatrix().map(r=>r.map(q).join(",")).join("\r\n"); }
+document.addEventListener("click",async e=>{ const id=e.target.id; if(id!=="attXlsx"&&id!=="attCsv"||!ATT) return;
+  if(id==="attCsv"){ dlBlob(new Blob([attCSV()],{type:"text/csv;charset=utf-8"}),attFile("csv")); toast("CSV descargado ✓"); return; }
+  e.target.disabled=true;
+  try{ const X=await import("https://cdn.sheetjs.com/xlsx-0.20.3/package/xlsx.mjs"); const ws=X.utils.aoa_to_sheet(attMatrix()); ws["!cols"]=[{wch:22},...ATT.outings.map(()=>({wch:8})),{wch:5},{wch:5}];
+    const wb=X.utils.book_new(); X.utils.book_append_sheet(wb,ws,(ATT.liga==="sabado"?"Sabatina ":"Dominical ")+ATT.season); X.writeFile(wb,attFile("xlsx")); toast("Excel descargado ✓"); }
+  catch{ dlBlob(new Blob([attCSV()],{type:"text/csv;charset=utf-8"}),attFile("csv")); toast("Se descargó en CSV (se abre en Excel)"); }
+  finally{ e.target.disabled=false; } });
 function renderAtt(){
   const O=ATT.outings, inLiga=id=>{const x=MEMBERS.find(y=>y.id===id); return x&&(x.liga===ATT.liga||x.liga==="ambas");}, M=ATT.members.filter(m=>m.asist||m.noshows||inLiga(m.id));
   if(!O.length){ $("#attBody").innerHTML=`<div class="card"><div class="note">No hay salidas registradas en ${seasonLabel(ATT.season)}.${ATT.can_edit?" Registra la primera con “Registrar salida”.":""}</div></div>`; return; }
@@ -1297,7 +1316,8 @@ function renderAtt(){
   const cnt={}; ns.forEach(x=>cnt[x.mid]=(cnt[x.mid]||0)+1);
   let h=`<div class="card"><div class="h">${ATT.liga==="sabado"?"Liga Sabatina":"Liga Dominical"} <small>${O.length} salidas · ${ATT.can_edit?"toca una fecha para editar":seasonLabel(ATT.season)}</small></div>
     <div class="grid"><table class="att" id="attTable">${head}${rows}${tot}${gst}</table></div>
-    <div class="note" style="margin-top:8px">1 = asistió · NS = No Call, No Show · rojo = 6 o más salidas seguidas sin jugar (incumple 7a).</div></div>`;
+    <div class="note" style="margin-top:8px">1 = asistió · NS = No Call, No Show · rojo = 6 o más salidas seguidas sin jugar (incumple 7a).</div>
+    <div class="row2" style="margin-top:10px"><button class="btn sm" id="attXlsx">⬇️ Descargar Excel</button><button class="btn sm ghost" id="attCsv">⬇️ Descargar CSV</button></div></div>`;
   h+=`<div class="card"><div class="h">Regla 7a <small>${fails.length?fails.length+" la incumplen":"todos cumplen"}</small></div>${fails.length?fails.map(m=>`<div class="trow"><span class="nm2">${esc(m.name)}</span><span class="st2 late">${m.max_streak} SALIDAS SIN JUGAR</span></div>`).join(""):`<div class="note">Nadie lleva 6 salidas seguidas sin jugar.</div>`}</div>`;
   h+=`<div class="card"><div class="h">No Call, No Show <small>${ns.length} en la temporada</small></div>${ns.length?ns.map(x=>`<div class="trow"><span class="nm2">${esc(x.name)}<div class="note">${esc(d2(x.o.date))}${x.o.label?" · "+esc(x.o.label):""} · ${nsLabel(x.k.n)}</div></span>
       <span class="st2 ${x.k.paid?"ok":"late"}">${nsAmt(x.k)} ${x.k.paid?"PAGADO":"PENDIENTE"}</span>${ATT.can_edit?`<button class="btn sm ${x.k.paid?"ghost":""}" data-pen="${x.o.id}" data-mid="${x.mid}" data-on="${x.k.paid?0:1}">${x.k.paid?"Desmarcar":"Pagó"}</button>`:""}</div>`).join(""):`<div class="note">Sin no-shows esta temporada.</div>`}
@@ -1467,7 +1487,7 @@ function renderUsage(){ const U=US, K=U.kpis, ago=t=>{ if(!t) return "nunca"; co
   const bars=(L,lab,val,sub)=>{ const mx=Math.max(1,...L.map(val)); return L.map(x=>`<div class="ubar"><span>${lab(x)}</span><span class="tr"><i style="width:${val(x)/mx*100}%"></i></span><em>${val(x)}${sub?" · "+sub(x):""}</em></div>`).join("")||`<div class="note">Sin datos todavía.</div>`; };
   const act=U.users.filter(x=>x.opens+x.views>0), never=U.users.filter(x=>!x.last_at), cold=U.users.filter(x=>x.last_at&&(Date.now()-new Date(x.last_at))/864e5>30);
   const mxd=Math.max(1,...U.daily.map(x=>x.n)), H=Array.from({length:24},(_,h)=>U.hours.find(x=>x.h===h)?.n||0), mxh=Math.max(1,...H);
-  const DW=["","Lun","Mar","Mié","Jue","Vie","Sáb","Dom"];
+  const DW=["","Lun","Mar","Mié","Jue","Vie","Sáb","Dom"], yax=mx=>`<div class="uy"><span>${mx}</span><span>${Math.round(mx/2)}</span><span>0</span></div>`;
   const log=U.log.filter(x=>!ULOG||x.mid===ULOG);
   const kn={login_codigo:"🔑 Entró con código",login_google:"🔑 Entró con Google",abrir:"📱 Abrió la app",vista:"👀"};
   const lastAct=(U.daily.slice(-7).reduce((a,x)=>a+x.u,0));
@@ -1475,12 +1495,12 @@ function renderUsage(){ const U=US, K=U.kpis, ago=t=>{ if(!t) return "nunca"; co
     <div class="stats"><div><b>${K.users}/${K.members}</b><span>SOCIOS ACTIVOS EN LA APP</span></div><div><b>${K.opens}</b><span>ENTRADAS</span></div><div><b>${K.views}</b><span>PANTALLAS VISTAS</span></div></div>
     <div class="stats" style="margin-top:10px"><div><b>${K.users?(K.opens/K.users).toFixed(1):"0"}</b><span>ENTRADAS POR SOCIO</span></div><div><b>${K.logins}</b><span>INICIOS DE SESIÓN</span><span style="display:block">${K.google} Google · ${K.codigo} código</span></div><div><b>${K.never}</b><span>NUNCA HAN ENTRADO</span></div></div></div>
   <div class="card"><div class="h">Actividad diaria <small>pantallas vistas</small></div>
-    <div class="ucols">${U.daily.map(x=>`<div style="height:${x.n/mxd*100}%" title="${esc(x.d)}: ${x.n} vistas · ${x.u} socios"></div>`).join("")}</div>
-    <div class="uaxis"><span>${esc(U.daily[0]?.d||"")}</span><span>${esc(U.daily.at(-1)?.d||"")}</span></div></div>
+    <div class="uchart">${yax(mxd)}<div><div class="ucols">${U.daily.map(x=>`<div style="height:${x.n/mxd*100}%" title="${esc(x.d)}: ${x.n} vistas · ${x.u} socios"></div>`).join("")}</div>
+    <div class="uaxis"><span>${esc(U.daily[0]?.d||"")}</span><span>${esc(U.daily.at(-1)?.d||"")}</span></div></div></div></div>
   <div class="card"><div class="h">Módulos más usados <small>vistas · socios</small></div>${bars(U.modules,x=>esc(VNAME[x.v]||x.v),x=>x.n,x=>x.u)}</div>
   ${U.tournaments.length?`<div class="card"><div class="h">Torneos más vistos</div>${bars(U.tournaments,x=>esc(x.t),x=>x.n,x=>x.u)}</div>`:""}
   <div class="card"><div class="h">¿A qué hora entran? <small>hora de Guadalajara</small></div>
-    <div class="ucols">${H.map((n,h)=>`<div style="height:${n/mxh*100}%" title="${h}:00 · ${n}"></div>`).join("")}</div><div class="uaxis"><span>0h</span><span>6h</span><span>12h</span><span>18h</span><span>23h</span></div>
+    <div class="uchart">${yax(mxh)}<div><div class="ucols">${H.map((n,h)=>`<div style="height:${n/mxh*100}%" title="${h}:00 · ${n}"></div>`).join("")}</div><div class="uaxis"><span>0h</span><span>6h</span><span>12h</span><span>18h</span><span>23h</span></div></div></div>
     <div class="mt" style="margin-top:12px">Por día de la semana</div>${bars([1,2,3,4,5,6,7].map(d=>({d,n:U.dow.find(x=>x.d===d)?.n||0})),x=>DW[x.d],x=>x.n)}</div>
   <div class="card"><div class="h">Socios <small>${act.length} activos en el periodo</small></div>
     <table class="ht" id="uUsers"><tr><th>Socio</th><th>Entradas</th><th>Días</th><th>Vistas</th><th>Última vez</th></tr>
@@ -1533,7 +1553,7 @@ function renderHonor(){
   document.querySelectorAll("#hnBoards [data-full]").forEach(async im=>{ try{ const full=await rpc("h_photo_get",{p_token:TOKEN,p_id:im.dataset.full}); if(full) im.src=full; }catch{} });
 }
 function honorForm(h){ h=h||{category:"liga_sabado",season:"",event_name:"",date:"",member_id:"",winner:"",notes:""};
-  const yrs=[]; for(let y=new Date().getFullYear(); y>=2015; y--){ yrs.push(`${y}-2`,`${y}-1`); }
+  const yrs=[]; for(let y=new Date().getFullYear(); y>=2020; y--){ yrs.push(`${y}-2`,`${y}-1`); }
   const champs=[...new Set((CAL?.items||[]).map(c=>c.name))];
   return `<div class="h">${h.id?"Editar":"Agregar"} al Cuadro de Honor</div>
    <label class="f">Categoría</label><select class="t" id="hfCat">${Object.entries(HCAT).map(([k,l])=>`<option value="${k}" ${h.category===k?"selected":""}>${l.replace("Campeones · ","Campeón ")}</option>`).join("")}</select>
