@@ -105,6 +105,12 @@ input.t:focus,select.t:focus,textarea.t:focus{outline:2px solid var(--gold);bord
 .etabs button.on{background:var(--cream);color:var(--g);border-color:var(--cream)}
 .back{background:none;border:0;color:var(--gold);font:600 13px Inter;padding:0 0 10px}
 /* stats */
+.teeprev svg{width:100%;height:auto;background:#fff;border-radius:10px;display:block}
+.slot{border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:10px}
+.slot .sh{display:grid;grid-template-columns:90px 80px 1fr;gap:6px;align-items:center;margin-bottom:6px}
+.slot .sh input{padding:7px 6px;font-size:13px}.slot .cnt{font-size:12px;text-align:right}
+.crow{display:grid;grid-template-columns:120px 1fr 1fr 26px;gap:4px;margin-bottom:5px;align-items:center}
+.crow input,.crow select{padding:7px 5px;font-size:12.5px}
 .ubar{display:grid;grid-template-columns:110px 1fr 54px;gap:8px;align-items:center;font-size:13px;margin:5px 0}
 .ubar .tr{height:10px;border-radius:5px;background:rgba(255,255,255,.06);overflow:hidden}.ubar .tr i{display:block;height:100%;background:var(--gold);border-radius:5px}
 .ubar em{font-style:normal;text-align:right;color:var(--mute);font-size:12px}
@@ -324,6 +330,7 @@ nav.main button{flex:0 0 auto;padding:8px 9px;font-size:12.5px}
     <button data-nav="home">Casa Club</button>
     <button data-nav="cal">Calendario</button>
     <button data-nav="bets">Apuestas</button>
+    <button data-nav="tee">Salidas</button>
     <button data-nav="att">Asistencias</button>
     <button data-nav="treas">Tesorería</button>
     <button data-nav="honor">Honor</button>
@@ -379,6 +386,7 @@ nav.main button{flex:0 0 auto;padding:8px 9px;font-size:12.5px}
     <div class="tiles">
       <button class="tile" data-nav="cal"><i>📅</i><b>Calendario</b><span>Championships del año</span></button>
       <button class="tile" data-nav="bets"><i>🎲</i><b>Apuestas</b><span>Quinielas y torneos</span></button>
+      <button class="tile" data-nav="tee"><i>🛺</i><b>Salidas</b><span>Horarios y carritos</span></button>
       <button class="tile" data-nav="att"><i>📋</i><b>Asistencias</b><span>Salidas y No-Show</span></button>
       <button class="tile" data-nav="treas"><i>💰</i><b>Tesorería</b><span>Cuotas y fondos</span></button>
       <button class="tile" data-nav="honor"><i>🏆</i><b>Cuadro de Honor</b><span>Campeones y reconocimientos</span></button>
@@ -441,6 +449,15 @@ nav.main button{flex:0 0 auto;padding:8px 9px;font-size:12.5px}
   </section>
 
   <!-- ASISTENCIAS -->
+  <section class="view" id="v-tee">
+    <div class="plaque"><div class="pt">Salidas</div><div class="pn">Horarios y Carritos</div><div class="ps">Quién sale a qué hora y en qué carrito</div></div>
+    <div class="card"><div class="row2"><div><label class="f" for="teeDate" style="margin-top:0">Fecha</label><input id="teeDate" class="t" type="date"></div><div><label class="f" style="margin-top:0">&nbsp;</label><div class="note" id="teeInfo"></div></div></div></div>
+    <div id="teeEdit"></div>
+    <div class="card"><div class="h">Vista para WhatsApp <small id="teeStamp"></small></div><div id="teePrev" class="teeprev"></div>
+      <div class="row2" style="margin-top:10px"><button class="btn gold" id="teeImg">📋 Copiar imagen</button><button class="btn ghost" id="teeShare">📲 Compartir</button></div>
+      <button class="btn ghost w" id="teeTxt" style="margin-top:8px">Copiar como texto</button><textarea class="copy hide" id="teeTxtArea" readonly></textarea></div>
+  </section>
+
   <section class="view" id="v-att">
     <div class="plaque"><div class="pt">Asistencias</div><div class="pn">Libro de Salidas</div><div class="ps">No Call, No Show · Regla 7a: jugar al menos cada 6 semanas</div></div>
     <div class="card"><div class="row2"><div><label class="f" for="attLiga">Liga</label><select id="attLiga" class="t"><option value="sabado">Sabatina</option><option value="domingo">Dominical</option></select></div>
@@ -556,6 +573,7 @@ function go(v){
   if(v==="profile") fillProfile();
   if(v==="cal") loadCal(+($("#calSel").value||2026));
   if(v==="treas") loadTreas();
+  if(v==="tee") loadTee();
   if(v==="honor") loadHonor();
   if(v==="code") loadCode();
   if(v==="board") loadBoard();
@@ -1292,6 +1310,79 @@ function renderPlayerHist(evs){
 
 
 /* ===== asistencias ===== */
+/* ===== salidas y carritos ===== */
+const CARTS=[{k:"",n:"Rentado (blanco)",c:"#efe7cb"},{k:"Damiano",n:"Damiano",c:"#8c8c8c"},{k:"Coronel",n:"Coronel",c:"#29a6df"},{k:"Peter",n:"Peter",c:"#1f48b6"},{k:"Juanfer",n:"Juanfer",c:"#2e8b57"},{k:"Fabian",n:"Fabián",c:"#c0392b"},{k:"Ivan",n:"Iván",c:"#3a3a3a"}];
+const TEE_DEF={6:["07:30","07:40","08:00"],0:["07:50","08:00"]};
+let TEE=null;
+function nextPlayDay(){ const d=new Date(); for(let i=0;i<8;i++){ const x=new Date(d.getFullYear(),d.getMonth(),d.getDate()+i); if(x.getDay()===6||x.getDay()===0) return `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,"0")}-${String(x.getDate()).padStart(2,"0")}`; } }
+const pName=m=>m.nickname&&m.nickname.length<=12?m.nickname:m.name.split(" ")[0];
+async function loadTee(){ const d=$("#teeDate").value||nextPlayDay(); $("#teeDate").value=d;
+  try{ TEE=await rpc("s_get",{p_token:TOKEN,p_date:d}); }catch(e){ toast(e.message); return; }
+  const wd=new Date(d+"T12:00:00").getDay();
+  if(!TEE.slots.length) TEE.slots=(TEE_DEF[wd]||["08:00"]).map(t=>({t,hoyo:"10",carts:[]}));
+  if(!TEE.saved){ TEE.title=TEE.title||(TEE.event?TEE.event:(wd===0?"Liga Dominical":"Liga Sabatina")); }
+  $("#teeInfo").textContent=TEE.saved?`Guardado por ${TEE.updated_by||"—"}`:(TEE.can_edit?"Sin armar todavía":"Aún no se publican las salidas");
+  renderTee(); }
+$("#teeDate").addEventListener("change",loadTee);
+function teeEditHTML(){ const T=TEE, used=new Set(); T.slots.forEach(s=>s.carts.forEach(c=>{ if(c.owner) used.add(c.owner); }));
+  const cartSel=(c,si,ci)=>`<select class="t" data-cs="${si}.${ci}">${CARTS.map(o=>`<option value="${o.k}" ${(c.owner||"")===o.k?"selected":""} ${o.k&&used.has(o.k)&&c.owner!==o.k?"disabled":""}>${esc(o.n)}</option>`).join("")}</select>`;
+  return `<div class="card"><div class="h">Armar salidas <small>2 a 5 por salida · 2 por carrito</small></div>
+    <label class="f" style="margin-top:0">Título</label><input class="t" id="teeTitle" value="${esc(T.title||"")}" placeholder="Torneo Invierno 2026">
+    <div class="row2"><div><label class="f">Subtítulo</label><input class="t" id="teeSub" value="${esc(T.subtitle||"")}" placeholder="Championship “Bullet & Octopus Cup”"></div><div><label class="f">Campo</label><input class="t" id="teeCampo" value="${esc(T.campo||"")}"></div></div>
+    <datalist id="teeNames">${MEMBERS.filter(m=>m.active).map(m=>`<option value="${esc(pName(m))}">${esc(m.name)}</option>`).join("")}<option value="Guest 1"><option value="Guest 2"><option value="Guest 3"></datalist>
+    <div style="margin-top:10px">${T.slots.map((s,si)=>{ const n=s.carts.reduce((a,c)=>a+c.p.filter(Boolean).length,0), ok=n===0||(n>=2&&n<=5);
+      return `<div class="slot"><div class="sh"><input class="t" data-st="${si}" value="${esc(s.t)}" placeholder="07:30"><input class="t" data-sho="${si}" value="${esc(s.hoyo||"10")}" placeholder="Hoyo"><span class="cnt" style="color:${ok?"var(--mute)":"var(--bad)"}">${n} jugador${n===1?"":"es"}${ok?(n?" ✓":""):" · deben ser 2 a 5"}</span></div>
+      ${s.carts.map((c,ci)=>`<div class="crow">${cartSel(c,si,ci)}<input class="t" list="teeNames" data-cp="${si}.${ci}.0" value="${esc(c.p[0]||"")}" placeholder="Jugador"><input class="t" list="teeNames" data-cp="${si}.${ci}.1" value="${esc(c.p[1]||"")}" placeholder="Jugador"><button type="button" class="btn sm danger" data-cdel="${si}.${ci}">✕</button></div>`).join("")}
+      <div class="row2"><button type="button" class="btn ghost sm" data-cadd="${si}">+ Carrito</button><button type="button" class="btn ghost sm" data-sdel="${si}">Quitar salida</button></div></div>`; }).join("")}
+    <button type="button" class="btn ghost sm" id="teeAddSlot">+ Agregar salida</button></div>
+    <button class="btn gold w" id="teeSave" style="margin-top:12px">Guardar salidas</button></div>`; }
+function teeSync(){ if(!TEE||!$("#teeTitle")) return; TEE.title=$("#teeTitle").value; TEE.subtitle=$("#teeSub").value; TEE.campo=$("#teeCampo").value;
+  document.querySelectorAll("[data-st]").forEach(i=>TEE.slots[+i.dataset.st].t=i.value.trim());
+  document.querySelectorAll("[data-sho]").forEach(i=>TEE.slots[+i.dataset.sho].hoyo=i.value.trim());
+  document.querySelectorAll("[data-cs]").forEach(i=>{ const [a,b]=i.dataset.cs.split(".").map(Number); TEE.slots[a].carts[b].owner=i.value||null; });
+  document.querySelectorAll("[data-cp]").forEach(i=>{ const [a,b,c]=i.dataset.cp.split(".").map(Number); TEE.slots[a].carts[b].p[c]=i.value.trim(); }); }
+function teeClean(){ return TEE.slots.map(s=>({t:s.t,hoyo:s.hoyo,carts:s.carts.map(c=>({owner:c.owner||null,p:c.p.filter(Boolean)})).filter(c=>c.p.length)})); }
+function renderTee(){ const ed=TEE.can_edit; $("#teeEdit").innerHTML=ed?teeEditHTML():""; teePreview(); }
+function teePreview(){ if(TEE.can_edit) teeSync(); $("#teePrev").innerHTML=teeSVG(); $("#teeStamp").textContent=TEE.saved?"publicado":"borrador"; }
+function cartSVG(c){ return `<g><rect x="22" y="0" width="108" height="12" rx="4" fill="${c}" stroke="#333" stroke-width="2.5"/><line x1="32" y1="12" x2="32" y2="66" stroke="#333" stroke-width="4"/><line x1="120" y1="12" x2="112" y2="66" stroke="#333" stroke-width="4"/>
+  <rect x="10" y="30" width="20" height="38" rx="4" fill="#d9d4c7" stroke="#333" stroke-width="2.5"/><line x1="14" y1="30" x2="10" y2="18" stroke="#333" stroke-width="2"/><line x1="22" y1="30" x2="24" y2="16" stroke="#333" stroke-width="2"/>
+  <rect x="42" y="44" width="36" height="24" rx="3" fill="${c}" stroke="#333" stroke-width="2.5"/><line x1="100" y1="40" x2="92" y2="66" stroke="#333" stroke-width="3"/>
+  <path d="M6 66 H132 Q142 66 142 78 V90 H6 Z" fill="${c}" stroke="#333" stroke-width="3"/>
+  <circle cx="36" cy="94" r="13" fill="#fff" stroke="#333" stroke-width="5"/><circle cx="114" cy="94" r="13" fill="#fff" stroke="#333" stroke-width="5"/><line x1="0" y1="108" x2="150" y2="108" stroke="#333" stroke-width="3"/></g>`; }
+function teeDateLbl(d){ const x=new Date(d+"T12:00:00"); return `${x.getDate()}-${x.toLocaleDateString("es-MX",{month:"short"}).replace(".","")}-${String(x.getFullYear()).slice(2)}`; }
+function teeSVG(){ const T=TEE, S=teeClean().filter(s=>s.carts.length||!T.saved), W=Math.max(960,265+Math.max(0,...S.map(s=>s.carts.length))*172), top=300, rh=235, H=top+Math.max(S.length,1)*rh+20;
+  const tx=(x,y,t,sz,w,anc,fill)=>`<text x="${x}" y="${y}" font-family="Georgia, 'Times New Roman', serif" font-size="${sz}" font-weight="${w||400}" text-anchor="${anc||"start"}" fill="${fill||"#111"}">${esc(t)}</text>`;
+  const tf=t=>{ const [h,m]=(t||"").split(":").map(Number); if(isNaN(h)) return t||""; return `${String(h>12?h-12:h).padStart(2,"0")}:${String(m||0).padStart(2,"0")} ${h<12?"a. m.":"p. m."}`; };
+  let g=tx(40,62,(T.title||"").toUpperCase(),34,800)+(T.subtitle?tx(40,118,T.subtitle.toUpperCase(),24,600):"")+tx(40,T.subtitle?162:118,"CAMPO: "+(T.campo||""),24,600)+tx(40,T.subtitle?206:162,"FECHA: "+teeDateLbl(T.date),24,600);
+  g+=`<g transform="translate(765,100)"><circle r="82" fill="#fff" stroke="#555" stroke-width="2"/><circle r="70" fill="none" stroke="#555" stroke-width="1"/>${tx(0,-40,"HERMANOS",15,600,"middle","#333")}${tx(0,6,"HMcG",30,800,"middle","#222")}${tx(0,32,"2020",14,400,"middle","#555")}${tx(0,58,"McGREGOR",17,800,"middle","#333")}</g>`;
+  g+=tx(62,top-38,"SALIDA",28,700)+tx(315,top-38,"CARRITO / JUGADORES",28,700)+`<line x1="0" y1="${top-20}" x2="${W}" y2="${top-20}" stroke="#333" stroke-width="1.5"/>`;
+  S.forEach((s,i)=>{ const y=top+i*rh; g+=tx(120,y+108,tf(s.t),24,400,"middle")+tx(120,y+138,"Hoyo "+(s.hoyo||"10"),19,400,"middle","#333");
+    s.carts.forEach((c,j)=>{ const x=245+j*172, col=(CARTS.find(o=>o.k===(c.owner||""))||CARTS[0]).c; g+=`<g transform="translate(${x},${y+28})">${cartSVG(col)}</g>`;
+      const L=(c.owner&&!c.p.length)?[c.owner]:c.p; L.forEach((n,k)=>g+=tx(x+75,y+170+k*29,n,22,400,"middle","#222")); });
+    if(!s.carts.length) g+=tx(320,y+118,"por definir",22,400,"start","#999");
+    g+=`<line x1="0" y1="${y+rh-8}" x2="${W}" y2="${y+rh-8}" stroke="#333" stroke-width="1.5"/>`; });
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}"><rect width="${W}" height="${H}" fill="#fff"/>${g}</svg>`; }
+function teeText(){ const T=TEE, S=teeClean().filter(s=>s.carts.length); const x=new Date(T.date+"T12:00:00").toLocaleDateString("es-MX",{weekday:"long",day:"numeric",month:"long"});
+  return [`⛳ *${(T.title||"Salidas").toUpperCase()}*`,T.subtitle?`_${T.subtitle}_`:"",`📍 ${T.campo} · ${x}`,"",...S.flatMap(s=>[`🕗 *${s.t}* · Hoyo ${s.hoyo||10}`,...s.carts.map(c=>`   🛺 ${c.p.join(" / ")}${c.owner?` _(carrito de ${(CARTS.find(o=>o.k===c.owner)||{}).n||c.owner})_`:""}`),""])].filter((l,i,a)=>l!==""||a[i-1]!=="").join("\n").trim(); }
+async function teePNG(){ const svg=teeSVG(), img=new Image(); img.src="data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg); await img.decode();
+  const c=document.createElement("canvas"); c.width=img.width*1.5; c.height=img.height*1.5; const x=c.getContext("2d"); x.scale(1.5,1.5); x.drawImage(img,0,0); return await new Promise(r=>c.toBlob(r,"image/png")); }
+document.addEventListener("input",e=>{ if(VIEW==="tee"&&e.target.closest("#teeEdit")){ teeSync(); $("#teePrev").innerHTML=teeSVG(); } });
+document.addEventListener("change",e=>{ if(VIEW==="tee"&&e.target.matches("[data-cs]")){ teeSync(); const [a,b]=e.target.dataset.cs.split(".").map(Number), c=TEE.slots[a].carts[b];
+  if(c.owner&&!c.p[0]){ const mm=MEMBERS.find(m=>pName(m).toLowerCase()===c.owner.toLowerCase()||m.name.toLowerCase().startsWith(c.owner.toLowerCase())); c.p[0]=mm?pName(mm):c.owner; } renderTee(); } });
+document.addEventListener("click",async e=>{ if(VIEW!=="tee") return; const t=e.target;
+  if(t.dataset.cadd!=null){ teeSync(); TEE.slots[+t.dataset.cadd].carts.push({owner:null,p:["",""]}); renderTee(); return; }
+  if(t.dataset.cdel!=null){ teeSync(); const [a,b]=t.dataset.cdel.split(".").map(Number); TEE.slots[a].carts.splice(b,1); renderTee(); return; }
+  if(t.dataset.sdel!=null){ teeSync(); TEE.slots.splice(+t.dataset.sdel,1); renderTee(); return; }
+  if(t.id==="teeAddSlot"){ teeSync(); TEE.slots.push({t:"",hoyo:"10",carts:[]}); renderTee(); return; }
+  if(t.id==="teeSave"){ teeSync(); t.disabled=true; try{ TEE=await rpc("s_save",{p_token:TOKEN,p_data:{date:TEE.date,title:TEE.title,subtitle:TEE.subtitle,campo:TEE.campo,slots:teeClean()}}); if(!TEE.slots.length) TEE.slots=[]; toast("Salidas guardadas ✓"); $("#teeInfo").textContent=`Guardado por ${TEE.updated_by||"—"}`; renderTee(); }catch(err){ toast(err.message); } finally{ t.disabled=false; } return; }
+  if(t.id==="teeTxt"){ const txt=teeText(), ta=$("#teeTxtArea"); ta.value=txt; try{ await navigator.clipboard.writeText(txt); toast("Texto copiado ✓"); }catch{ ta.classList.remove("hide"); ta.select(); } return; }
+  if(t.id==="teeImg"||t.id==="teeShare"){ t.disabled=true; try{ const b=await teePNG(), f=new File([b],`salidas-${TEE.date}.png`,{type:"image/png"});
+      if(t.id==="teeImg"&&navigator.clipboard&&window.ClipboardItem){ try{ await navigator.clipboard.write([new ClipboardItem({"image/png":b})]); toast("Imagen copiada ✓ · pégala en WhatsApp"); return; }catch{} }
+      if(navigator.canShare&&navigator.canShare({files:[f]})){ await navigator.share({files:[f]}); return; }
+      dlBlob(b,f.name); toast("Imagen descargada ✓"); }
+    catch(err){ if(err?.name!=="AbortError") toast(err.message||"No se pudo"); } finally{ t.disabled=false; } return; }
+});
+
 let ATT=null, OUTF=null;
 const seasonOf=d=>{const x=d?new Date(d+"T12:00:00"):new Date(); return x.getFullYear()+"-"+(x.getMonth()<6?1:2);};
 const seasonLabel=s=>{const [y,h]=s.split("-"); return (h==="1"?"1er semestre ":"2º semestre ")+y;};
