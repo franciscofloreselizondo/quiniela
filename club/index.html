@@ -193,6 +193,11 @@ input.t:focus,select.t:focus,textarea.t:focus{outline:2px solid var(--gold);bord
 .badge{font-size:10px;font-weight:700;letter-spacing:.06em;border-radius:6px;padding:2px 7px;border:1px solid var(--line);color:var(--gold2);margin-right:4px;white-space:nowrap}
 .badge.g{background:var(--gold);color:var(--g);border-color:var(--gold)}
 .badge.c{background:var(--red);color:var(--cream);border-color:var(--red)}
+.badge.f{background:rgba(212,175,55,.18);color:#e8cf7a;border-color:rgba(212,175,55,.6)}
+.badge.p{color:#8fd19e;border-color:rgba(143,209,158,.5)}
+.badge.i{color:var(--mute);border-color:rgba(255,255,255,.14);font-weight:600}
+.mtags{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:4px 0;max-width:230px}
+.mtags .badge{margin:0 0 0 4px}
 /* history */
 table.ht{width:100%;border-collapse:collapse;font-size:13px}
 table.ht th{font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--gold);text-align:right;padding:5px 4px;border-bottom:1px solid var(--line);cursor:pointer;white-space:nowrap}
@@ -252,7 +257,16 @@ table.att td.ok{color:var(--ok);font-weight:700}table.att td.ko{color:var(--bad)
 .post .ph{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;background:rgba(255,255,255,.05);cursor:zoom-in}
 .post .noph{aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;color:var(--mute);font-size:13px;background:rgba(255,255,255,.04)}
 .post .bd{padding:14px 16px 16px}
-.post .cat{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold2)}
+.post .cat{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold2);display:flex;align-items:center;gap:8px}
+.post .ph-wrap{position:relative}
+.hbadge{position:absolute;top:10px;left:10px;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(14,32,24,.85);border:2px solid var(--bc,#c9a54b);box-shadow:0 2px 8px rgba(0,0,0,.35)}
+.hbadge svg{width:24px;height:24px}.hbadge i{font-style:normal;font-size:22px;line-height:1}
+.hbdot{width:16px;height:16px;flex:none;display:inline-flex}.hbdot svg{width:16px;height:16px}
+.hnfil{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 14px}
+.hnfil select{padding:8px 10px;font-size:13px}
+.hnfil .cnt{grid-column:1/-1;font-size:12px;color:var(--mute);display:flex;justify-content:space-between}
+.hnfil .cnt button{border:0;background:none;color:var(--gold);font:600 12px Inter;padding:0}
+@media(min-width:700px){.hnfil{grid-template-columns:repeat(4,1fr)}}
 .post .wn{font:700 26px/1.1 "Cormorant Garamond",serif;color:var(--cream);margin:6px 0 4px}
 .post .ev{font-size:14px;color:var(--cream);opacity:.85}
 .post .mt2{display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:12px;color:var(--mute)}
@@ -440,6 +454,7 @@ nav.main button{flex:0 0 auto;padding:8px 9px;font-size:12.5px}
     <div class="hnhead"><span class="t1">Publicaciones</span><button class="hnadd" id="hnAdd">+ Agregar campeón</button></div>
     <input type="file" id="phFile" accept="image/*" class="hide">
     <div class="card hide" id="hnForm"></div>
+    <div class="hnfil" id="hnFil"></div>
     <div id="hnBoards"></div>
   </section>
 
@@ -580,6 +595,16 @@ $("#whoBtn").onclick=()=>go("profile");
 const ini=n=>String(n||"?").trim().split(/\s+/).map(w=>w[0]).slice(0,2).join("").toUpperCase();
 function avatarHTML(m,cls){ return m&&m.avatar?`<img src="${m.avatar}" alt="" ${cls?`class="${cls}"`:""}>`:`<span class="ini ${cls||""}">${esc(ini(m&&(m.nickname||m.name)))}</span>`; }
 function renderWho(){ $("#whoBtn").innerHTML=avatarHTML(ME)+`<span>${esc(ME.nickname||ME.name)}</span>`; $("#navBoard").classList.toggle("hide",!ME.board); $("#tileBoard").classList.toggle("hide",!ME.board); }
+/* etiquetas del perfil: cargo, board, fundador, permisos y datos de juego */
+function memTags(m,full){ const t=[], L={sabado:"LIGA SÁB",domingo:"LIGA DOM",ambas:"LIGA SÁB+DOM"};
+  if(["presidente","tesorero","secretario"].includes(m.role)) t.push(`<span class="badge g">${ROLES[m.role].toUpperCase()}</span>`);
+  if(m.board) t.push(`<span class="badge" title="Vota en el board y puede sumar socios">BOARD</span>`);
+  if(m.fundador) t.push(`<span class="badge f" title="Socio fundador">★ FUNDADOR</span>`);
+  if(m.superadmin) t.push(`<span class="badge p" title="Acceso total a la app">SUPERADMIN</span>`);
+  else { if(m.bet_admin) t.push(`<span class="badge p" title="Puede abrir y administrar torneos y quinielas">ABRE TORNEOS</span>`);
+    if(m.role==="presidente"||m.role==="secretario") t.push(`<span class="badge p" title="Administra socios">ADMIN SOCIOS</span>`); }
+  if(full){ if(m.liga&&L[m.liga]) t.push(`<span class="badge i">${L[m.liga]}</span>`); if(m.hcp!=null&&m.hcp!=="") t.push(`<span class="badge i">HCP ${esc(m.hcp)}</span>`); if(m.active===false) t.push(`<span class="badge c">INACTIVO</span>`); }
+  return t.join(""); }
 function isAdminBets(){ return ME&&(ME.superadmin||ME.bet_admin); }
 function isAdminMembers(){ return ME&&(ME.superadmin||ME.role==="presidente"||ME.role==="secretario"); }
 function canDelMembers(){ return ME&&(ME.superadmin||ME.role==="presidente"||ME.board); }
@@ -837,18 +862,62 @@ function rankingHTML(){
       <div><div class="nm2">${esc(r.e.name)}${mine?'<span class="me">TÚ</span>':""}${prize}</div><div class="marks">${marks}</div></div>
       <div class="pts">${r.p}<small>${r.e.complete?(r.e.paid?"pagó 💵":""):"incompleto"}</small></div></div><div class="detail">${det}</div></div>`;}).join("");
   return summaryHTML()+`<div class="card"><div class="h">Ranking <small>${EV.closed?"final":nres?"en vivo":EV.entries.filter(x=>x.complete).length+"/"+EV.entries.length+" con picks"}</small></div><div id="board">${list}</div><div class="note" style="margin-top:8px">Toca un nombre para ver sus picks.</div></div>
-    <div class="card"><button class="btn ghost w" id="copyBtn">Copiar ranking para WhatsApp</button><textarea class="copy hide" id="copyTxt" readonly></textarea></div>`;
+    <div class="card"><div class="h">Compartir en WhatsApp</div><button class="btn gold w" id="shareBtn">📲 Compartir imagen + texto</button><button class="btn ghost w" id="copyBtn" style="margin-top:8px">Copiar solo el texto</button><textarea class="copy hide" id="copyTxt" readonly></textarea></div>`;
 }
 document.addEventListener("click",e=>{const r=e.target.closest("[data-row]"); if(!r) return; openRow=openRow===r.dataset.row?null:r.dataset.row; const y=window.scrollY; renderEvent(); window.scrollTo(0,y);});
-document.addEventListener("click",async e=>{ if(e.target.id!=="copyBtn") return;
-  const rows=ranked(), R=EV.results||{}, nres=KEYS().filter(k=>R[k]).length;
-  let w=0,r=0; EV.matches.forEach((m,i)=>{const v=R["m"+(i+1)]; if(v===m.w[0])w++; else if(v===m.r[0])r++;});
-  let txt=`⛳ Quiniela ${EV.name} · Hermanos McGregor\nResultados: ${nres}/${KEYS().length} · Bolsa: ${money(bolsa())}\n`;
-  if(nres&&ST()) txt+=`Podio net: ${["p1","p2","p3"].map((k,i)=>(i+1)+"º "+(R[k]||"—")).join(" · ")}\n`;
-  else if(nres) txt+=`Matches: ${EV.teams[0]} ${w} – ${r} ${EV.teams[1]}${R.team?" · Copa: "+R.team:""}${R.ind1?" · 1er net: "+R.ind1:""}\n`;
-  txt+="\n"+rows.map(x=>`${x.rank}. ${x.e.name} — ${x.p} pts${nres&&x.prize>0&&x.p>0?" ("+money(x.prize)+")":""}`).join("\n")+`\n\n${location.origin+location.pathname}#e=${EV.id}`;
-  const ta=$("#copyTxt"); ta.value=txt;
-  try{ await navigator.clipboard.writeText(txt); toast("Copiado ✓"); }catch{ ta.classList.remove("hide"); ta.select(); toast("Copia el texto de abajo"); } });
+/* ===== compartir a WhatsApp: texto con punch + imagen del ranking ===== */
+function shareData(){
+  const rows=ranked(), R=EV.results||{}, K=KEYS(), nres=K.filter(k=>R[k]).length, fin=EV.closed, live=!fin&&(nres>0||locked());
+  const st=fin?"🏁 FINAL":nres?`🔥 EN VIVO · ${nres}/${K.length} resultados`:locked()?"⏳ Picks cerrados · esperando resultados":"🟢 Picks abiertos · cierran en "+fmtLeft(lockAt()-(Date.now()+skew));
+  let marc="";
+  if(nres&&ST()) marc=`🏌️ Podio net: ${["p1","p2","p3"].map((k,i)=>["🥇","🥈","🥉"][i]+" "+(R[k]||"—")+(k==="p1"&&EV.net_ganador!=null?` (${EV.net_ganador})`:"")).join("  ")}`;
+  else if(nres){ let w=0,r=0; if(PJ()){ const PC=pairCalc(); w=PC.wp; r=PC.rp; } else EV.matches.forEach((m,i)=>{const v=R["m"+(i+1)]; if(v===m.w[0])w++; else if(v===m.r[0])r++;});
+    marc=`⚔️ ${EV.teams[0]} *${half(w)}* – *${half(r)}* ${EV.teams[1]}${R.team?`  ·  🏆 Copa: *${R.team}*`:""}${R.ind1?`\n${PJ()?"👥 1ª pareja":"⛳ 1er lugar"}: *${R.ind1}*${EV.net_ganador!=null?` (${EV.net_ganador})`:""}`:""}`; }
+  // un dato con punch: la sorpresa (resultado que menos le atinaron) o el más acertado
+  const withP=EV.entries.filter(b=>Object.keys(b.picks||{}).length); let dato="";
+  if(nres&&withP.length){ let worst=null; K.filter(k=>R[k]).forEach(k=>{const c=withP.filter(b=>b.picks?.[k]===R[k]).length; if(!worst||c<worst.c) worst={k,c};});
+    if(worst&&worst.c/withP.length<.35) dato=`💥 Sorpresa: ${LONG(worst.k)} → *${R[worst.k]}*. Solo ${worst.c} de ${withP.length} le atinaron${worst.c&&worst.c<=3?" ("+withP.filter(b=>b.picks?.[worst.k]===R[worst.k]).map(b=>b.name).join(", ")+")":""}.`;
+    else { const b=rows.slice().sort((a,c)=>c.h-a.h)[0]; if(b&&b.h) dato=`🎯 ${b.e.name} va ${b.h} de ${nres} en aciertos.`; } }
+  const med=["🥇","🥈","🥉"];
+  const lines=rows.slice(0,10).map(x=>`${x.rank<=3&&nres?med[x.rank-1]:x.rank+"."} ${x.rank<=3&&nres?"*"+x.e.name+"*":x.e.name} — ${x.p} pts${nres&&x.prize>0&&x.p>0?"  💰"+money(x.prize):""}`);
+  const rest=rows.length>10?`…y ${rows.length-10} más`:"";
+  const url=location.origin+location.pathname+"#e="+EV.id;
+  const txt=[`⛳ *QUINIELA ${EV.name.toUpperCase()}*`,`_Hermanos McGregor${EV.course?" · "+EV.course:""}_`,"",st,marc,"","🏆 *RANKING*",...lines,rest,"",dato,`💵 Bolsa: *${money(bolsa())}* · ${EV.entries.length} apostadores`,"",`👉 Ver todo: ${url}`].filter((l,i,a)=>l!==""||(a[i-1]!==""&&i>0)).join("\n").replace(/\n{3,}/g,"\n\n").trim();
+  return {txt,rows,st,marc,nres,fin,live};
+}
+async function shareImage(d){
+  const W=1080,H=1350,c=document.createElement("canvas"); c.width=W; c.height=H; const x=c.getContext("2d");
+  const g=x.createLinearGradient(0,0,0,H); g.addColorStop(0,"#16352a"); g.addColorStop(1,"#0b1c15"); x.fillStyle=g; x.fillRect(0,0,W,H);
+  x.strokeStyle="rgba(201,165,75,.55)"; x.lineWidth=3; x.strokeRect(36,36,W-72,H-72);
+  const T=(t,X,Y,f,col,al)=>{ x.font=f; x.fillStyle=col; x.textAlign=al||"left"; x.fillText(t,X,Y); };
+  const fit=(t,max,f)=>{ x.font=f; let s=String(t); while(x.measureText(s).width>max&&s.length>3) s=s.slice(0,-2); return s===String(t)?s:s+"…"; };
+  const clean=t=>String(t).replace(/[*_]/g,"");
+  T("HERMANOS McGREGOR",W/2,120,"600 30px Inter, Arial","#c9a54b","center");
+  T(fit(EV.name,W-160,"700 76px Georgia, serif"),W/2,215,"700 76px Georgia, serif","#f3ead2","center");
+  T(clean(d.st).replace(/^[^\wÁÉÍÓÚ]+/,""),W/2,275,"600 32px Inter, Arial",d.fin?"#c9a54b":"#8fd19e","center");
+  let y=330; if(d.marc){ clean(d.marc).split("\n").forEach(l=>{ T(fit(l,W-160,"500 30px Inter, Arial"),W/2,y,"500 30px Inter, Arial","#f3ead2","center"); y+=44; }); }
+  // podio
+  const top=d.rows.slice(0,3), pos=[[W/2,y+40,1],[W/2-320,y+90,2],[W/2+320,y+90,3]];
+  [[top[0],pos[0]],[top[1],pos[1]],[top[2],pos[2]]].forEach(([r,[cx,cy,n]])=>{ if(!r) return; const col=n===1?"#d4af37":n===2?"#c0c7cc":"#cd7f32";
+    x.beginPath(); x.arc(cx,cy+40,n===1?62:52,0,7); x.fillStyle=col; x.fill(); T(String(n),cx,cy+58,"800 50px Georgia, serif","#0b1c15","center");
+    T(fit(r.e.name,280,"700 34px Inter, Arial"),cx,cy+150,"700 34px Inter, Arial","#f3ead2","center");
+    T(r.p+" pts"+(d.nres&&r.prize>0&&r.p>0?" · "+money(r.prize):""),cx,cy+192,"500 28px Inter, Arial","#c9a54b","center"); });
+  y+=330; x.fillStyle="rgba(201,165,75,.35)"; x.fillRect(90,y,W-180,2); y+=56;
+  d.rows.slice(3,11).forEach(r=>{ T(r.rank+".",120,y,"600 30px Inter, Arial","#c9a54b"); T(fit(r.e.name,620,"500 32px Inter, Arial"),190,y,"500 32px Inter, Arial","#f3ead2"); T(r.p+" pts",W-120,y,"600 30px Inter, Arial","#f3ead2","right"); y+=52; });
+  if(d.rows.length>11) T(`…y ${d.rows.length-11} más`,W/2,y+6,"400 26px Inter, Arial","#9fb3a8","center");
+  T(`Bolsa ${money(bolsa())} · ${EV.entries.length} apostadores`,W/2,H-110,"600 30px Inter, Arial","#c9a54b","center");
+  T("hermanosmcgregor.com",W/2,H-66,"400 24px Inter, Arial","#9fb3a8","center");
+  return await new Promise(r=>c.toBlob(r,"image/png"));
+}
+document.addEventListener("click",async e=>{ const id=e.target.id; if(id!=="copyBtn"&&id!=="shareBtn") return;
+  const d=shareData(), ta=$("#copyTxt"); ta.value=d.txt;
+  if(id==="shareBtn"){ e.target.disabled=true;
+    try{ const blob=await shareImage(d), file=new File([blob],`quiniela-${EV.name.replace(/\W+/g,"-").toLowerCase()}.png`,{type:"image/png"});
+      if(navigator.canShare&&navigator.canShare({files:[file]})){ try{ await navigator.clipboard.writeText(d.txt); }catch{} await navigator.share({files:[file],text:d.txt}); toast("Listo ✓ · el texto también quedó copiado"); }
+      else { const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=file.name; document.body.appendChild(a); a.click(); a.remove();
+        try{ await navigator.clipboard.writeText(d.txt); toast("Imagen descargada y texto copiado ✓"); }catch{ ta.classList.remove("hide"); ta.select(); toast("Imagen descargada · copia el texto de abajo"); } } }
+    catch(err){ if(err?.name!=="AbortError") toast(err.message||"No se pudo compartir"); } finally{ e.target.disabled=false; } return; }
+  try{ await navigator.clipboard.writeText(d.txt); toast("Texto copiado ✓ · pégalo en WhatsApp"); }catch{ ta.classList.remove("hide"); ta.select(); toast("Copia el texto de abajo"); } });
 
 /* ===== event admin ===== */
 function adminHTML(){
@@ -1026,7 +1095,7 @@ async function loadMembers(){
   const L=[...MEMBERS].sort((x,y)=>rk(x)-rk(y)||x.name.localeCompare(y.name));
   $("#memList").innerHTML=L.map(m=>`<div class="mem" ${(isAdminMembers()||canDelMembers())?`data-medit="${m.id}" style="cursor:pointer"`:""}><div><div class="n">${m.avatar?`<img class="mav" src="${m.avatar}" alt="">`:""}${esc(m.name)}${m.nickname?` <span style="color:var(--gold2);font-weight:500">“${esc(m.nickname)}”</span>`:""}${m.id===ME.id?'<span class="me">TÚ</span>':""}</div>
     <div class="s">${!m.active?"inactivo":""}${isAdminMembers()&&m.email?(m.active?"":" · ")+esc(m.email):""}</div></div>
-    <div style="text-align:right">${["presidente","tesorero","secretario"].includes(m.role)?`<span class="badge g">${ROLES[m.role].toUpperCase()}</span>`:""}${m.board?`<span class="badge">BOARD</span>`:""}</div></div>`).join("");
+    <div class="mtags">${memTags(m)}</div></div>`).join("");
 }
 function memberForm(m){
   m=m||{name:"",email:"",role:"miembro",fundador:false,liga:"",hcp:"",active:true,bet_admin:false};
@@ -1331,7 +1400,7 @@ document.addEventListener("click",async e=>{ const t=e.target;
 const LIGTXT={sabado:"Sabatina",domingo:"Dominical",ambas:"Ambas"};
 function fillProfile(){ if(!ME) return; $("#pfAv").innerHTML=ME.avatar?`<img src="${ME.avatar}" alt="">`:esc(ini(ME.nickname||ME.name)); $("#pfName").textContent=ME.name+(ME.nickname?` “${ME.nickname}”`:"");
   $("#pfMail").textContent=ME.email||""; $("#pfHcp").textContent=ME.hcp??"—"; $("#pfLigaTxt").textContent=LIGTXT[ME.liga]||"—"; $("#pfNick").value=ME.nickname||""; $("#pfLiga").value=ME.liga||"";
-  $("#pfTags").innerHTML=(["presidente","tesorero","secretario"].includes(ME.role)?`<span class="badge g">${ROLES[ME.role].toUpperCase()}</span>`:"")+(ME.board?`<span class="badge">BOARD</span>`:""); }
+  $("#pfTags").innerHTML=memTags(ME); }
 $("#pfSave").onclick=async()=>{ try{ ME=await rpc("c_update_me",{p_token:TOKEN,p_data:{nickname:$("#pfNick").value.trim(),liga:$("#pfLiga").value}}); toast("Perfil guardado ✓"); fillProfile(); renderWho(); }catch(e){ toast(e.message); } };
 $("#pfLogout").onclick=()=>logout(false);
 $("#pfPhoto").onclick=()=>$("#pfFile").click();
@@ -1365,15 +1434,34 @@ async function handleCreq(){ const q=new URLSearchParams(location.search), id=q.
 
 /* ===== cuadro de honor ===== */
 let HN=null;
-const HCAT={liga_sabado:"Campeones · Liga Sabatina",liga_domingo:"Campeones · Liga Dominical",gran_finale:"Gran Finale",championship:"Championships",hole_in_one:"Hole-in-One",otro:"Leyendas y otros honores"};
+const HCAT={liga_sabado:"Campeones · Liga Sabatina",liga_domingo:"Campeones · Liga Dominical",gran_finale:"Gran Finale",championship:"Championships",torneo:"Torneo regular",hole_in_one:"Hole-in-One",otro:"Leyendas y otros honores"};
+/* insignia por categoría: trofeo de color según la importancia; Hole-in-One con bandera */
+const HBADGE={liga_sabado:{c:"#d4af37",t:"Campeón de temporada"},liga_domingo:{c:"#d4af37",t:"Campeón de temporada"},gran_finale:{c:"#e5e4e2",t:"Gran Finale",star:1},championship:{c:"#b8c4cc",t:"Championship"},torneo:{c:"#cd7f32",t:"Torneo regular"},hole_in_one:{c:"#6fbf73",e:"⛳",t:"Hole-in-One"},otro:{c:"#a4a16a",e:"⭐",t:"Leyenda"}};
+function trophySVG(c,star){ return `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="${c}" d="M7 3h10v2h3v3a4 4 0 0 1-4 4h-.3A5 5 0 0 1 13 14.9V17h3v2H8v-2h3v-2.1A5 5 0 0 1 8.3 12H8a4 4 0 0 1-4-4V5h3V3zm0 4H6v1a2 2 0 0 0 1.2 1.8A5 5 0 0 1 7 8.5V7zm10 0v1.5c0 .4 0 .9-.2 1.3A2 2 0 0 0 18 8V7h-1zM7 20h10v2H7z"/>${star?'<path fill="#0e2018" d="M12 5.2l.9 1.9 2 .3-1.5 1.4.4 2-1.8-1-1.8 1 .4-2-1.5-1.4 2-.3z"/>':""}</svg>`; }
+function hBadge(cat,small){ const b=HBADGE[cat]||HBADGE.otro, ic=b.e?`<i>${b.e}</i>`:trophySVG(b.c,b.star);
+  return small?`<span class="hbdot" title="${esc(b.t)}">${b.e?`<i style="font-style:normal;font-size:13px">${b.e}</i>`:trophySVG(b.c,b.star)}</span>`:`<span class="hbadge" style="--bc:${b.c}" title="${esc(b.t)}">${ic}</span>`; }
+let HF={cat:"",soc:"",yr:"",sea:""};
+const hYear=h=>h.season?h.season.slice(0,4):h.date?String(h.date).slice(0,4):"";
+document.addEventListener("change",e=>{ const k=e.target.dataset?.hf; if(k){ HF[k]=e.target.value; renderHonor(); } });
+document.addEventListener("click",e=>{ if(e.target.id==="hfClear"){ HF={cat:"",soc:"",yr:"",sea:""}; renderHonor(); } });
 async function loadHonor(){ try{ HN=await rpc("h_list",{p_token:TOKEN}); }catch(e){ toast(e.message); return; } renderHonor(); }
 function renderHonor(){
   const by={}; HN.honors.forEach(h=>(by[h.category]=by[h.category]||[]).push(h));
   const when=h=>h.season?seasonLabel(h.season):h.date?new Date(h.date+"T12:00:00").toLocaleDateString("es-MX",{month:"short",year:"numeric"}):"";
   const canEd=h=>HN.can_admin||h.created_by===HN.me;
-  $("#hnBoards").innerHTML=HN.honors.length?`<div class="hnwrap">${HN.honors.map(h=>`<article class="post" data-post="${h.id}">
-    ${h.photo?`<img class="ph" src="${h.photo.thumb}" data-ph="${h.photo.id}" data-full="${h.photo.id}" alt="${esc(h.winner)}">`:`<div class="noph">Sin foto</div>`}
-    <div class="bd"><div class="cat">${esc(HCAT[h.category].replace("Campeones · ","Campeón · "))}${when(h)?" · "+esc(when(h)):""}</div>
+  const all=HN.honors, uniq=a=>[...new Set(a.filter(Boolean))];
+  const cats=uniq(all.map(h=>h.category)), socs=uniq(all.map(h=>h.winner)).sort((a,b)=>a.localeCompare(b)), yrs=uniq(all.map(hYear)).sort().reverse(), seas=uniq(all.map(h=>h.season)).sort().reverse();
+  const opt=(k,v,l)=>`<option value="${esc(v)}" ${HF[k]===v?"selected":""}>${esc(l)}</option>`;
+  const L=all.filter(h=>(!HF.cat||h.category===HF.cat||(HF.cat==="liga"&&/^liga_/.test(h.category)))&&(!HF.soc||h.winner===HF.soc)&&(!HF.yr||hYear(h)===HF.yr)&&(!HF.sea||h.season===HF.sea));
+  const on=Object.values(HF).some(Boolean);
+  $("#hnFil").innerHTML=all.length?`<select class="t" data-hf="cat"><option value="">Todas las categorías</option>${cats.map(c=>opt("cat",c,HCAT[c].replace("Campeones · ","Campeón ")))}</select>
+    <select class="t" data-hf="soc"><option value="">Todos los socios</option>${socs.map(x=>opt("soc",x,x))}</select>
+    <select class="t" data-hf="yr"><option value="">Todos los años</option>${yrs.map(x=>opt("yr",x,x))}</select>
+    <select class="t" data-hf="sea"><option value="">Todas las temporadas</option>${seas.map(x=>opt("sea",x,seasonLabel(x)))}</select>
+    <div class="cnt"><span>${L.length} de ${all.length} reconocimiento${all.length===1?"":"s"}</span>${on?`<button id="hfClear">Quitar filtros</button>`:""}</div>`:"";
+  $("#hnBoards").innerHTML=all.length&&!L.length?`<div class="card"><div class="note">Ningún reconocimiento con esos filtros.</div></div>`:all.length?`<div class="hnwrap">${L.map(h=>`<article class="post" data-post="${h.id}">
+    <div class="ph-wrap">${h.photo?`<img class="ph" src="${h.photo.thumb}" data-ph="${h.photo.id}" data-full="${h.photo.id}" alt="${esc(h.winner)}">`:`<div class="noph">Sin foto</div>`}${hBadge(h.category)}</div>
+    <div class="bd"><div class="cat">${hBadge(h.category,1)}<span>${esc(HCAT[h.category].replace("Campeones · ","Campeón · "))}${when(h)?" · "+esc(when(h)):""}</span></div>
     <div class="wn">${esc(h.winner)}</div>${h.event_name||h.notes?`<div class="ev">${esc([h.event_name,h.notes].filter(Boolean).join(" · "))}</div>`:""}
     <div class="mt2"><span>${h.by?"Publicado por "+esc(h.by):""}</span>${canEd(h)?`<button class="ed" data-hn="${h.id}">Editar</button>`:""}</div></div></article>`).join("")}</div>`
     : `<div class="card"><div class="note">El Cuadro de Honor está vacío. Publica al primer campeón con su foto en “+ Agregar campeón”: cualquier socio puede hacerlo.</div></div>`;
