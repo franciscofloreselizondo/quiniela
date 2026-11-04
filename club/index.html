@@ -1059,14 +1059,14 @@ document.addEventListener("click",e=>{const h=e.target.closest("[data-htab]"); i
 /* histórico como jugador: lugares, victorias, podios, net y match play */
 function playerResults(e){
   const out={}, put=(n,o)=>{ const k=e.pmap?.[n]||("n:"+n); const x=out[k]||(out[k]={key:k,n,pos:null,net:null,mw:0,ml:0,cup:null}); Object.entries(o).forEach(([a,b])=>{ if(b!=null) x[a]=b; }); return x; };
-  const names=e.format==="stroke"?(e.players||[]).map(p=>p.n):e.matches.flatMap(m=>[m.w[0],m.r[0]]);
+  const names=(e.format==="stroke"||e.format==="stableford")?(e.players||[]).map(p=>p.n):e.matches.flatMap(m=>[m.w[0],m.r[0]]);
   names.forEach(n=>put(n,{}));
   const R=e.results||{};
   if(e.format==="stroke"){ ["p1","p2","p3"].forEach((k,i)=>{ if(R[k]) put(R[k],{pos:i+1}); }); if(R.p1&&e.net_ganador!=null) put(R.p1,{net:e.net_ganador}); }
   else { if(R.ind1) put(R.ind1,{pos:1,net:e.net_ganador}); ["p2","p3"].forEach((k,i)=>{ const x=e.podio?.[k]; if(x?.n) put(x.n,{pos:i+2,net:x.net}); });
     e.matches.forEach((m,i)=>{ const v=R["m"+(i+1)]; if(!v) return; const lo=v===m.w[0]?m.r[0]:m.w[0]; put(v,{}).mw++; put(lo,{}).ml++; });
     if(R.team){ e.matches.forEach(m=>{ put(m.w[0],{}).cup=(R.team===e.teams[0]); put(m.r[0],{}).cup=(R.team===e.teams[1]); }); } }
-  (e.scores||[]).forEach(x=>put(x.n,{pos:x.pos,net:x.net}));
+  (e.scores||[]).forEach(x=>put(x.n,e.format==="stableford"?{pos:x.pos,pts:x.pts??x.net}:{pos:x.pos,net:x.net}));
   return out;
 }
 function renderPlayerHist(evs){
@@ -1096,7 +1096,7 @@ function renderPlayerHist(evs){
     mine+=`<div class="stats"><div><b>${me.ev}</b><span>TORNEOS</span></div><div><b>${me.wins}</b><span>VICTORIAS</span></div><div><b>${me.pods}</b><span>PODIOS</span></div></div>
     <div class="stats" style="margin-top:8px"><div><b>${me.posN?(me.posS/me.posN).toFixed(1):"—"}</b><span>LUGAR PROM.</span></div><div><b>${me.best??"—"}</b><span>MEJOR NET</span></div><div><b>${me.mw+me.ml?me.mw+"-"+me.ml:"—"}</b><span>MATCH PLAY</span></div></div>
     <table class="ht" style="margin-top:12px"><tr><th>Torneo</th><th>Formato</th><th>Lugar</th><th>Net</th><th>Match</th></tr>
-    ${mineRows.map(({e,r})=>`<tr><td>${esc(e.name)}<div class="note">${esc(fdate(e.event_date))}</div></td><td>${e.format==="stroke"?"Stroke":"Ryder"}</td><td>${r.pos?r.pos+"º":"—"}</td><td>${r.net??"—"}</td><td>${e.format==="stroke"?"—":(r.mw?"Ganó":r.ml?"Perdió":"—")}${r.cup?" 🛡️":""}</td></tr>`).join("")}</table>
+    ${mineRows.map(({e,r})=>`<tr><td>${esc(e.name)}<div class="note">${esc(fdate(e.event_date))}</div></td><td>${e.format==="stroke"?"Stroke":e.format==="stableford"?"Stableford":"Ryder"}</td><td>${r.pos?r.pos+"º":"—"}</td><td>${r.net??(r.pts!=null?r.pts+" pts":"—")}</td><td>${e.format!=="ryder"?"—":(r.mw?"Ganó":r.ml?"Perdió":"—")}${r.cup?" 🛡️":""}</td></tr>`).join("")}</table>
     <div class="note" style="margin-top:8px">Vas ${pos}º de ${L.length} en esta tabla.</div>`; }
   mine+=`</div>`;
   const th=(k,l)=>`<th data-ps="${k}">${l}${pSort===k?" ▾":""}</th>`;
