@@ -526,6 +526,16 @@ nav.main button{flex:0 0 auto;padding:8px 9px;font-size:12.5px}
 <div class="toast" id="toast"></div>
 
 <script>
+/* si algo falla al cargar, mostrar el error en vez de pantalla en blanco (y avisar al superadmin vía bitácora de uso) */
+window.__errs=[];
+window.addEventListener("error",function(ev){ try{ var msg=(ev.message||"error")+" @"+(ev.lineno||"?")+":"+(ev.colno||"?"); window.__errs.push(msg);
+  var tk=null; try{ tk=localStorage.getItem("mcg_token"); }catch(_){}
+  var U=(typeof SB_URL!=="undefined")?SB_URL:null, K=(typeof SB_KEY!=="undefined")?SB_KEY:null;
+  if(tk&&U&&K&&window.fetch){ fetch(U+"/rest/v1/rpc/u_track",{method:"POST",headers:{"Content-Type":"application/json",apikey:K,Authorization:"Bearer "+K},body:JSON.stringify({p_token:tk,p_kind:"vista",p_view:"error",p_detail:(navigator.userAgent.match(/(iPhone OS [\d_]+|Android [\d.]+|Version\/[\d.]+|CriOS\/[\d.]+|Chrome\/[\d.]+)/g)||[]).join(" ").slice(0,40)+" · "+msg,p_device:null})}).catch(function(){}); }
+  setTimeout(function(){ var on=document.querySelector(".view.on"); if(!on||!on.innerText.trim()){ var d=document.createElement("div"); d.style.cssText="position:fixed;inset:auto 12px 12px 12px;z-index:9999;background:#7a1f1f;color:#fff;padding:12px 14px;border-radius:12px;font:14px system-ui"; d.innerHTML="<b>Algo falló al cargar.</b><br>"+msg.replace(/</g,"&lt;")+"<br><button onclick='location.reload()' style='margin-top:8px;padding:6px 12px;border-radius:8px;border:0'>Recargar</button>"; document.body.appendChild(d); } },1500);
+}catch(_){} });
+</script>
+<script>
 const SB_URL = "https://njdvluvuzcczsrrrwyzt.supabase.co";
 const SB_KEY = "sb_publishable_bJvJamSGhkDgcMVmHnpXSA_NXU5ZreP";
 const STORE = SB_URL + "/storage/v1/object/public/quiniela/";
@@ -1637,7 +1647,7 @@ function renderUsage(){ const U=US, K=U.kpis, ago=t=>{ if(!t) return "nunca"; co
     <div class="stats" style="margin-top:10px"><div><b>${K.users?(K.opens/K.users).toFixed(1):"0"}</b><span>ENTRADAS POR SOCIO</span></div><div><b>${K.logins}</b><span>INICIOS DE SESIÓN</span><span style="display:block">${K.google} Google · ${K.codigo} código</span></div><div><b>${K.never}</b><span>NUNCA HAN ENTRADO</span></div></div></div>
   <div class="card"><div class="h">Actividad diaria <small>entradas + pantallas vistas</small></div>
     <div class="uchart">${yax(mxd)}<div><div class="ucols">${U.daily.map(x=>`<div style="height:${x.n/mxd*100}%" title="${esc(x.d)}: ${x.n} registros · ${x.u} socios"></div>`).join("")}</div>
-    <div class="uaxis"><span>${esc(U.daily[0]?.d||"")}</span><span>${esc(U.daily.at(-1)?.d||"")}</span></div></div></div></div>
+    <div class="uaxis"><span>${esc(U.daily[0]?.d||"")}</span><span>${esc(U.daily[U.daily.length-1]?.d||"")}</span></div></div></div></div>
   <div class="card"><div class="h">Módulos más usados <small>vistas · socios</small></div>${bars(U.modules,x=>esc(VNAME[x.v]||x.v),x=>x.n,x=>x.u)}</div>
   ${U.tournaments.length?`<div class="card"><div class="h">Torneos más vistos</div>${bars(U.tournaments,x=>esc(x.t),x=>x.n,x=>x.u)}</div>`:""}
   <div class="card"><div class="h">¿A qué hora entran? <small>hora de Guadalajara</small></div>
@@ -1649,7 +1659,7 @@ function renderUsage(){ const U=US, K=U.kpis, ago=t=>{ if(!t) return "nunca"; co
   <div class="card"><div class="h">Para dar seguimiento</div>
     <ul class="facts">${never.length?`<li><i>🚪</i><div><b>${never.length} nunca han entrado:</b> <span>${esc(never.map(x=>x.name).join(", "))}.</span></div></li>`:""}
     ${cold.length?`<li><i>🧊</i><div><b>${cold.length} sin entrar en más de 30 días:</b> <span>${esc(cold.map(x=>x.name).join(", "))}.</span></div></li>`:""}
-    ${U.modules.length?`<li><i>📉</i><div><b>Menos usado:</b> <span>${esc(VNAME[U.modules.at(-1).v]||U.modules.at(-1).v)} (${U.modules.at(-1).n} vistas).</span></div></li>`:""}
+    ${U.modules.length?`<li><i>📉</i><div><b>Menos usado:</b> <span>${esc(VNAME[U.modules[U.modules.length-1].v]||U.modules[U.modules.length-1].v)} (${U.modules[U.modules.length-1].n} vistas).</span></div></li>`:""}
     <li><i>📱</i><div><b>Dispositivos:</b> <span>${U.devices.map(x=>esc(x.d)+" "+x.u).join(" · ")||"—"}.</span></div></li>
     <li><i>📆</i><div><b>${lastAct}</b> <span>socio-días activos en la última semana.</span></div></li></ul></div>
   <div class="card"><div class="h">Bitácora <small>últimos ${U.log.length} registros</small></div>
