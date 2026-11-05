@@ -357,6 +357,7 @@ nav.main button{flex:0 0 auto;padding:8px 9px;font-size:12.5px}
     <button data-nav="hist">Históricos</button>
     <button data-nav="members">Miembros</button>
     <button data-nav="social">Redes</button>
+    <button data-nav="news">Noticias</button>
     <button data-nav="usage" class="hide" id="navUsage">Uso</button>
   </nav>
 </div>
@@ -400,8 +401,10 @@ nav.main button{flex:0 0 auto;padding:8px 9px;font-size:12.5px}
   <section class="view" id="v-home">
     <div class="hero"><img class="logo" alt="Hermanos McGregor"><h1 id="hiName">Bienvenido</h1><div class="sub" id="hiRole"></div></div>
     <div class="kpis" id="homeKpis"></div>
+    <div id="homeNews"></div>
 
     <div class="tiles">
+      <button class="tile" data-nav="news"><i>📰</i><b>Noticias <span class="bdg hide" id="bdgNews"></span></b><span>Lo nuevo del club</span></button>
       <button class="tile" data-nav="cal"><i>📅</i><b>Calendario</b><span>Championships del año</span></button>
       <button class="tile" data-nav="bets"><i>🎲</i><b>Apuestas</b><span>Quinielas y torneos</span></button>
       <button class="tile" data-nav="tee"><i>🛺</i><b>Salidas</b><span>Horarios y carritos</span></button>
@@ -589,8 +592,10 @@ let EVENTS=[], EV=null, ETAB="principal", skew=0, form={picks:{},tb:""}, target=
 
 /* ===== noticias ===== */
 let NEWS=null;
-function bellSet(n){ const b=$("#bellN"); b.textContent=n>9?"9+":String(n); b.classList.toggle("hide",!n); }
-async function newsTick(){ if(!TOKEN||!ME) return; try{ NEWS=await rpc("n_list",{p_token:TOKEN}); bellSet(NEWS.unread); }catch{} }
+function bellSet(n){ for(const id of ["#bellN","#bdgNews"]){ const b=$(id); if(!b) continue; b.textContent=n>9?"9+":String(n); b.classList.toggle("hide",!n); } }
+function homeNews(){ const h=$("#homeNews"); if(!h) return; const L=(NEWS&&NEWS.items||[]).slice(0,3); if(!L.length){ h.innerHTML=""; return; }
+  h.innerHTML=`<div class="card" data-nav="news" style="cursor:pointer"><div class="h">📰 Lo último ${NEWS.unread?`<small style="color:#ff8a80">${NEWS.unread} sin leer</small>`:"<small>al día</small>"}</div>${L.map(n=>`<div class="nw ${n.new?"new":""}" style="grid-template-columns:30px 1fr"><i>${esc(n.icon)}</i><div><b>${esc(n.title)}</b><div class="s">${newsAgo(n.at)}</div></div></div>`).join("")}<div class="note" style="margin-top:6px">Ver todas ›</div></div>`; }
+async function newsTick(){ if(!TOKEN||!ME) return; try{ NEWS=await rpc("n_list",{p_token:TOKEN}); bellSet(NEWS.unread); if(VIEW==="home") homeNews(); }catch{} }
 function newsAgo(t){ const d=(Date.now()-new Date(t))/6e4; if(d<1) return "ahora"; if(d<60) return `hace ${Math.round(d)} min`; if(d<1440) return `hace ${Math.round(d/60)} h`; if(d<2880) return "ayer";
   return new Date(t).toLocaleDateString("es-MX",{day:"numeric",month:"short"}); }
 async function loadNews(){ try{ NEWS=await rpc("n_list",{p_token:TOKEN}); }catch(e){ $("#newsList").innerHTML=`<div class="note">${esc(e.message)}</div>`; return; }
