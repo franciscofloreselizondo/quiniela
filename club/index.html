@@ -528,6 +528,7 @@ nav.main button{flex:0 0 auto;padding:8px 9px;font-size:12.5px}
 <script>
 /* si algo falla al cargar, mostrar el error en vez de pantalla en blanco (y avisar al superadmin vía bitácora de uso) */
 window.__errs=[];
+window.addEventListener("unhandledrejection",function(ev){ var r=ev.reason||{}; window.dispatchEvent(new ErrorEvent("error",{message:"promesa: "+(r.message||String(r)).slice(0,90),lineno:(String(r.stack||"").match(/:(\d+):\d+/)||[])[1]||0})); });
 window.addEventListener("error",function(ev){ try{ var msg=(ev.message||"error")+" @"+(ev.lineno||"?")+":"+(ev.colno||"?"); window.__errs.push(msg);
   var tk=null; try{ tk=localStorage.getItem("mcg_token"); }catch(_){}
   var U=(typeof SB_URL!=="undefined")?SB_URL:null, K=(typeof SB_KEY!=="undefined")?SB_KEY:null;
