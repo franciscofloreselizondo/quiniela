@@ -98,6 +98,11 @@ input.t:focus,select.t:focus,textarea.t:focus{outline:2px solid var(--gold);bord
 .ev:first-of-type{border-top:0}
 .ev .n{font:700 20px "Cormorant Garamond",serif;color:var(--cream)}
 .ev .m{font-size:12.5px;color:var(--mute)}
+.psum{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}.psum div{border:1px solid rgba(164,161,106,.25);border-radius:12px;padding:8px 10px;font-size:12.5px;color:var(--mute)}.psum b{display:block;color:var(--cream);font-size:14px}.psum span{display:block}
+.ptab .ph,.ptab .pr{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:6px;align-items:center;padding:7px 0;border-top:1px solid rgba(164,161,106,.18)}
+.ptab .ph{border-top:0;font:600 11px Inter;letter-spacing:.05em;color:var(--gold2);text-transform:uppercase}.ptab .pn{font-size:14px;color:var(--cream)}
+.pc{font:600 12px Inter;border-radius:999px;padding:5px 10px;border:1px solid var(--line);background:transparent;color:var(--mute);cursor:pointer}.pc.ok{background:rgba(127,199,154,.18);border-color:var(--ok);color:var(--ok)}.pc.debe{background:rgba(229,154,143,.14);border-color:var(--bad);color:var(--bad)}.pc.dis{border:0;cursor:default;opacity:.5}
+.lnk{background:none;border:0;color:var(--mute);font-size:11px;text-decoration:underline;cursor:pointer;padding:0 0 0 6px}
 .evc{border:1px solid var(--line);border-radius:16px;padding:14px;background:rgba(164,161,106,.06);cursor:pointer;margin-top:10px}
 .evc:first-child{margin-top:0}
 .evc-h{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
@@ -781,11 +786,12 @@ function torneoCard(){ const T=TB(); if(!T.on) return ""; const x=EV.aportacion,
   ${T.po?`<tr><td>🏆 <b>Podio de parejas</b><div class="note">Best ball net, suma de los 2 días</div></td><td>${money(T.po)}</td><td>${money(T.poPot)}</td><td style="text-align:left">Por jugador inscrito:<br>3ª ${money(T.po)} <span class="note">(reintegro)</span><br>2ª ${money(2*T.po)} <span class="note">(doble)</span><br>1ª el resto de la bolsa</td></tr>`:""}
   <tr><td><b>Ambas</b></td><td><b>${money(x+T.eq+T.po)}</b></td><td><b>${money(x*n+T.eqPot+T.poPot)}</b></td><td></td></tr></table>
   <div class="note" style="margin-top:8px">🎯 La quiniela es para cualquier socio, juegue o no. ⚔️🏆 La apuesta del torneo (${money(T.eq+T.po)}) es solo para jugadores y solo cobran quienes se inscriban a ella. Sin empates en el podio: desempata el net del compañero y luego el HCP combinado.</div></div>`; }
-function inscripcionCard(){ const T=TB(); if(!T.on) return ""; const mine=myEntry(), open=!EV.closed&&!locked(), mePl=(EV.players||[]).find(p=>p.member_id===ME.id), inT=mePl&&T.opt.has(mePl.n), picks=mine&&Object.keys(mine.picks||{}).length;
-  const row=(ic,t,price,on,btnOn,btnOff,note)=>`<div class="trow"><span class="nm2">${ic} <b>${t}</b> · ${money(price)}${note?`<div class="note">${note}</div>`:""}</span><span class="st2 ${on?"ok":"pend"}">${on?"INSCRITO":"NO INSCRITO"}</span>${open?(on?btnOff:btnOn):""}</div>`;
-  return `<div class="card"><div class="h">Tu inscripción <small>elige una o las dos</small></div>
-    ${row("🎯","Quiniela",EV.aportacion,!!mine,`<button class="btn sm gold" id="joinBtn">Entrar</button>`,picks?"":`<button class="btn sm ghost" id="leaveQ">Salir</button>`,picks?"Ya tienes picks guardados":"Para cualquier socio")}
-    ${mePl?row("⚔️","Apuesta del torneo",T.eq+T.po,inT,`<button class="btn sm gold" data-tj="1">Entrar</button>`,`<button class="btn sm ghost" data-tj="0">Salir</button>`,`Equipos ${money(T.eq)} + podio de parejas ${money(T.po)}`):`<div class="note" style="margin-top:6px">⚔️ La apuesta del torneo es solo para los jugadores.</div>`}
+function inscripcionCard(){ const T=TB(); if(!T.on) return ""; const mine=myEntry(), open=!EV.closed&&!locked(), mePl=(EV.players||[]).find(p=>p.member_id===ME.id), inT=mePl&&T.opt.has(mePl.n), picks=mine&&Object.keys(mine.picks||{}).length, tPaid=mePl&&(EV.torneo_paid||[]).includes(mePl.n);
+  const st=(on,paid)=>on?`<span class="st2 ${paid?"ok":"pend"}">${paid?"INSCRITO · PAGADO":"INSCRITO · DEBE"}</span>`:`<span class="st2 pend">NO INSCRITO</span>`;
+  const row=(ic,t,price,on,paid,btn,note)=>`<div class="trow"><span class="nm2">${ic} <b>${t}</b> · ${money(price)}${note?`<div class="note">${note}</div>`:""}</span>${st(on,paid)}${open&&btn?btn:""}</div>`;
+  return `<div class="card"><div class="h">Tu inscripción <small>2 apuestas: entra a una o a las dos</small></div>
+    ${row("🎯","Quiniela",EV.aportacion,!!mine,mine&&mine.paid,mine?(picks?"":`<button class="btn sm ghost" id="leaveQ">Salir</button>`):`<button class="btn sm gold" id="joinBtn">Entrar</button>`,mine?(picks?"Ya tienes picks guardados":"Para cualquier socio"):"Para cualquier socio, juegue o no")}
+    ${mePl?row("⚔️","Competencia",T.eq+T.po,inT,tPaid,inT?"":`<button class="btn sm gold" data-tj="1">Entrar</button>`,inT?"Ya estás dentro · para salir pídeselo al organizador":`Equipos ${money(T.eq)} + podio de parejas ${money(T.po)} · solo jugadores`):`<div class="note" style="margin-top:6px">⚔️ La competencia es solo para los jugadores del torneo.</div>`}
     ${open?"":`<div class="note" style="margin-top:6px">Las inscripciones ya cerraron.</div>`}</div>`; }
 function torneoResultsCard(){ const T=TB(); if(!T.on) return ""; const PC=pairCalc(), TP=torneoPrizes(); let h=`<div class="note" style="margin-bottom:6px">${T.nP} jugadores inscritos a la apuesta del torneo · bolsa ${money(T.eqPot+T.poPot)}</div>`;
   if(T.eq) h+=`<div class="pzl"><span>⚔️ ${esc(EV.teams[0])} vs ${esc(EV.teams[1])}</span><b>${TP.team?esc(TP.team.name)+(TP.team.names.length?": "+money(TP.team.each)+" c/u":": nadie inscrito, se regresa"):"por definir"}</b></div>`;
@@ -1110,9 +1116,7 @@ function adminHTML(){
     <div class="card"><div class="h">Bolsas del torneo <small>cuota por jugador, aparte de la quiniela</small></div>
     <div class="row2"><div><label class="f">${esc(EV.teams[0])} vs ${esc(EV.teams[1])} ($)</label><input class="t" id="bqEq" type="number" value="${esc(EV.bolsas?.equipos??"")}" placeholder="0"></div><div><label class="f">Podio de parejas ($)</label><input class="t" id="bqPo" type="number" value="${esc(EV.bolsas?.podio??"")}" placeholder="0"></div></div>
     <button class="btn w" id="saveBolsas" style="margin-top:10px">Guardar bolsas</button></div>
-    <div class="card"><div class="h">Inscritos a la apuesta del torneo <small>${(EV.torneo||[]).length} de ${(EV.players||[]).length}</small></div>
-    <div class="note" style="margin-bottom:8px">Toca para inscribir o quitar (sirve para invitados sin cuenta).</div>
-    <div class="chips">${(EV.players||[]).map(p=>{ const on=(EV.torneo||[]).includes(p.n); return `<span class="chip" data-at="${esc(p.n)}" data-on="${on?0:1}" style="cursor:pointer;${on?"background:var(--gold);color:var(--g)":""}">${on?"✓ ":""}${esc(p.n)}</span>`; }).join("")}</div></div>${adminRest(hasPicks,notIn)}`; }
+    ${pagosCard(notIn)}${adminRest(hasPicks,notIn,TB().on)}`; }
   return `<div class="card"><div class="h">Resultados <small>toca para marcar</small></div>
     <div id="resM">${matchesHTML(res,"r",false)}</div><div class="mt">Equipo ganador</div><div class="teams">${teamHTML(res,"r",false)}</div>
     <div class="mt">1er lugar individual</div><div class="grid3">${indHTML(res,"r",false)}</div>
@@ -1123,13 +1127,26 @@ function adminHTML(){
     <button class="btn w" id="saveRes" style="margin-top:12px">Guardar resultados</button></div>
   ${scoreCard}${adminRest(hasPicks,notIn)}`;
 }
-function adminRest(hasPicks,notIn){
-  return `<div class="card"><div class="h">Apostadores <small>${EV.entries.length}</small></div>
+function pagosCard(notIn){ const T=TB(); if(!T.on) return ""; const E=new Map(EV.entries.map(x=>[x.member_id,x])), TP=new Set(EV.torneo_paid||[]), nk=KEYS().length;
+  const rows=[...(EV.players||[]).map(p=>({n:p.n,mid:p.member_id||null,pl:true})),...EV.entries.filter(x=>!(EV.players||[]).some(p=>p.member_id===x.member_id)).map(x=>({n:x.name,mid:x.member_id,pl:false}))];
+  const q=EV.entries, qp=q.filter(x=>x.paid).length, t=[...T.opt], tp=t.filter(n=>TP.has(n)).length;
+  const cell=(on,paid,attrs,dis)=>dis?`<span class="pc dis">—</span>`:on?`<button class="pc ${paid?"ok":"debe"}" ${attrs} data-pp="${paid?0:1}">${paid?"Pagó ✓":"Debe"}</button>`:`<button class="pc no" ${attrs} data-pin="1">+ Entrar</button>`;
+  return `<div class="card"><div class="h">Inscripciones y pagos <small>toca para marcar</small></div>
+    <div class="psum"><div><b>🎯 Quiniela</b><span>${q.length} inscritos · ${qp} pagados</span><span>${money(EV.aportacion*q.length)}</span></div><div><b>⚔️ Competencia</b><span>${t.length} de ${(EV.players||[]).length} · ${tp} pagados</span><span>${money(T.eqPot+T.poPot)}</span></div></div>
+    <div class="ptab"><div class="ph"><span>Socio</span><span>🎯 Quiniela</span><span>⚔️ Competencia</span></div>
+    ${rows.map(r=>{ const e=r.mid&&E.get(r.mid), on=T.opt.has(r.n);
+      return `<div class="pr"><span class="pn">${esc(r.n)}${!r.pl?` <span class="note">no juega</span>`:""}${e?` <span class="note">${Object.keys(e.picks||{}).length}/${nk}</span>`:""}${e?` <button class="lnk" data-cap="${r.mid}">capturar</button>`:""}</span>
+        <span>${cell(!!e,e&&e.paid,`data-pq="${r.mid||""}"`,!r.mid)}${e&&!Object.keys(e.picks||{}).length?`<button class="lnk" data-ent="remove" data-mid="${r.mid}">quitar</button>`:""}</span>
+        <span>${cell(on,TP.has(r.n),`data-pt="${esc(r.n)}"`,!r.pl)}${on&&!TP.has(r.n)?`<button class="lnk" data-at="${esc(r.n)}" data-on="0">quitar</button>`:""}</span></div>`; }).join("")}</div>
+    <div class="note" style="margin-top:8px">“—” = no aplica: la quiniela requiere cuenta en la app y la competencia es solo para jugadores. Para quitar a alguien que ya pagó, primero desmarca el pago.</div>
+    ${notIn.length?`<div class="row2" style="grid-template-columns:1fr auto;margin-top:10px"><select id="addMem" class="t">${notIn.map(m=>`<option value="${m.id}">${esc(m.name)}</option>`).join("")}</select><button class="btn" id="addMemBtn">Sumar a quiniela</button></div>`:""}</div>`; }
+function adminRest(hasPicks,notIn,skipBettors){
+  return `${skipBettors?"":`<div class="card"><div class="h">Apostadores <small>${EV.entries.length}</small></div>
     ${EV.entries.map(x=>`<div class="ent"><span class="nm2">${esc(x.name)} <span class="note">${Object.keys(x.picks||{}).length}/${KEYS().length}</span></span>
       <button class="btn sm ${x.paid?"":"ghost"}" data-ent="${x.paid?"unpaid":"paid"}" data-mid="${x.member_id}">${x.paid?"Pagó ✓":"Pago"}</button>
       <button class="btn sm ghost" data-cap="${x.member_id}">Capturar</button>
       ${Object.keys(x.picks||{}).length?"":`<button class="btn sm danger" data-ent="remove" data-mid="${x.member_id}">Quitar</button>`}</div>`).join("")||`<div class="note">Nadie se ha sumado aún.</div>`}
-    ${notIn.length?`<div class="row2" style="grid-template-columns:1fr auto;margin-top:10px"><select id="addMem" class="t">${notIn.map(m=>`<option value="${m.id}">${esc(m.name)}</option>`).join("")}</select><button class="btn" id="addMemBtn">Sumar</button></div>`:""}</div>
+    ${notIn.length?`<div class="row2" style="grid-template-columns:1fr auto;margin-top:10px"><select id="addMem" class="t">${notIn.map(m=>`<option value="${m.id}">${esc(m.name)}</option>`).join("")}</select><button class="btn" id="addMemBtn">Sumar</button></div>`:""}</div>`}
   <div class="card"><div class="h">Cerrar evento</div><div class="note" style="margin-bottom:10px">Con todos los resultados capturados, cierra el evento: se manda a todos el correo con ganador(es).</div>
     <button class="btn ${EV.closed?"ghost":"gold"} w" id="closeEv">${EV.closed?"Reabrir evento":"Cerrar evento y enviar ganador"}</button></div>
   ${eventFormHTML(EV,hasPicks)}
@@ -1240,6 +1257,8 @@ document.addEventListener("click",async e=>{
   if(VIEW!=="event"||ETAB!=="admin") return;
   const r=t.closest("[data-r]");
   if(r){ const k=r.dataset.r,v=r.dataset.v; if(res[k]===v) delete res[k]; else res[k]=v; const y=window.scrollY; const keep=readAdminExtras(); renderEvent(); writeAdminExtras(keep); window.scrollTo(0,y); return; }
+  if(t.dataset.pq!=null&&t.dataset.pq){ try{ EV=await rpc("b_admin_entry",{p_token:TOKEN,p_event:EV.id,p_member:t.dataset.pq,p_action:t.dataset.pin?"add":(t.dataset.pp==="1"?"paid":"unpaid")}); renderEvent(); }catch(err){ toast(err.message); } return; }
+  if(t.dataset.pt!=null){ try{ EV=t.dataset.pin?await rpc("b_admin_torneo",{p_token:TOKEN,p_event:EV.id,p_n:t.dataset.pt,p_on:true}):await rpc("b_admin_torneo_paid",{p_token:TOKEN,p_event:EV.id,p_n:t.dataset.pt,p_paid:t.dataset.pp==="1"}); renderEvent(); }catch(err){ toast(err.message); } return; }
   if(t.dataset.at!=null){ try{ EV=await rpc("b_admin_torneo",{p_token:TOKEN,p_event:EV.id,p_n:t.dataset.at,p_on:t.dataset.on==="1"}); renderEvent(); }catch(err){ toast(err.message); } return; }
   if(t.id==="saveBolsas"){ t.disabled=true; try{ EV=await rpc("b_admin_set_bolsas",{p_token:TOKEN,p_event:EV.id,p_bolsas:{equipos:+$("#bqEq").value||0,podio:+$("#bqPo").value||0}}); toast("Bolsas guardadas ✓"); renderEvent(); }catch(err){ toast(err.message); t.disabled=false; } return; }
   if(t.id==="mailPairSc"){ if(!confirm("¿Mandar el resumen por correo a apostadores y jugadores?")) return; t.disabled=true; try{ const r=await rpc("b_mail_pair_summary",{p_token:TOKEN,p_event:EV.id}); toast(`Resumen enviado a ${r.sent} ✓`); }catch(err){ toast(err.message); } finally{ t.disabled=false; } return; }
