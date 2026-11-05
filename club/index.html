@@ -73,6 +73,7 @@ input.t:focus,select.t:focus,textarea.t:focus{outline:2px solid var(--gold);bord
 .kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:4px 0 14px}
 .kpi{border:1px solid var(--line);border-radius:14px;padding:14px 10px;text-align:center;background:rgba(164,161,106,.07)}
 .kpi b{display:block;font:700 34px/1 "Cormorant Garamond",serif;color:var(--cream)}
+.kdelta{display:block;margin-top:5px;font:600 11.5px Inter}.kdelta.up{color:var(--ok)}.kdelta.dn{color:var(--bad)}.kdelta.eq{color:var(--mute)}
 .kpi span{display:block;margin-top:6px;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold2)}
 .kpi.wide{grid-column:1/-1}
 .kpi .ksub{display:block;margin-top:4px;font-size:11.5px;color:var(--mute)}
@@ -97,6 +98,17 @@ input.t:focus,select.t:focus,textarea.t:focus{outline:2px solid var(--gold);bord
 .ev:first-of-type{border-top:0}
 .ev .n{font:700 20px "Cormorant Garamond",serif;color:var(--cream)}
 .ev .m{font-size:12.5px;color:var(--mute)}
+.evc{border:1px solid var(--line);border-radius:16px;padding:14px;background:rgba(164,161,106,.06);cursor:pointer;margin-top:10px}
+.evc:first-child{margin-top:0}
+.evc-h{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.evc-n{font:700 22px/1.15 "Cormorant Garamond",serif;color:var(--cream)}
+.evc .m{font-size:12.5px;color:var(--mute);margin-top:2px}
+.evc-k{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px;margin:12px 0}
+.evc-k div{border:1px solid rgba(164,161,106,.25);border-radius:12px;padding:8px 6px;text-align:center}
+.evc-k b{display:block;font:700 22px/1.1 "Cormorant Garamond",serif;color:var(--cream)}
+.evc-k span{font-size:11px;color:var(--mute)}
+.evc-f{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:13px}
+.evc-f .ok{color:var(--ok)}
 .pill{font:600 11px Inter;border-radius:999px;padding:3px 9px;border:1px solid;white-space:nowrap;align-self:start}
 .pill.open{color:var(--ok);border-color:var(--ok)}.pill.live{color:var(--bad);border-color:var(--red2);background:rgba(143,45,42,.25)}.pill.fin{color:var(--mute);border-color:var(--line)}
 /* tabs inside event */
@@ -456,7 +468,7 @@ nav.main button{flex:0 0 auto;padding:8px 9px;font-size:12.5px}
     <div id="teeEdit"></div>
     <div class="card"><div class="h">Vista para WhatsApp <small id="teeStamp"></small></div><div id="teePrev" class="teeprev"></div>
       <div class="row2" style="margin-top:10px"><button class="btn gold" id="teeImg">📋 Copiar imagen</button><button class="btn ghost" id="teeShare">📲 Compartir</button></div>
-      <button class="btn ghost w" id="teeTxt" style="margin-top:8px">Copiar como texto</button><textarea class="copy hide" id="teeTxtArea" readonly></textarea></div>
+      <button class="btn ghost w" id="teeTxt" style="margin-top:8px">Copiar como texto</button><button class="btn ghost w hide" id="teeDel" style="margin-top:8px;color:var(--bad);border-color:var(--red2)">🗑 Borrar todo</button><textarea class="copy hide" id="teeTxtArea" readonly></textarea></div>
   </section>
 
   <section class="view" id="v-att">
@@ -519,7 +531,7 @@ nav.main button{flex:0 0 auto;padding:8px 9px;font-size:12.5px}
     <button class="btn gold w hide" id="newMemBtn" style="margin-bottom:14px">+ Agregar miembro</button>
     <div class="card hide" id="reqCard"><div class="h">Solicitudes de acceso <small id="reqN"></small></div><div id="reqList"></div></div>
     <div class="card hide" id="memForm"></div>
-    <div class="card"><div class="h">Socios</div><div id="memList"></div></div>
+    <div class="card"><div class="h">Socios</div><div class="etabs" id="memFilt"></div><div id="memList"></div></div>
   </section>
 </main>
 <div class="save hide" id="saveBar"><div class="inner"><div class="prog" id="prog"></div><button class="btn gold" id="saveBtn" disabled>Guardar picks</button></div></div>
@@ -672,18 +684,23 @@ async function renderHome(){
   $("#hiRole").textContent=[ROLES[ME.role], ME.fundador?"Fundador":null, ME.superadmin?"Administrador":ME.bet_admin?"Admin de apuestas":null].filter(Boolean).join(" · ");
   rpc("c_home_stats",{p_token:TOKEN}).then(k=>{ const n=x=>Number(x||0).toLocaleString("es-MX");
     const bp=+k.board_pending||0; $("#bdgBoard").textContent=bp; $("#bdgBoard").classList.toggle("hide",!bp); $("#navBoard").textContent=bp?`Board (${bp})`:"Board";
-    $("#homeKpis").innerHTML=`<div class="kpi"><b>${n(k.hermanos)}</b><span>Hermanos</span></div><div class="kpi"><b>${n(k.torneos)}</b><span>Torneos jugados</span></div>
+    $("#homeKpis").innerHTML=`<div class="kpi"><b>${n(k.hermanos)}</b><span>Hermanos</span></div>${k.torneos_year!=null?`<div class="kpi"><b>${n(k.torneos_year)}</b><span>Torneos ${k.asist_year}</span>${kDelta(k.torneos_year,k.torneos_prev,"",k.asist_year-1)}</div>`:`<div class="kpi"><b>${n(k.torneos)}</b><span>Torneos jugados</span></div>`}
       ${k.quinielas!=null?`<div class="kpi wide"><b>${money(k.quinielas)}</b><span>Total apostado en quinielas</span><small class="ksub">${n(k.apuestas)} apuestas en ${n(k.n_quinielas)} quiniela${k.n_quinielas==1?"":"s"}</small></div>
-      <div class="kpi"><b>${money(k.hio)}</b><span>Bolsa Hole in One</span></div>`:`<div class="kpi wide"><b>${money(k.hio)}</b><span>Bolsa Hole in One</span></div><div class="kpi"><b>${n(k.horas)}</b><span>Horas jugadas juntos</span></div>`}${k.asistencia!=null?`<div class="kpi"><b>${k.asistencia}%</b><span>Asistencia ${k.asist_year}</span></div><div class="kpi wide">`:`<div class="kpi">`}<b>${n(k.honores)}</b><span>Reconocimientos</span></div>`; }).catch(()=>{ $("#homeKpis").innerHTML=""; });
+      <div class="kpi"><b>${money(k.hio)}</b><span>Bolsa Hole in One</span></div>`:`<div class="kpi wide"><b>${money(k.hio)}</b><span>Bolsa Hole in One</span></div><div class="kpi"><b>${n(k.horas)}</b><span>Horas jugadas juntos</span></div>`}${k.asistencia!=null?`<div class="kpi"><b>${k.asistencia}%</b><span>Asistencia ${k.asist_year}</span>${kDelta(k.asistencia,k.asist_prev," pt",k.asist_year-1)}</div><div class="kpi wide">`:`<div class="kpi">`}<b>${n(k.honores)}</b><span>Reconocimientos</span></div>`; }).catch(()=>{ $("#homeKpis").innerHTML=""; });
   try{ EVENTS=await rpc("b_events_list",{p_token:TOKEN}); }catch{ EVENTS=[]; }
   const nx=EVENTS.filter(e=>!e.closed).sort((a,b)=>new Date(a.lock_at)-new Date(b.lock_at))[0];
-  $("#homeNext").innerHTML = nx ? `<div class="card" data-ev="${nx.id}" style="cursor:pointer"><div class="h">${new Date(nx.lock_at)>new Date()?"Próximo torneo":"En juego"} <small>${esc(fdate(nx.event_date))}</small></div>
-    <div style="font:700 22px 'Cormorant Garamond',serif;color:var(--txt)">${esc(nx.name)}</div><div class="note">${esc(nx.course||"")} · ${nx.n_entries} apostador${nx.n_entries===1?"":"es"} · bolsa ${money(nx.aportacion*nx.n_entries)}</div>
-    <div style="margin-top:10px"><span class="btn sm">${nx.joined?(nx.locked?"Ver ranking":"Mis picks"):(nx.locked?"Ver":"Sumarme")}</span></div></div>` : "";
+  $("#homeNext").innerHTML = nx ? `<div class="card"><div class="h">${new Date(nx.lock_at)>new Date()?"Próximo torneo":"En juego"}</div>${evCard(nx)}</div>` : "";
 }
 
 /* ===== events list ===== */
 function evStatus(e){ return e.closed?["fin","Final"]: e.locked?["live","En juego"]:["open","Inscripciones abiertas"]; }
+function evCard(e){ const [c,l]=evStatus(e), nk=ST(e)?3:e.matches.length+2, nP=(e.players||[]).length, B=e.bolsas||{}, nT=(e.torneo||[]).length, pt=(+B.equipos||0)+(+B.podio||0);
+  const btn=e.joined?(e.locked?"Ver ranking":"Mis picks"):(e.locked?"Ver":"Sumarme");
+  const st=e.joined?(e.my_n===nk?`<b class="ok">Tus picks ✓</b>`:`<b>Inscrito · faltan picks</b>`):`<span class="note">${e.locked?"No participaste":"Aún no estás inscrito"}</span>`;
+  return `<div class="evc" data-ev="${e.id}"><div class="evc-h"><div><div class="evc-n">${esc(e.name)}</div><div class="m">${esc(e.course||"")}${e.course&&e.event_date?" · ":""}${esc(fdate(e.event_date))}</div></div><span class="pill ${c}">${l}</span></div>
+    <div class="evc-k">${nP?`<div><b>${nP}</b><span>👥 jugadores</span></div>`:""}<div><b>${money(e.aportacion*e.n_entries)}</b><span>🎯 quiniela · ${e.n_entries} inscrito${e.n_entries===1?"":"s"}</span></div>${pt>0?`<div><b>${money(pt*nT)}</b><span>⚔️ competencia · ${nT} inscrito${nT===1?"":"s"}</span></div>`:""}</div>
+    <div class="evc-f">${st}<span class="btn sm">${btn}</span></div></div>`; }
+function kDelta(v,p,u,y){ if(v==null||p==null) return ""; const d=v-p; return `<small class="kdelta ${d>0?"up":d<0?"dn":"eq"}" title="Contra el mismo día de ${y}">${d>0?"▲ +":d<0?"▼ –":"＝ "}${Math.abs(d)}${d?u:""} vs ${y}</small>`; }
 async function loadEvents(){
   try{ EVENTS=await rpc("b_events_list",{p_token:TOKEN}); }catch(e){ toast(e.message); return; }
   $("#newEvBtn").classList.toggle("hide",!isAdminBets());
@@ -691,7 +708,7 @@ async function loadEvents(){
     return `<div class="ev" data-ev="${e.id}"><div><div class="n">${esc(e.name)}</div><div class="m">${esc(e.course||"")}${e.course?" · ":""}${esc(fdate(e.event_date))}</div>
     <div class="m">${e.n_entries} apostador${e.n_entries===1?"":"es"} · bolsa ${money(e.aportacion*e.n_entries)}${e.joined?` · <b>${e.my_n===nk?"tus picks ✓":"estás inscrito"}</b>`:""}</div></div><span class="pill ${c}">${l}</span></div>`;};
   const nxt=EVENTS.filter(e=>!e.closed), past=EVENTS.filter(e=>e.closed);
-  $("#evNext").innerHTML = nxt.length? nxt.map(row).join("") : `<div class="note">No hay torneos abiertos.${isAdminBets()?" Crea uno con “Nuevo torneo”.":""}</div>`;
+  $("#evNext").innerHTML = nxt.length? nxt.map(evCard).join("") : `<div class="note">No hay torneos abiertos.${isAdminBets()?" Crea uno con “Nuevo torneo”.":""}</div>`;
   $("#evPast").innerHTML = past.length? past.map(row).join("") : `<div class="note">Aún no hay torneos cerrados.</div>`;
 }
 document.addEventListener("click",e=>{const r=e.target.closest("[data-ev]"); if(r) openEvent(r.dataset.ev);});
@@ -1209,15 +1226,25 @@ function writeAdminExtras(x){ if(!x?.raw) return; const s=(q,v)=>{if($(q)&&v!=nu
 $("#newEvBtn").onclick=()=>{ $("#evNext").closest(".card").insertAdjacentHTML("beforebegin",""); const c=document.createElement("div"); c.innerHTML=eventFormHTML(null,false); const old=$("#evForm"); if(old) old.remove(); $("#newEvBtn").after(c.firstElementChild); $("#fName").focus(); };
 
 /* ===== members ===== */
+let MEMK="all";
+const MEMF=[["all","Todos",m=>true],["board","Board",m=>m.board],["cargos","Cargos",m=>["presidente","tesorero","secretario"].includes(m.role)],["fund","Fundadores",m=>m.fundador],
+  ["liga","En liga",m=>m.liga_status==="en_liga"],["fuera","Fuera de liga",m=>m.liga_status==="no_juega"],["pend","Liga pendiente",m=>m.liga_status==="pendiente"],
+  ["torneos","Abren torneos",m=>m.superadmin||m.bet_admin],["admin","Admins",m=>m.superadmin||m.role==="presidente"||m.role==="secretario"],["inact","Inactivos",m=>m.active===false]];
+document.addEventListener("click",e=>{ const b=e.target.closest("[data-memf]"); if(!b) return; MEMK=b.dataset.memf; renderMembers(); });
 async function loadMembers(){
   try{ MEMBERS=await rpc("c_members_list",{p_token:TOKEN}); }catch(e){ toast(e.message); return; }
-  loadRequests();
+  loadRequests(); renderMembers(); }
+function renderMembers(){
   const act=MEMBERS.filter(m=>m.active);
   $("#memCount").textContent=`${act.length} socios activos`;
   $("#newMemBtn").classList.toggle("hide",!(isAdminMembers()||ME.board));
   const rk=m=>m.role==="presidente"?1:m.role==="tesorero"?2:m.role==="secretario"?3:m.board?4:5;
-  const L=[...MEMBERS].sort((x,y)=>rk(x)-rk(y)||x.name.localeCompare(y.name));
-  $("#memList").innerHTML=L.map(m=>`<div class="mem" ${(isAdminMembers()||canDelMembers())?`data-medit="${m.id}" style="cursor:pointer"`:""}><div><div class="n">${m.avatar?`<img class="mav" src="${m.avatar}" alt="">`:""}${esc(m.name)}${m.nickname?` <span style="color:var(--gold2);font-weight:500">“${esc(m.nickname)}”</span>`:""}${m.id===ME.id?'<span class="me">TÚ</span>':""}</div>
+  const F=MEMF.filter(([k,,f])=>k==="all"||MEMBERS.some(f)); if(!F.some(x=>x[0]===MEMK)) MEMK="all";
+  $("#memFilt").innerHTML=F.map(([k,n,f])=>`<button type="button" data-memf="${k}" class="${k===MEMK?"on":""}">${n} <span style="opacity:.7">${MEMBERS.filter(f).length}</span></button>`).join("");
+  const fn=MEMF.find(x=>x[0]===MEMK)[2];
+  const L=[...MEMBERS].filter(fn).sort((x,y)=>rk(x)-rk(y)||x.name.localeCompare(y.name));
+  $("#memCount").textContent=MEMK==="all"?`${act.length} socios activos`:`${L.length} de ${MEMBERS.length} socios · ${MEMF.find(x=>x[0]===MEMK)[1]}`;
+  $("#memList").innerHTML=(L.length?"":`<div class="note">Nadie en este filtro.</div>`)+L.map(m=>`<div class="mem" ${(isAdminMembers()||canDelMembers())?`data-medit="${m.id}" style="cursor:pointer"`:""}><div><div class="n">${m.avatar?`<img class="mav" src="${m.avatar}" alt="">`:""}${esc(m.name)}${m.nickname?` <span style="color:var(--gold2);font-weight:500">“${esc(m.nickname)}”</span>`:""}${m.id===ME.id?'<span class="me">TÚ</span>':""}</div>
     <div class="s">${!m.active?"inactivo":""}${isAdminMembers()&&m.email?(m.active?"":" · ")+esc(m.email):""}</div></div>
     <div class="mtags">${memTags(m)}</div></div>`).join("");
 }
@@ -1399,7 +1426,7 @@ function teeSync(){ if(!TEE||!$("#teeTitle")) return; TEE.title=$("#teeTitle").v
   document.querySelectorAll("[data-cs]").forEach(i=>{ const [a,b]=i.dataset.cs.split(".").map(Number); TEE.slots[a].carts[b].owner=i.value||null; });
   document.querySelectorAll("[data-cp]").forEach(i=>{ const [a,b,c]=i.dataset.cp.split(".").map(Number); TEE.slots[a].carts[b].p[c]=i.value.trim(); }); }
 function teeClean(){ return TEE.slots.map(s=>({t:s.t,hoyo:s.hoyo,carts:s.carts.map(c=>({owner:c.owner||null,p:c.p.filter(Boolean)})).filter(c=>c.p.length)})); }
-function renderTee(){ const ed=TEE.can_edit; $("#teeEdit").innerHTML=ed?teeEditHTML():""; teePreview(); }
+function renderTee(){ const ed=TEE.can_edit; $("#teeEdit").innerHTML=ed?teeEditHTML():""; $("#teeDel").classList.toggle("hide",!ed); teePreview(); if(LOGO64===null) logoData().then(()=>{ if(VIEW==="tee") teePreview(); }); }
 function teePreview(){ if(TEE.can_edit) teeSync(); $("#teePrev").innerHTML=teeSVG(); $("#teeStamp").textContent=TEE.saved?"publicado":"borrador"; }
 function cartSVG(c){ return `<g><rect x="22" y="0" width="108" height="12" rx="4" fill="${c}" stroke="#333" stroke-width="2.5"/><line x1="32" y1="12" x2="32" y2="66" stroke="#333" stroke-width="4"/><line x1="120" y1="12" x2="112" y2="66" stroke="#333" stroke-width="4"/>
   <rect x="10" y="30" width="20" height="38" rx="4" fill="#d9d4c7" stroke="#333" stroke-width="2.5"/><line x1="14" y1="30" x2="10" y2="18" stroke="#333" stroke-width="2"/><line x1="22" y1="30" x2="24" y2="16" stroke="#333" stroke-width="2"/>
@@ -1407,21 +1434,31 @@ function cartSVG(c){ return `<g><rect x="22" y="0" width="108" height="12" rx="4
   <path d="M6 66 H132 Q142 66 142 78 V90 H6 Z" fill="${c}" stroke="#333" stroke-width="3"/>
   <circle cx="36" cy="94" r="13" fill="#fff" stroke="#333" stroke-width="5"/><circle cx="114" cy="94" r="13" fill="#fff" stroke="#333" stroke-width="5"/><line x1="0" y1="108" x2="150" y2="108" stroke="#333" stroke-width="3"/></g>`; }
 function teeDateLbl(d){ const x=new Date(d+"T12:00:00"); return `${x.getDate()}-${x.toLocaleDateString("es-MX",{month:"short"}).replace(".","")}-${String(x.getFullYear()).slice(2)}`; }
-function teeSVG(){ const T=TEE, S=teeClean().filter(s=>s.carts.length||!T.saved), W=Math.max(960,265+Math.max(0,...S.map(s=>s.carts.length))*172), top=300, rh=235, H=top+Math.max(S.length,1)*rh+20;
-  const tx=(x,y,t,sz,w,anc,fill)=>`<text x="${x}" y="${y}" font-family="Georgia, 'Times New Roman', serif" font-size="${sz}" font-weight="${w||400}" text-anchor="${anc||"start"}" fill="${fill||"#111"}">${esc(t)}</text>`;
-  const tf=t=>{ const [h,m]=(t||"").split(":").map(Number); if(isNaN(h)) return t||""; return `${String(h>12?h-12:h).padStart(2,"0")}:${String(m||0).padStart(2,"0")} ${h<12?"a. m.":"p. m."}`; };
-  let g=tx(40,62,(T.title||"").toUpperCase(),34,800)+(T.subtitle?tx(40,118,T.subtitle.toUpperCase(),24,600):"")+tx(40,T.subtitle?162:118,"CAMPO: "+(T.campo||""),24,600)+tx(40,T.subtitle?206:162,"FECHA: "+teeDateLbl(T.date),24,600);
-  g+=`<g transform="translate(765,100)"><circle r="82" fill="#fff" stroke="#555" stroke-width="2"/><circle r="70" fill="none" stroke="#555" stroke-width="1"/>${tx(0,-40,"HERMANOS",15,600,"middle","#333")}${tx(0,6,"HMcG",30,800,"middle","#222")}${tx(0,32,"2020",14,400,"middle","#555")}${tx(0,58,"McGREGOR",17,800,"middle","#333")}</g>`;
-  g+=tx(62,top-38,"SALIDA",28,700)+tx(315,top-38,"CARRITO / JUGADORES",28,700)+`<line x1="0" y1="${top-20}" x2="${W}" y2="${top-20}" stroke="#333" stroke-width="1.5"/>`;
-  S.forEach((s,i)=>{ const y=top+i*rh; g+=tx(120,y+108,tf(s.t),24,400,"middle")+tx(120,y+138,"Hoyo "+(s.hoyo||"10"),19,400,"middle","#333");
-    s.carts.forEach((c,j)=>{ const x=245+j*172, col=(CARTS.find(o=>o.k===(c.owner||""))||CARTS[0]).c; g+=`<g transform="translate(${x},${y+28})">${cartSVG(col)}</g>`;
-      const L=(c.owner&&!c.p.length)?[c.owner]:c.p; L.forEach((n,k)=>g+=tx(x+75,y+170+k*29,n,22,400,"middle","#222")); });
-    if(!s.carts.length) g+=tx(320,y+118,"por definir",22,400,"start","#999");
-    g+=`<line x1="0" y1="${y+rh-8}" x2="${W}" y2="${y+rh-8}" stroke="#333" stroke-width="1.5"/>`; });
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}"><rect width="${W}" height="${H}" fill="#fff"/>${g}</svg>`; }
+let LOGO64=null;
+async function logoData(){ if(LOGO64) return LOGO64; try{ const i=new Image(); i.crossOrigin="anonymous"; i.src=STORE+"logo.webp"; await i.decode(); const c=document.createElement("canvas"); c.width=c.height=320; c.getContext("2d").drawImage(i,0,0,320,320); LOGO64=c.toDataURL("image/png"); }catch(e){ LOGO64=""; } return LOGO64; }
+function teeSVG(){ const T=TEE, S=teeClean().filter(s=>s.carts.length||!T.saved), GR="#1d3a2c", GO="#c2a96b", CR="#f7f2e6", INK="#1f2a24";
+  const W=Math.max(960,285+Math.max(0,...S.map(s=>s.carts.length))*172), hd=250, top=hd+70, rh=225, H=top+Math.max(S.length,1)*rh+70;
+  const tx=(x,y,t,sz,w,anc,fill,ls,it)=>`<text x="${x}" y="${y}" font-family="Georgia, 'Times New Roman', serif" font-size="${sz}" font-weight="${w||400}" text-anchor="${anc||"start"}" fill="${fill||INK}"${ls?` letter-spacing="${ls}"`:""}${it?` font-style="italic"`:""}>${esc(t)}</text>`;
+  const tf=t=>{ const [h,m]=(t||"").split(":").map(Number); if(isNaN(h)) return t||""; return `${h>12?h-12:h}:${String(m||0).padStart(2,"0")}`; }, ap=t=>(+String(t).split(":")[0]<12?"a. m.":"p. m.");
+  const fl=new Date(T.date+"T12:00:00").toLocaleDateString("es-MX",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+  let g=`<rect width="${W}" height="${H}" fill="${CR}"/><rect width="${W}" height="${hd}" fill="${GR}"/><rect x="0" y="${hd}" width="${W}" height="4" fill="${GO}"/>`;
+  g+=`<rect x="14" y="14" width="${W-28}" height="${H-28}" fill="none" stroke="${GO}" stroke-width="1.5" opacity=".7"/>`;
+  g+=tx(56,92,(T.title||"").toUpperCase(),44,700,"start",CR,4)+(T.subtitle?tx(58,138,T.subtitle,26,400,"start",GO,1,true):"");
+  g+=tx(58,T.subtitle?190:150,(T.campo||"").toUpperCase(),17,400,"start",CR,3)+tx(58,T.subtitle?218:178,fl,19,400,"start",GO,1,true);
+  if(LOGO64) g+=`<image href="${LOGO64}" x="${W-226}" y="35" width="180" height="180"/>`;
+  g+=tx(110,top-22,"SALIDA",15,700,"middle",GR,4)+tx(265,top-22,"CARRITOS · JUGADORES",15,700,"start",GR,4);
+  S.forEach((s,i)=>{ const y=top+i*rh; if(i%2===0) g+=`<rect x="15" y="${y-6}" width="${W-30}" height="${rh}" fill="#efe7d3" opacity=".55"/>`;
+    g+=`<line x1="40" y1="${y-6}" x2="${W-40}" y2="${y-6}" stroke="${GO}" stroke-width="1"/>`;
+    g+=tx(110,y+100,tf(s.t),46,700,"middle",GR)+tx(110,y+128,ap(s.t),16,400,"middle",INK,2)+tx(110,y+158,"HOYO "+(s.hoyo||"10"),14,700,"middle",GO,3);
+    s.carts.forEach((c,j)=>{ const x=255+j*172, col=(CARTS.find(o=>o.k===(c.owner||""))||CARTS[0]).c; g+=`<g transform="translate(${x},${y+18})">${cartSVG(col)}</g>`;
+      const L=(c.owner&&!c.p.length)?[c.owner]:c.p; L.forEach((n,k)=>g+=tx(x+75,y+160+k*27,n,21,400,"middle",INK)); });
+    if(!s.carts.length) g+=tx(320,y+108,"por definir",22,400,"start","#999",0,true); });
+  g+=`<line x1="40" y1="${top+Math.max(S.length,1)*rh-6}" x2="${W-40}" y2="${top+Math.max(S.length,1)*rh-6}" stroke="${GO}" stroke-width="1"/>`;
+  g+=tx(W/2,H-34,"HERMANOS McGREGOR  ·  PLAY IT AS IT LIES",13,700,"middle",GR,4);
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">${g}</svg>`; }
 function teeText(){ const T=TEE, S=teeClean().filter(s=>s.carts.length); const x=new Date(T.date+"T12:00:00").toLocaleDateString("es-MX",{weekday:"long",day:"numeric",month:"long"});
   return [`⛳ *${(T.title||"Salidas").toUpperCase()}*`,T.subtitle?`_${T.subtitle}_`:"",`📍 ${T.campo} · ${x}`,"",...S.flatMap(s=>[`🕗 *${s.t}* · Hoyo ${s.hoyo||10}`,...s.carts.map(c=>`   🛺 ${c.p.join(" / ")}${c.owner?` _(carrito de ${(CARTS.find(o=>o.k===c.owner)||{}).n||c.owner})_`:""}`),""])].filter((l,i,a)=>l!==""||a[i-1]!=="").join("\n").trim(); }
-async function teePNG(){ const svg=teeSVG(), img=new Image(); img.src="data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg); await img.decode();
+async function teePNG(){ await logoData(); const svg=teeSVG(), img=new Image(); img.src="data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg); await img.decode();
   const c=document.createElement("canvas"); c.width=img.width*1.5; c.height=img.height*1.5; const x=c.getContext("2d"); x.scale(1.5,1.5); x.drawImage(img,0,0); return await new Promise(r=>c.toBlob(r,"image/png")); }
 document.addEventListener("input",e=>{ if(VIEW==="tee"&&e.target.closest("#teeEdit")){ teeSync(); $("#teePrev").innerHTML=teeSVG(); } });
 document.addEventListener("change",e=>{ if(VIEW==="tee"&&e.target.matches("[data-cs]")){ teeSync(); const [a,b]=e.target.dataset.cs.split(".").map(Number), c=TEE.slots[a].carts[b];
@@ -1432,6 +1469,8 @@ document.addEventListener("click",async e=>{ if(VIEW!=="tee") return; const t=e.
   if(t.dataset.sdel!=null){ teeSync(); TEE.slots.splice(+t.dataset.sdel,1); renderTee(); return; }
   if(t.id==="teeAddSlot"){ teeSync(); TEE.slots.push({t:"",hoyo:"10",carts:[]}); renderTee(); return; }
   if(t.id==="teeSave"){ teeSync(); t.disabled=true; try{ TEE=await rpc("s_save",{p_token:TOKEN,p_data:{date:TEE.date,title:TEE.title,subtitle:TEE.subtitle,campo:TEE.campo,slots:teeClean()}}); if(!TEE.slots.length) TEE.slots=[]; toast("Salidas guardadas ✓"); $("#teeInfo").textContent=`Guardado por ${TEE.updated_by||"—"}`; renderTee(); }catch(err){ toast(err.message); } finally{ t.disabled=false; } return; }
+  if(t.id==="teeDel"){ const fl=new Date(TEE.date+"T12:00:00").toLocaleDateString("es-MX",{weekday:"long",day:"numeric",month:"short"}); if(!confirm(`¿Borrar todas las salidas del ${fl}? Se quitan jugadores y carritos${TEE.saved?" y se elimina lo publicado":""}.`)) return;
+    t.disabled=true; try{ if(TEE.saved) await rpc("s_delete",{p_token:TOKEN,p_date:TEE.date}); await loadTee(); toast("Salidas borradas"); }catch(err){ toast(err.message); } t.disabled=false; return; }
   if(t.id==="teeTxt"){ const txt=teeText(), ta=$("#teeTxtArea"); ta.value=txt; try{ await navigator.clipboard.writeText(txt); toast("Texto copiado ✓"); }catch{ ta.classList.remove("hide"); ta.select(); } return; }
   if(t.id==="teeImg"||t.id==="teeShare"){ t.disabled=true; try{ const b=await teePNG(), f=new File([b],`salidas-${TEE.date}.png`,{type:"image/png"});
       if(t.id==="teeImg"&&navigator.clipboard&&window.ClipboardItem){ try{ await navigator.clipboard.write([new ClipboardItem({"image/png":b})]); toast("Imagen copiada ✓ · pégala en WhatsApp"); return; }catch{} }
