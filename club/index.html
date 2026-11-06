@@ -98,6 +98,7 @@ input.t:focus,select.t:focus,textarea.t:focus{outline:2px solid var(--gold);bord
 .ev:first-of-type{border-top:0}
 .ev .n{font:700 20px "Cormorant Garamond",serif;color:var(--cream)}
 .ev .m{font-size:12.5px;color:var(--mute)}
+.updPrev{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}.updPrev figure{margin:0}.updPrev img{width:100%;border-radius:10px;border:1px solid var(--line);cursor:pointer;display:block}.updPrev figcaption{font-size:11.5px;color:var(--mute);margin-top:4px;text-align:center}
 .psum{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}.psum div{border:1px solid rgba(164,161,106,.25);border-radius:12px;padding:8px 10px;font-size:12.5px;color:var(--mute)}.psum b{display:block;color:var(--cream);font-size:14px}.psum span{display:block}
 .ptab .ph,.ptab .pr{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:6px;align-items:center;padding:7px 0;border-top:1px solid rgba(164,161,106,.18)}
 .ptab .ph{border-top:0;font:600 11px Inter;letter-spacing:.05em;color:var(--gold2);text-transform:uppercase}.ptab .pn{font-size:14px;color:var(--cream)}
@@ -845,6 +846,7 @@ function renderEvent(){
   if(ETAB==="admin") b.innerHTML=adminHTML();
   $("#saveBar").classList.toggle("hide",!(VIEW==="event"&&ETAB==="picks"&&target&&!picksDisabled()));
   if(ETAB==="picks") updateProg();
+  if(ETAB==="principal"||ETAB==="ranking") setTimeout(updatePreview,50);
 }
 document.addEventListener("click",e=>{const t=e.target.closest("[data-etab]"); if(t){ if(t.dataset.etab!=="picks"&&dirty&&!confirm("Tienes picks sin guardar. ¿Salir?")) return; if(t.dataset.etab==="picks"&&target?.admin){ const mine=myEntry(); target=mine?{member_id:ME.id,name:ME.name}:null; loadForm(mine);} setETab(t.dataset.etab);} });
 
@@ -878,7 +880,7 @@ function principalHTML(){
       const ct=cnt("team"); f+=`<div class="mt">Equipo</div>`+bar(EV.teams[0],ct[EV.teams[0]]||0,EV.teams[1],ct[EV.teams[1]]||0)+chips("ind1"); }
     h+=`<div class="card"><div class="h">Favoritos del grupo <small>${withP.length} con picks</small></div>${f}</div>`;
   }
-  return h;
+  return h+updateCard();
 }
 document.addEventListener("click",async e=>{ const t=e.target; if(t.id!=="leaveQ"&&t.dataset.tj==null) return; t.disabled=true;
   try{ if(t.id==="leaveQ"){ if(!confirm("¿Salir de la quiniela?")){ t.disabled=false; return; } EV=await rpc("b_leave",{p_token:TOKEN,p_event:EV.id}); target=null; loadForm(null); toast("Saliste de la quiniela"); }
@@ -1018,7 +1020,7 @@ function rankingHTML(){
       <div><div class="nm2">${esc(r.e.name)}${mine?'<span class="me">TÚ</span>':""}${prize}</div><div class="marks">${marks}</div></div>
       <div class="pts">${r.p}<small>${r.e.complete?(r.e.paid?"pagó 💵":""):"incompleto"}</small></div></div><div class="detail">${det}</div></div>`;}).join("");
   return summaryHTML()+`<div class="card"><div class="h">Ranking <small>${EV.closed?"final":nres?"en vivo":EV.entries.filter(x=>x.complete).length+"/"+EV.entries.length+" con picks"}</small></div><div id="board">${list}</div><div class="note" style="margin-top:8px">Toca un nombre para ver sus picks.</div></div>
-    <div class="card"><div class="h">Compartir en WhatsApp</div><div class="row2"><button class="btn gold" id="shareBtn">📲 Compartir imagen</button><button class="btn ghost" id="copyImgBtn">📋 Copiar imagen</button></div><button class="btn ghost w" id="copyBtn" style="margin-top:8px">Copiar texto</button><div class="note" style="margin-top:6px">WhatsApp no acepta imagen y texto juntos: manda la imagen y luego pega el texto (se copia solo al compartir).</div><textarea class="copy hide" id="copyTxt" readonly></textarea></div>`;
+    ${updateCard()}`;
 }
 document.addEventListener("click",e=>{const r=e.target.closest("[data-row]"); if(!r) return; openRow=openRow===r.dataset.row?null:r.dataset.row; const y=window.scrollY; renderEvent(); window.scrollTo(0,y);});
 /* ===== compartir a WhatsApp: texto con punch + imagen del ranking ===== */
@@ -1038,45 +1040,103 @@ function shareData(){
   // Ryder de parejas con bolsas: sección del torneo (equipos + podio de parejas)
   const T=TB(), tor=[]; let torTot=0;
   if(T.on){ const PC=pairCalc(), played=PC.M.some(m=>m.res); torTot=T.eqPot+T.poPot; marc="";
-    tor.push(`⚔️ *TORNEO · ${EV.teams[0].toUpperCase()} vs ${EV.teams[1].toUpperCase()}*`);
+    tor.push(`⚔️ *COMPETENCIA · ${EV.teams[0].toUpperCase()} vs ${EV.teams[1].toUpperCase()}*`);
     const TP=torneoPrizes();
     if(played){ const done=PC.M.every(m=>m.res);
       tor.push(`${EV.teams[0]} *${half(PC.wp)}* – *${half(PC.rp)}* ${EV.teams[1]}${TP.team?`  ·  🏆 Gana *${TP.team.name}*${TP.team.names.length?` (💰${money(TP.team.each)} c/u inscrito)`:""}`:done?"":`  ·  ${PC.M.filter(m=>m.res).length}/${PC.M.length} partidos`}`); }
-    else tor.push(`${EV.matches.length} partidos · ${T.nP} jugadores · arranca ${EV.event_date?new Date(EV.event_date+"T12:00:00").toLocaleDateString("es-MX",{day:"numeric",month:"short"}):"pronto"}${EV.matches[0]?.t?" · "+EV.matches[0].t:""}`);
+    else tor.push(`${EV.matches.length} partidos · ${(EV.players||[]).length} jugadores · arranca ${EV.event_date?new Date(EV.event_date+"T12:00:00").toLocaleDateString("es-MX",{day:"numeric",month:"short"}):"pronto"}${EV.matches[0]?.t?" · "+EV.matches[0].t:""}`);
     const two=PC.P.length&&PC.P.every(x=>x.tot!=null), d1=PC.P.filter(x=>x.b1!=null);
     if(two) TP.pods.forEach((o,i)=>tor.push(`${med[i]} ${o.x.label} (${o.x.tot}) · 💰${money(o.total)}`));
     else if(d1.length){ tor.push("_Parejas tras el día 1:_"); d1.sort((a,b)=>a.b1-b.b1).slice(0,3).forEach((x,i)=>tor.push(`${i+1}. ${x.label} (${x.b1})`)); }
-    tor.push(`💵 Bolsa torneo: *${money(torTot)}* · ${T.nP} inscritos · ${money(T.eqPot)} equipos + ${money(T.poPot)} podio`); }
-  const lines=rows.slice(0,10).map(x=>`${x.rank<=3&&nres?med[x.rank-1]:x.rank+"."} ${x.rank<=3&&nres?"*"+x.e.name+"*":x.e.name} — ${x.p} pts${nres&&x.prize>0&&x.p>0?"  💰"+money(x.prize):""}`);
-  const rest=rows.length>10?`…y ${rows.length-10} más`:"";
+    tor.push(`💵 Bolsa competencia: *${money(torTot)}* · ${T.nP} de ${(EV.players||[]).length} inscritos`, `   ${money(T.eqPot)} equipos + ${money(T.poPot)} podio de parejas`); }
+  const lines=!nres?(rows.length?rows.map(x=>`${x.e.complete?"✅":"⏳"} ${x.e.name}${x.e.complete?"":" (faltan picks)"}`):["Nadie ha entrado aún"]):rows.slice(0,10).map(x=>`${x.rank<=3&&nres?med[x.rank-1]:x.rank+"."} ${x.rank<=3&&nres?"*"+x.e.name+"*":x.e.name} — ${x.p} pts${nres&&x.prize>0&&x.p>0?"  💰"+money(x.prize):""}`);
+  const rest=nres&&rows.length>10?`…y ${rows.length-10} más`:"";
   const url=location.origin+location.pathname+"#e="+EV.id;
-  const txt=[T.on?`⛳ *${EV.name.toUpperCase()}*`:`⛳ *QUINIELA ${EV.name.toUpperCase()}*`,`_Hermanos McGregor${EV.course?" · "+EV.course:""}_`,"",st,marc,"",...(T.on?[...tor,"","🎯 *QUINIELA*"]:["🏆 *RANKING*"]),...lines,rest,"",dato,`💵 Bolsa${T.on?" quiniela":""}: *${money(bolsa())}* · ${EV.entries.length} apostadores`,...(T.on?[`💰 *Bolsa total: ${money(bolsa()+torTot)}*`]:[]),"",`👉 Ver todo: ${url}`].filter((l,i,a)=>l!==""||(a[i-1]!==""&&i>0)).join("\n").replace(/\n{3,}/g,"\n\n").trim();
+  const txt=[T.on?`⛳ *${EV.name.toUpperCase()}*`:`⛳ *QUINIELA ${EV.name.toUpperCase()}*`,`_Hermanos McGregor${EV.course?" · "+EV.course:""}_`,"",st,marc,"",...(T.on?[...tor,"","🎯 *QUINIELA*"]:["🏆 *RANKING*"]),...lines,rest,"",dato,`💵 Bolsa${T.on?" quiniela":""}: *${money(bolsa())}* · ${EV.entries.length} apostadores`,...(T.on?[`💰 *Bolsa total: ${money(bolsa()+torTot)}*`]:[]),...(!nres?favText(favData()):[]),"",`👉 ${nres||locked()?"Ver todo":"Haz tus picks"}: ${url}`].filter((l,i,a)=>l!==""||(a[i-1]!==""&&i>0)).join("\n").replace(/\n{3,}/g,"\n\n").trim();
   return {txt,rows,st,marc,nres,fin,live,tor,torTot};
 }
+function updateCard(){ return `<div class="card"><div class="h">Update para WhatsApp <small>imágenes + texto</small></div>
+    <div class="updPrev" id="updPrev"><div class="note">Preparando vista previa…</div></div>
+    <div class="row2" style="margin-top:10px"><button class="btn gold" id="shareBtn">📲 Compartir imágenes</button><button class="btn ghost" id="copyBtn">📋 Copiar texto</button></div>
+    <div class="note" style="margin-top:6px">Toca una imagen para copiarla sola. WhatsApp no manda imagen y texto juntos: comparte las imágenes y luego pega el texto (se copia solo).</div>
+    <textarea class="copy hide" id="copyTxt" readonly></textarea></div>`; }
+function favData(){ const withP=EV.entries.filter(x=>Object.keys(x.picks||{}).length); if(!withP.length) return null;
+  const cnt=k=>{const c={};withP.forEach(b=>{const v=b.picks?.[k];if(v)c[v]=(c[v]||0)+1;});return c;}, n=withP.length, pc=v=>Math.round(v/n*100);
+  const R=[]; if(ST()) ["p1","p2","p3"].forEach(k=>R.push({lb:LONG(k),top:Object.entries(cnt(k)).sort((x,y)=>y[1]-x[1]).slice(0,3).map(([a,v])=>[a,pc(v)])}));
+  else { EV.matches.forEach((m,i)=>{ const c=cnt("m"+(i+1)), a=c[m.w[0]]||0, b=c[m.r[0]]||0, t=a+b||1; R.push({lb:(PJ()?"Partido ":"Match ")+(i+1),a:m.w[0],b:m.r[0],pa:Math.round(a/t*100),pb:b?100-Math.round(a/t*100):0,na:a,nb:b}); });
+    const ct=cnt("team"), a=ct[EV.teams[0]]||0, b=ct[EV.teams[1]]||0, t=a+b||1; R.push({lb:"Equipo",a:EV.teams[0],b:EV.teams[1],pa:Math.round(a/t*100),pb:b?100-Math.round(a/t*100):0,na:a,nb:b});
+    R.push({lb:PJ()?"1ª pareja":LONG("ind1"),top:Object.entries(cnt("ind1")).sort((x,y)=>y[1]-x[1]).slice(0,3).map(([a,v])=>[a,pc(v)])}); }
+  return {n,rows:R}; }
+function favText(F){ if(!F) return []; const L=["",`📊 *FAVORITOS DEL GRUPO* · ${F.n} con picks`];
+  F.rows.forEach(r=>{ if(r.top) L.push(`${r.lb}: ${r.top.map(([a,p])=>`${a} ${p}%`).join(" · ")||"—"}`); else { const fav=r.pa>=r.pb?[r.a,r.pa]:[r.b,r.pb]; L.push(`${r.lb}: ${r.pa===r.pb?`${r.a} vs ${r.b} · 50-50`:`*${fav[0]}* ${fav[1]}%`}`); } });
+  return L; }
+async function favImage(F){ const W=1080,H=1350,c=document.createElement("canvas"); c.width=W; c.height=H; const x=c.getContext("2d");
+  const g=x.createLinearGradient(0,0,0,H); g.addColorStop(0,"#16352a"); g.addColorStop(1,"#0b1c15"); x.fillStyle=g; x.fillRect(0,0,W,H);
+  x.strokeStyle="rgba(201,165,75,.55)"; x.lineWidth=3; x.strokeRect(36,36,W-72,H-72);
+  const T=(t,X,Y,f,col,al)=>{ x.font=f; x.fillStyle=col; x.textAlign=al||"left"; x.fillText(t,X,Y); };
+  const fit=(t,max,f)=>{ x.font=f; let s=String(t); if(x.measureText(s).width<=max) return s; while(x.measureText(s+"…").width>max&&s.length>3) s=s.slice(0,-1); return s+"…"; };
+  T("HERMANOS McGREGOR",W/2,110,"600 28px Inter, Arial","#c9a54b","center");
+  T(fit(EV.name,W-160,"700 64px Georgia, serif"),W/2,190,"700 64px Georgia, serif","#f3ead2","center");
+  T(`Favoritos del grupo · ${F.n} con picks`,W/2,240,"600 30px Inter, Arial","#8fd19e","center");
+  const rows=F.rows, avail=H-300-120, rh=Math.min(96,Math.floor(avail/rows.length)); let y=300;
+  const blue="#3f5fc4", red="#c0453a";
+  rows.forEach(r=>{ T(r.lb.toUpperCase(),90,y+20,"700 20px Inter, Arial","#c9a54b");
+    if(r.top){ let X=90; r.top.forEach(([a,p],i)=>{ const t=`${a} ${p}%`, f=i?"500 24px Inter, Arial":"700 26px Inter, Arial"; x.font=f; const w=Math.min(x.measureText(t).width,(W-200)/Math.max(r.top.length,1)-42)+30;
+        x.strokeStyle="rgba(201,165,75,.6)"; x.lineWidth=2; x.beginPath(); x.roundRect(X,y+32,w,40,20); x.stroke(); T(fit(a,w-30-x.measureText(` ${p}%`).width,f)+` ${p}%`,X+15,y+60,f,"#f3ead2"); X+=w+12; });
+      if(!r.top.length) T("—",90,y+62,"500 24px Inter, Arial","#9fb3a8"); }
+    else { const f="600 24px Inter, Arial", fl=r.pa>=r.pb, fr=r.pb>r.pa;
+      T(fit(r.a,400,f)+(r.na?` ${r.pa}%`:""),90,y+54,(fl?"700 ":"500 ")+"24px Inter, Arial",fl?"#f3ead2":"#b9c6bf");
+      T((r.nb?`${r.pb}% `:"")+fit(r.b,400,f),W-90,y+54,(fr?"700 ":"500 ")+"24px Inter, Arial",fr?"#f3ead2":"#b9c6bf","right");
+      const bw=W-180, wa=(r.na+r.nb)?bw*r.na/(r.na+r.nb):bw/2; x.fillStyle=blue; x.fillRect(90,y+66,wa,10); x.fillStyle=red; x.fillRect(90+wa,y+66,bw-wa,10); }
+    y+=rh; });
+  T("hermanosmcgregor.com",W/2,H-66,"400 24px Inter, Arial","#9fb3a8","center");
+  return await new Promise(r=>c.toBlob(r,"image/png")); }
+async function updateImages(){ const d=shareData(), F=favData(), out=[{name:"resumen",blob:await shareImage(d)}]; if(F&&!d.nres) out.push({name:"favoritos",blob:await favImage(F)}); return {d,imgs:out}; }
+let UPDSEQ=0, UPDC=null;
+async function updatePreview(){ const el=$("#updPrev"); if(!el) return; const seq=++UPDSEQ;
+  try{ const U=await updateImages(); const imgs=U.imgs; if(seq!==UPDSEQ||!document.body.contains(el)) return; UPDC={key:U.d.txt,imgs};
+    el.innerHTML=imgs.map((o,i)=>`<figure><img src="${URL.createObjectURL(o.blob)}" alt="${o.name}" data-updimg="${i}"><figcaption>${i+1}. ${o.name==="resumen"?"Resumen":"Favoritos"} · toca para copiar</figcaption></figure>`).join(""); }
+  catch(e){ el.innerHTML=`<div class="note">No se pudo generar la vista previa.</div>`; } }
+document.addEventListener("click",async e=>{ const i=e.target.dataset?.updimg; if(i==null) return;
+  try{ if(navigator.clipboard&&window.ClipboardItem){ await navigator.clipboard.write([new ClipboardItem({"image/png":UPDC?Promise.resolve(UPDC.imgs[+i].blob):updateImages().then(r=>r.imgs[+i].blob)})]); toast("Imagen copiada ✓ · pégala en WhatsApp"); }
+    else { const r=await updateImages(), a=document.createElement("a"); a.href=URL.createObjectURL(r.imgs[+i].blob); a.download=r.imgs[+i].name+".png"; document.body.appendChild(a); a.click(); a.remove(); toast("Imagen descargada ✓"); } }
+  catch(err){ toast(err.message||"No se pudo copiar"); } });
 async function shareImage(d){
   const W=1080,H=1350,c=document.createElement("canvas"); c.width=W; c.height=H; const x=c.getContext("2d");
   const g=x.createLinearGradient(0,0,0,H); g.addColorStop(0,"#16352a"); g.addColorStop(1,"#0b1c15"); x.fillStyle=g; x.fillRect(0,0,W,H);
   x.strokeStyle="rgba(201,165,75,.55)"; x.lineWidth=3; x.strokeRect(36,36,W-72,H-72);
   const T=(t,X,Y,f,col,al)=>{ x.font=f; x.fillStyle=col; x.textAlign=al||"left"; x.fillText(t,X,Y); };
-  const fit=(t,max,f)=>{ x.font=f; let s=String(t); while(x.measureText(s).width>max&&s.length>3) s=s.slice(0,-2); return s===String(t)?s:s+"…"; };
-  const clean=t=>String(t).replace(/[*_]/g,"");
-  T("HERMANOS McGREGOR",W/2,120,"600 30px Inter, Arial","#c9a54b","center");
-  T(fit(EV.name,W-160,"700 76px Georgia, serif"),W/2,215,"700 76px Georgia, serif","#f3ead2","center");
-  T(clean(d.st).replace(/^[^\wÁÉÍÓÚ]+/,""),W/2,275,"600 32px Inter, Arial",d.fin?"#c9a54b":"#8fd19e","center");
-  let y=330; if(d.marc){ clean(d.marc).split("\n").forEach(l=>{ T(fit(l,W-160,"500 30px Inter, Arial"),W/2,y,"500 30px Inter, Arial","#f3ead2","center"); y+=44; }); }
-  // podio
-  const top=d.rows.slice(0,3), pos=[[W/2,y+40,1],[W/2-320,y+90,2],[W/2+320,y+90,3]];
-  [[top[0],pos[0]],[top[1],pos[1]],[top[2],pos[2]]].forEach(([r,[cx,cy,n]])=>{ if(!r) return; const col=n===1?"#d4af37":n===2?"#c0c7cc":"#cd7f32";
-    x.beginPath(); x.arc(cx,cy+40,n===1?62:52,0,7); x.fillStyle=col; x.fill(); T(String(n),cx,cy+58,"800 50px Georgia, serif","#0b1c15","center");
-    T(fit(r.e.name,280,"700 34px Inter, Arial"),cx,cy+150,"700 34px Inter, Arial","#f3ead2","center");
-    T(r.p+" pts"+(d.nres&&r.prize>0&&r.p>0?" · "+money(r.prize):""),cx,cy+192,"500 28px Inter, Arial","#c9a54b","center"); });
-  y+=330; x.fillStyle="rgba(201,165,75,.35)"; x.fillRect(90,y,W-180,2); y+=56;
-  const nList=d.tor&&d.tor.length?5:11;
-  d.rows.slice(3,nList).forEach(r=>{ T(r.rank+".",120,y,"600 30px Inter, Arial","#c9a54b"); T(fit(r.e.name,620,"500 32px Inter, Arial"),190,y,"500 32px Inter, Arial","#f3ead2"); T(r.p+" pts",W-120,y,"600 30px Inter, Arial","#f3ead2","right"); y+=52; });
-  if(d.rows.length>nList) T(`…y ${d.rows.length-nList} más`,W/2,y+6,"400 26px Inter, Arial","#9fb3a8","center");
-  if(d.tor&&d.tor.length){ y=Math.max(y+40,820); x.fillStyle="rgba(201,165,75,.35)"; x.fillRect(90,y,W-180,2); y+=58;
-    d.tor.forEach((l,i)=>{ const f=i===0?"700 34px Inter, Arial":"500 29px Inter, Arial"; T(fit(clean(l),W-180,f),W/2,y,f,i===0?"#c9a54b":/^💵/.test(l)?"#c9a54b":"#f3ead2","center"); y+=i===0?52:44; }); }
-  T(d.tor&&d.tor.length?`Quiniela ${money(bolsa())} · ${EV.entries.length} apostadores · Total ${money(bolsa()+d.torTot)}`:`Bolsa ${money(bolsa())} · ${EV.entries.length} apostadores`,W/2,H-110,"600 30px Inter, Arial","#c9a54b","center");
+  const fit=(t,max,f)=>{ x.font=f; let s=String(t); if(x.measureText(s).width<=max) return s; while(x.measureText(s+"…").width>max&&s.length>3) s=s.slice(0,-1); return s+"…"; };
+  const clean=t=>String(t).replace(/[*_]/g,"").trim();
+  const rule=y=>{ x.fillStyle="rgba(201,165,75,.35)"; x.fillRect(90,y,W-180,2); };
+  T("HERMANOS McGREGOR",W/2,115,"600 30px Inter, Arial","#c9a54b","center");
+  T(fit(EV.name,W-160,"700 76px Georgia, serif"),W/2,205,"700 76px Georgia, serif","#f3ead2","center");
+  T(fit(clean(d.st).replace(/^[^\wÁÉÍÓÚ]+/,"")+(EV.course?" · "+EV.course:""),W-160,"600 30px Inter, Arial"),W/2,262,"600 30px Inter, Arial",d.fin?"#c9a54b":"#8fd19e","center");
+  let y=310;
+  // bolsas
+  const TB0=TB(), boxes=[["🎯 QUINIELA",money(bolsa()),`${EV.entries.length} apostador${EV.entries.length===1?"":"es"}`]];
+  if(TB0.on) boxes.push(["⚔️ COMPETENCIA",money(d.torTot),`${TB0.nP} de ${(EV.players||[]).length} inscritos`]);
+  const bw=(W-180-(boxes.length-1)*24)/boxes.length;
+  boxes.forEach((b,i)=>{ const bx=90+i*(bw+24); x.strokeStyle="rgba(201,165,75,.6)"; x.lineWidth=2; x.beginPath(); x.roundRect(bx,y,bw,150,22); x.stroke();
+    T(b[0],bx+bw/2,y+42,"700 24px Inter, Arial","#c9a54b","center"); T(b[1],bx+bw/2,y+100,"700 54px Georgia, serif","#f3ead2","center"); T(b[2],bx+bw/2,y+134,"500 22px Inter, Arial","#b9c6bf","center"); });
+  y+=150; if(TB0.on){ T(`Bolsa total ${money(bolsa()+d.torTot)}`,W/2,y+46,"700 30px Inter, Arial","#c9a54b","center"); y+=60; } y+=30;
+  if(d.marc){ clean(d.marc).split("\n").forEach(l=>{ T(fit(l,W-160,"500 30px Inter, Arial"),W/2,y+10,"500 30px Inter, Arial","#f3ead2","center"); y+=44; }); y+=10; }
+  if(TB0.on&&d.tor.length>1){ rule(y); y+=50; d.tor.slice(1,-2).forEach(l=>{ T(fit(clean(l),W-180,"500 28px Inter, Arial"),W/2,y,"500 28px Inter, Arial","#f3ead2","center"); y+=42; }); y+=8; }
+  rule(y); y+=56;
+  if(!d.nres){ // antes de resultados: quién ya está dentro
+    T(`YA ESTÁN EN LA QUINIELA (${d.rows.length})`,W/2,y,"700 26px Inter, Arial","#c9a54b","center"); y+=52;
+    const L=d.rows.map(r=>(r.e.complete?"✓ ":"… ")+r.e.name), cols=L.length>8?2:1, per=Math.ceil(L.length/cols), cw=(W-180)/cols, lh=Math.min(46,Math.floor((H-170-y)/Math.max(per,1)));
+    L.forEach((t,i)=>{ const cx=90+Math.floor(i/per)*cw+cw/2; T(fit(t,cw-20,"500 30px Inter, Arial"),cx,y+(i%per)*lh,"500 30px Inter, Arial",t.startsWith("✓")?"#f3ead2":"#9fb3a8","center"); });
+    if(!L.length) T("Sé el primero en entrar",W/2,y,"500 30px Inter, Arial","#9fb3a8","center");
+  } else { // podio de la quiniela
+    const top=d.rows.slice(0,3), pos=[[W/2,y-10,1],[W/2-320,y+30,2],[W/2+320,y+30,3]];
+    [[top[0],pos[0]],[top[1],pos[1]],[top[2],pos[2]]].forEach(([r,[cx,cy,n]])=>{ if(!r) return; const col=n===1?"#d4af37":n===2?"#c0c7cc":"#cd7f32";
+      x.beginPath(); x.arc(cx,cy+40,n===1?56:46,0,7); x.fillStyle=col; x.fill(); T(String(r.rank),cx,cy+56,"800 44px Georgia, serif","#0b1c15","center");
+      T(fit(r.e.name,280,"700 32px Inter, Arial"),cx,cy+140,"700 32px Inter, Arial","#f3ead2","center");
+      T(r.p+" pts"+(r.prize>0&&r.p>0?" · "+money(r.prize):""),cx,cy+178,"500 26px Inter, Arial","#c9a54b","center"); });
+    y+=230; const nL=Math.max(0,Math.floor((H-150-y)/46));
+    d.rows.slice(3,3+nL).forEach(r=>{ T(r.rank+".",120,y,"600 28px Inter, Arial","#c9a54b"); T(fit(r.e.name,620,"500 30px Inter, Arial"),190,y,"500 30px Inter, Arial","#f3ead2"); T(r.p+" pts",W-120,y,"600 28px Inter, Arial","#f3ead2","right"); y+=46; });
+    if(d.rows.length>3+nL) T(`…y ${d.rows.length-3-nL} más`,W/2,y,"400 24px Inter, Arial","#9fb3a8","center"); }
   T("hermanosmcgregor.com",W/2,H-66,"400 24px Inter, Arial","#9fb3a8","center");
   return await new Promise(r=>c.toBlob(r,"image/png"));
 }
@@ -1086,10 +1146,10 @@ document.addEventListener("click",async e=>{ const id=e.target.id; if(id!=="copy
       else { const blob=await shareImage(d), a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="torneo.png"; document.body.appendChild(a); a.click(); a.remove(); toast("Imagen descargada ✓"); } }
     catch(err){ toast(err.message||"No se pudo copiar"); } finally{ e.target.disabled=false; } return; }
   if(id==="shareBtn"){ e.target.disabled=true;
-    try{ const blob=await shareImage(d), file=new File([blob],`quiniela-${EV.name.replace(/\W+/g,"-").toLowerCase()}.png`,{type:"image/png"});
+    try{ const U=UPDC&&UPDC.key===d.txt?{imgs:UPDC.imgs}:await updateImages(), files=U.imgs.map(o=>new File([o.blob],`${EV.name.replace(/\W+/g,"-").toLowerCase()}-${o.name}.png`,{type:"image/png"})), blob=U.imgs[0].blob, file=files[0];
       let copied=false; try{ await navigator.clipboard.writeText(d.txt); copied=true; }catch{}
-      if(navigator.canShare&&navigator.canShare({files:[file]})){ await navigator.share({files:[file]}); if(!copied){ ta.classList.remove("hide"); ta.select(); } toast(copied?"Imagen enviada ✓ · el texto está copiado: pégalo como mensaje":"Imagen enviada ✓ · copia el texto de abajo"); }
-      else { const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=file.name; document.body.appendChild(a); a.click(); a.remove();
+      if(navigator.canShare&&navigator.canShare({files})){ await navigator.share({files}); if(!copied){ ta.classList.remove("hide"); ta.select(); } toast(copied?"Imagen enviada ✓ · el texto está copiado: pégalo como mensaje":"Imagen enviada ✓ · copia el texto de abajo"); }
+      else { for(const f of files){ const a=document.createElement("a"); a.href=URL.createObjectURL(f); a.download=f.name; document.body.appendChild(a); a.click(); a.remove(); }
         try{ await navigator.clipboard.writeText(d.txt); toast("Imagen descargada y texto copiado ✓"); }catch{ ta.classList.remove("hide"); ta.select(); toast("Imagen descargada · copia el texto de abajo"); } } }
     catch(err){ if(err?.name!=="AbortError") toast(err.message||"No se pudo compartir"); } finally{ e.target.disabled=false; } return; }
   try{ await navigator.clipboard.writeText(d.txt); toast("Texto copiado ✓ · pégalo en WhatsApp"); }catch{ ta.classList.remove("hide"); ta.select(); toast("Copia el texto de abajo"); } });
