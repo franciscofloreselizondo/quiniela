@@ -601,7 +601,7 @@ let NEWS=null;
 function bellSet(n){ for(const id of ["#bellN","#bdgNews"]){ const b=$(id); if(!b) continue; b.textContent=n>9?"9+":String(n); b.classList.toggle("hide",!n); } }
 function homeNews(){ const h=$("#homeNews"); if(!h) return; const L=(NEWS&&NEWS.items||[]).slice(0,3); if(!L.length){ h.innerHTML=""; return; }
   h.innerHTML=`<div class="card" data-nav="news" style="cursor:pointer"><div class="h">📰 Lo último ${NEWS.unread?`<small style="color:#ff8a80">${NEWS.unread} sin leer</small>`:"<small>al día</small>"}</div>${L.map(n=>`<div class="nw ${n.new?"new":""}" style="grid-template-columns:30px 1fr"><i>${esc(n.icon)}</i><div><b>${esc(n.title)}</b><div class="s">${newsAgo(n.at)}</div></div></div>`).join("")}<div class="note" style="margin-top:6px">Ver todas ›</div></div>`; }
-async function newsTick(){ if(!TOKEN||!ME) return; try{ NEWS=await rpc("n_list",{p_token:TOKEN}); bellSet(NEWS.unread); if(VIEW==="home") homeNews(); }catch{} }
+async function newsTick(){ if(!TOKEN||!ME||ME.guest){ const h=$("#homeNews"); if(h) h.innerHTML=""; return; } try{ NEWS=await rpc("n_list",{p_token:TOKEN}); bellSet(NEWS.unread); if(VIEW==="home") homeNews(); }catch{} }
 function newsAgo(t){ const d=(Date.now()-new Date(t))/6e4; if(d<1) return "ahora"; if(d<60) return `hace ${Math.round(d)} min`; if(d<1440) return `hace ${Math.round(d/60)} h`; if(d<2880) return "ayer";
   return new Date(t).toLocaleDateString("es-MX",{day:"numeric",month:"short"}); }
 async function loadNews(){ try{ NEWS=await rpc("n_list",{p_token:TOKEN}); }catch(e){ $("#newsList").innerHTML=`<div class="note">${esc(e.message)}</div>`; return; }
@@ -627,12 +627,13 @@ function show(v){
   VIEW=v; document.querySelectorAll(".view").forEach(s=>s.classList.toggle("on",s.id==="v-"+v));
   const nv = v==="event"?"bets":v;
   document.querySelectorAll("nav.main button").forEach(b=>b.classList.toggle("on",b.dataset.nav===nv));
-  $("#mainNav").classList.toggle("hide",v==="login"); $("#whoBtn").classList.toggle("hide",v==="login"||!ME); $("#bellBtn").classList.toggle("hide",v==="login"||!ME); $("#logoutBtn").classList.toggle("hide",v==="login"||!ME);
+  $("#mainNav").classList.toggle("hide",v==="login"); $("#whoBtn").classList.toggle("hide",v==="login"||!ME); $("#bellBtn").classList.toggle("hide",v==="login"||!ME||!!ME.guest); $("#logoutBtn").classList.toggle("hide",v==="login"||!ME);
   $("#saveBar").classList.toggle("hide",!(v==="event"&&ETAB==="picks"&&target&&!picksDisabled()));
   window.scrollTo(0,0);
 }
 function go(v){
   if(!ME){ show("login"); return; }
+  if(ME.guest&&!GUEST_OK.has(v)) v="home";
   if(v==="bets"){ history.replaceState(null,"",location.pathname); loadEvents(); }
   if(v==="hist") loadHist();
   if(v==="members") loadMembers();
@@ -700,11 +701,16 @@ $("#logoutBtn").onclick=()=>{ if(confirm("¿Cerrar sesión?")) logout(false); };
 $("#whoBtn").onclick=()=>go("profile");
 const ini=n=>String(n||"?").trim().split(/\s+/).map(w=>w[0]).slice(0,2).join("").toUpperCase();
 function avatarHTML(m,cls){ return m&&m.avatar?`<img src="${m.avatar}" alt="" ${cls?`class="${cls}"`:""}>`:`<span class="ini ${cls||""}">${esc(ini(m&&(m.nickname||m.name)))}</span>`; }
-function renderWho(){ $("#whoBtn").innerHTML=avatarHTML(ME)+`<span>${esc(ME.nickname||ME.name)}</span>`; $("#navBoard").classList.toggle("hide",!ME.board); $("#tileBoard").classList.toggle("hide",!ME.board); $("#navUsage").classList.toggle("hide",!ME.superadmin); }
+const GUEST_OK=new Set(["home","bets","event","honor","social","profile","login"]);
+function renderWho(){ $("#whoBtn").innerHTML=avatarHTML(ME)+`<span>${esc(ME.nickname||ME.name)}</span>`;
+  document.querySelectorAll("nav.main [data-nav], .tiles [data-nav]").forEach(b=>{ if(b.id==="navBoard"||b.id==="tileBoard"||b.id==="navUsage") return; b.classList.toggle("hide",!!ME.guest&&!GUEST_OK.has(b.dataset.nav)); });
+  $("#navBoard").classList.toggle("hide",!ME.board||!!ME.guest); $("#tileBoard").classList.toggle("hide",!ME.board||!!ME.guest); $("#navUsage").classList.toggle("hide",!ME.superadmin);
+  document.body.classList.toggle("guest",!!ME.guest); }
 /* etiquetas del perfil: cargo, board, fundador, permisos y datos de juego */
 function memTags(m,full){ const t=[], L={sabado:"LIGA SÁB",domingo:"LIGA DOM",ambas:"LIGA SÁB+DOM"};
   if(["presidente","tesorero","secretario"].includes(m.role)) t.push(`<span class="badge g">${ROLES[m.role].toUpperCase()}</span>`);
   if(m.board) t.push(`<span class="badge" title="Vota en el board y puede sumar socios">BOARD</span>`);
+  if(m.guest) t.push(`<span class="badge i" title="Invitado: solo ve Casa Club, Apuestas, Honor y Redes">INVITADO</span>`);
   if(m.fundador) t.push(`<span class="badge f" title="Socio fundador">★ FUNDADOR</span>`);
   if(m.liga_status) t.push(m.liga_status==="en_liga"?`<span class="badge p" title="Pagó la liga de esta temporada">EN LIGA</span>`:m.liga_status==="no_juega"?`<span class="badge i" title="No juega la liga esta temporada">FUERA DE LIGA</span>`:`<span class="badge i" title="Aún no paga la liga de esta temporada">LIGA PENDIENTE</span>`);
   if(m.superadmin) t.push(`<span class="badge p" title="Acceso total a la app">SUPERADMIN</span>`);
@@ -725,7 +731,7 @@ async function afterLogin(){
 /* ===== home ===== */
 async function renderHome(){ newsTick();
   $("#hiName").textContent="Bienvenido, "+(ME.nickname||ME.name);
-  $("#hiRole").textContent=[ROLES[ME.role], ME.fundador?"Fundador":null, ME.superadmin?"Administrador":ME.bet_admin?"Admin de apuestas":null].filter(Boolean).join(" · ");
+  $("#hiRole").textContent=ME.guest?"Invitado":[ROLES[ME.role], ME.fundador?"Fundador":null, ME.superadmin?"Administrador":ME.bet_admin?"Admin de apuestas":null].filter(Boolean).join(" · ");
   rpc("c_home_stats",{p_token:TOKEN}).then(k=>{ const n=x=>Number(x||0).toLocaleString("es-MX");
     const bp=+k.board_pending||0; $("#bdgBoard").textContent=bp; $("#bdgBoard").classList.toggle("hide",!bp); $("#navBoard").textContent=bp?`Board (${bp})`:"Board";
     $("#homeKpis").innerHTML=`<div class="kpi"><b>${n(k.hermanos)}</b><span>Hermanos</span></div>${k.torneos_year!=null?`<div class="kpi"><b>${n(k.torneos_year)}</b><span>Torneos ${k.asist_year}</span>${kDelta(k.torneos_year,k.torneos_prev,"",k.asist_year-1)}</div>`:`<div class="kpi"><b>${n(k.torneos)}</b><span>Torneos jugados</span></div>`}
@@ -775,19 +781,16 @@ function torneoPrizes(){ const T=TB(), PC=pairCalc(), R=EV.results||{}, out={tea
   if(wt>=0){ const w=(EV.players||[]).filter(p=>p.team===wt&&T.opt.has(p.n)).map(p=>p.n); out.team={name:R.team,names:w,each:w.length?T.eqPot/w.length:0}; }
   const all=PC.P.length&&PC.P.every(x=>x.tot!=null);
   if(all){ const el=PC.ranked.filter(x=>x.ps.some(p=>T.opt.has(p.n))).slice(0,3).map(x=>({x,names:x.ps.filter(p=>T.opt.has(p.n)).map(p=>p.n)}));
-    const tot=[0,0,0]; [2,1].forEach(i=>{ if(el[i]) tot[i]=podEach(T,i,el[i].x.ps.length)*el[i].names.length; }); if(el[0]) tot[0]=Math.max(T.poPot-tot[1]-tot[2],0);
+    const tot=[0,0,0]; if(el[2]) tot[2]=T.po*el[2].names.length; if(el[1]) tot[1]=2*T.po*el[1].names.length; if(el[0]) tot[0]=Math.max(T.poPot-tot[1]-tot[2],0);
     out.pods=el.map((o,i)=>({...o,pos:i+1,total:tot[i],each:tot[i]/(o.names.length||1)})); }
   return out; }
-/* podio de parejas: 1ª 60% · 2ª 25% · 3ª 15% de la bolsa; por jugador inscrito, redondeado a $100; lo que sobre (redondeo o compañeros no inscritos) va a la 1ª */
-const PODIO_PCT=[.60,.25,.15];
-function podEach(T,i,ps){ return Math.round(T.poPot*PODIO_PCT[i]/(ps||2)/100)*100; }
-function podioPrizes(T){ const p3=2*podEach(T,2), p2=2*podEach(T,1); return [Math.max(T.poPot-p2-p3,0),p2,p3]; }
+function podioPrizes(T){ return [Math.max(T.poPot-6*T.po,0),4*T.po,2*T.po]; }
 function torneoCard(){ const T=TB(); if(!T.on) return ""; const x=EV.aportacion, n=EV.entries.length, pq=prizes();
   return `<div class="card"><div class="h">¿Cómo funciona la bolsa? <small>entras a una o a las dos</small></div>
   <table class="ht" id="bolsaTbl"><tr><th>Bolsa</th><th>Cuota</th><th>Total</th><th>Premios</th></tr>
   <tr><td>🎯 <b>Quiniela</b><div class="note">Individual · más puntos con tus picks</div></td><td>${money(x)}</td><td>${money(x*n)}<div class="note">${n} inscrito${n===1?"":"s"}</div></td><td style="text-align:left">1º el resto <span class="note">(hoy ${money(pq[0])})</span><br>2º ${money(pq[1]||0)} <span class="note">(doble)</span><br>3º ${money(pq[2]||0)} <span class="note">(reintegro)</span></td></tr>
   ${T.eq?`<tr><td>⚔️ <b>${esc(EV.teams[0])} vs ${esc(EV.teams[1])}</b><div class="note">Gana el equipo que gane más partidos: ${EV.matches.length} partidos (${EV.matches.length/2||0} por día), cada uno vale 1 punto. Si quedan ${half(EV.matches.length/2)}–${half(EV.matches.length/2)}: gana el de menos golpes netos totales</div></td><td>${money(T.eq)}</td><td>${money(T.eqPot)}<div class="note">${T.nP} de ${T.nPl} jugadores</div></td><td style="text-align:left">Se reparte entre los inscritos del equipo ganador <span class="note">(≈ el doble de su cuota)</span></td></tr>`:""}
-  ${T.po?`<tr><td>🏆 <b>Podio de parejas</b><div class="note">Best ball net, suma de los 2 días</div></td><td>${money(T.po)}</td><td>${money(T.poPot)}</td><td style="text-align:left">1ª 60% <span class="note">(hoy ${money(podioPrizes(T)[0]/2)} c/u)</span><br>2ª 25% <span class="note">(hoy ${money(podEach(T,1))} c/u)</span><br>3ª 15% <span class="note">(hoy ${money(podEach(T,2))} c/u)</span><div class="note">Cobra cada jugador inscrito de la pareja</div></td></tr>`:""}
+  ${T.po?`<tr><td>🏆 <b>Podio de parejas</b><div class="note">Best ball net, suma de los 2 días</div></td><td>${money(T.po)}</td><td>${money(T.poPot)}</td><td style="text-align:left">Por jugador inscrito:<br>3ª ${money(T.po)} <span class="note">(reintegro)</span><br>2ª ${money(2*T.po)} <span class="note">(doble)</span><br>1ª el resto de la bolsa</td></tr>`:""}
   <tr><td><b>Ambas</b></td><td><b>${money(x+T.eq+T.po)}</b></td><td><b>${money(x*n+T.eqPot+T.poPot)}</b></td><td></td></tr></table>
   <div class="note" style="margin-top:8px">🎯 La quiniela es para cualquier socio, juegue o no. ⚔️🏆 La apuesta del torneo (${money(T.eq+T.po)}) es solo para jugadores y solo cobran quienes se inscriban a ella. Sin empates en el podio: desempata el net del compañero y luego el HCP combinado.</div></div>`; }
 function inscripcionCard(){ const T=TB(); if(!T.on) return ""; const mine=myEntry(), open=!EV.closed&&!locked(), mePl=(EV.players||[]).find(p=>p.member_id===ME.id), inT=mePl&&T.opt.has(mePl.n), picks=mine&&Object.keys(mine.picks||{}).length, tPaid=mePl&&(EV.torneo_paid||[]).includes(mePl.n);
@@ -1301,7 +1304,7 @@ document.addEventListener("click",async e=>{
     $("#fBody").classList.remove("hide"); F.querySelector(".fs-stroke").classList.toggle("hide",fb.dataset.fmt!=="stroke"); F.querySelector(".fs-ryder").classList.toggle("hide",fb.dataset.fmt!=="ryder"); F.querySelector(".fs-parejas").classList.toggle("hide",fb.dataset.fmt!=="parejas");
     if(fb.dataset.fmt==="stroke") refreshPlayers(); return; }
   if(t.id==="fAddPBtn"){ syncPlayerHcp(); addPlayerMember($("#fAddP").value); refreshPlayers(); return; }
-  if(t.id==="fAddAll"){ syncPlayerHcp(); MEMBERS.filter(m=>m.active).forEach(m=>addPlayerMember(m.id)); refreshPlayers(); return; }
+  if(t.id==="fAddAll"){ syncPlayerHcp(); MEMBERS.filter(m=>m.active&&!m.guest).forEach(m=>addPlayerMember(m.id)); refreshPlayers(); return; }
   if(t.id==="fAddPxBtn"){ const n=$("#fAddPx").value.trim(); if(!n) return; if(FPLAYERS.some(x=>x.n.toLowerCase()===n.toLowerCase())){ toast("Ya está en la lista"); return; } syncPlayerHcp(); FPLAYERS.push({n,h:null,member_id:null}); refreshPlayers(); return; }
   if(t.dataset.delp!=null){ syncPlayerHcp(); FPLAYERS.splice(+t.dataset.delp,1); refreshPlayers(); return; }
   if(t.id==="addPair"){ $("#fPairs").insertAdjacentHTML("beforeend",pairRow(null,$("#fPairs").children.length,false,[$("#fQ1").value||"Equipo 1",$("#fQ2").value||"Equipo 2"])); refreshPM(); return; }
@@ -1353,13 +1356,13 @@ $("#newEvBtn").onclick=()=>{ $("#evNext").closest(".card").insertAdjacentHTML("b
 let MEMK="all";
 const MEMF=[["all","Todos",m=>true],["board","Board",m=>m.board],["cargos","Cargos",m=>["presidente","tesorero","secretario"].includes(m.role)],["fund","Fundadores",m=>m.fundador],
   ["liga","En liga",m=>m.liga_status==="en_liga"],["fuera","Fuera de liga",m=>m.liga_status==="no_juega"],["pend","Liga pendiente",m=>m.liga_status==="pendiente"],
-  ["torneos","Abren torneos",m=>m.superadmin||m.bet_admin],["admin","Admins",m=>m.superadmin||m.role==="presidente"||m.role==="secretario"],["inact","Inactivos",m=>m.active===false]];
+  ["torneos","Abren torneos",m=>m.superadmin||m.bet_admin],["admin","Admins",m=>m.superadmin||m.role==="presidente"||m.role==="secretario"],["guest","Invitados",m=>m.guest],["inact","Inactivos",m=>m.active===false]];
 document.addEventListener("click",e=>{ const b=e.target.closest("[data-memf]"); if(!b) return; MEMK=b.dataset.memf; renderMembers(); });
 async function loadMembers(){
   try{ MEMBERS=await rpc("c_members_list",{p_token:TOKEN}); }catch(e){ toast(e.message); return; }
   loadRequests(); renderMembers(); }
 function renderMembers(){
-  const act=MEMBERS.filter(m=>m.active);
+  const act=MEMBERS.filter(m=>m.active&&!m.guest);
   $("#memCount").textContent=`${act.length} socios activos`;
   $("#newMemBtn").classList.toggle("hide",!(isAdminMembers()||ME.board));
   const rk=m=>m.role==="presidente"?1:m.role==="tesorero"?2:m.role==="secretario"?3:m.board?4:5;
@@ -1367,7 +1370,7 @@ function renderMembers(){
   $("#memFilt").innerHTML=F.map(([k,n,f])=>`<button type="button" data-memf="${k}" class="${k===MEMK?"on":""}">${n} <span style="opacity:.7">${MEMBERS.filter(f).length}</span></button>`).join("");
   const fn=MEMF.find(x=>x[0]===MEMK)[2];
   const L=[...MEMBERS].filter(fn).sort((x,y)=>rk(x)-rk(y)||x.name.localeCompare(y.name));
-  $("#memCount").textContent=MEMK==="all"?`${act.length} socios activos`:`${L.length} de ${MEMBERS.length} socios · ${MEMF.find(x=>x[0]===MEMK)[1]}`;
+  $("#memCount").textContent=MEMK==="all"?`${act.length} socios activos${MEMBERS.some(m=>m.guest)?` · ${MEMBERS.filter(m=>m.guest&&m.active).length} invitados`:""}`:`${L.length} de ${MEMBERS.length} socios · ${MEMF.find(x=>x[0]===MEMK)[1]}`;
   $("#memList").innerHTML=(L.length?"":`<div class="note">Nadie en este filtro.</div>`)+L.map(m=>`<div class="mem" ${(isAdminMembers()||canDelMembers())?`data-medit="${m.id}" style="cursor:pointer"`:""}><div><div class="n">${m.avatar?`<img class="mav" src="${m.avatar}" alt="">`:""}${esc(m.name)}${m.nickname?` <span style="color:var(--gold2);font-weight:500">“${esc(m.nickname)}”</span>`:""}${m.id===ME.id?'<span class="me">TÚ</span>':""}</div>
     <div class="s">${!m.active?"inactivo":""}${isAdminMembers()&&m.email?(m.active?"":" · ")+esc(m.email):""}</div></div>
     <div class="mtags">${memTags(m)}</div></div>`).join("");
@@ -1382,6 +1385,7 @@ function memberForm(m){
     <div class="row2"><div><label class="f">HCP</label><input class="t" id="mHcp" inputmode="decimal" value="${esc(m.hcp??"")}"></div>
     ${isAdminMembers()?`<div><label class="f">Fundador</label><select class="t" id="mFund"><option value="false">No</option><option value="true" ${m.fundador?"selected":""}>Sí</option></select></div>`:"<div></div>"}</div>
     ${isAdminMembers()?`<label class="f">Board (vota cambios al Código)</label><select class="t" id="mBoard"><option value="false">No</option><option value="true" ${m.board?"selected":""}>Sí</option></select>`:`<div class="note" style="margin-top:8px">Como miembro del board das de alta al nuevo hermano; roles y permisos los asigna el Presidente o el Secretario.</div>`}
+    ${isAdminMembers()&&!m.superadmin?`<label class="f">Perfil</label><select class="t" id="mGuest"><option value="false">Socio</option><option value="true" ${m.guest?"selected":""}>Invitado · solo Casa Club, Apuestas, Honor y Redes</option></select>`:""}
     ${m.id&&!m.superadmin?`<label class="f">Estatus</label><select class="t" id="mAct"><option value="true">Activo</option><option value="false" ${m.active?"":"selected"}>Inactivo</option></select>`:""}
     ${ME.superadmin&&m.id&&!m.superadmin?`<label class="f">Admin de apuestas (puede abrir torneos)</label><select class="t" id="mBet"><option value="false">No</option><option value="true" ${m.bet_admin?"selected":""}>Sí</option></select>`:""}
     ${isAdminMembers()||(ME.board&&!m.id)?`<button class="btn gold w" id="mSave" data-id="${m.id||""}" style="margin-top:14px">${m.id?"Guardar":"Dar de alta"}</button>`:""}
@@ -1399,6 +1403,8 @@ document.addEventListener("click",async e=>{
     e.target.disabled=true;
     try{ MEMBERS=await rpc("c_admin_save_member",{p_token:TOKEN,p_data:d});
       if($("#mBet")&&id&&(($("#mBet").value==="true")!==!!prev?.bet_admin)) MEMBERS=await rpc("c_admin_set_bet_admin",{p_token:TOKEN,p_id:id,p_on:$("#mBet").value==="true"});
+      if($("#mGuest")&&(($("#mGuest").value==="true")!==!!prev?.guest)){ const nid=id||(MEMBERS.find(x=>d.email&&(x.email||"").toLowerCase()===d.email.toLowerCase())||MEMBERS.find(x=>x.name===d.name)||{}).id;
+        if(nid) MEMBERS=await rpc("c_admin_set_guest",{p_token:TOKEN,p_id:nid,p_on:$("#mGuest").value==="true"}); }
       toast("Socio guardado ✓"); $("#memForm").classList.add("hide"); loadMembers();
       if(id===ME.id){ ME=await rpc("c_me",{p_token:TOKEN}); renderWho(); } }
     catch(err){ toast(err.message); e.target.disabled=false; } }
@@ -1665,7 +1671,7 @@ function outFormHTML(o){
   const liga=$("#attLiga").value, fees=ATT.fees;
   o=o||{date:new Date().toISOString().slice(0,10),tipo:"regular",label:"",fee:fees.regular,guests:0,notes:"",marks:{}};
   OUTF={id:o.id||null,marks:Object.fromEntries(Object.entries(o.marks||{}).map(([k,v])=>[k,v.s]))};
-  const lg=m=>m.liga===liga||m.liga==="ambas"; const mem=MEMBERS.filter(m=>m.active||OUTF.marks[m.id]).sort((a,b)=>(lg(b)-lg(a))||a.name.localeCompare(b.name));
+  const lg=m=>m.liga===liga||m.liga==="ambas"; const mem=MEMBERS.filter(m=>(m.active&&!m.guest)||OUTF.marks[m.id]).sort((a,b)=>(lg(b)-lg(a))||a.name.localeCompare(b.name));
   return `<div class="h">${o.id?"Editar salida":"Registrar salida"} <small>${liga==="sabado"?"Sabatina":"Dominical"}</small></div>
     <div class="row2"><div><label class="f">Fecha</label><input class="t" id="oDate" type="date" value="${esc(o.date)}"></div>
     <div><label class="f">Tipo</label><select class="t" id="oTipo">${Object.entries(TIPOS).map(([k,l])=>`<option value="${k}" ${o.tipo===k?"selected":""}>${l}</option>`).join("")}</select></div></div>
