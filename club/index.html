@@ -105,6 +105,12 @@ body.guest .agseg{display:none}
 .ptbl td:first-child,.ptbl th:first-child{text-align:left;color:var(--cream);font-weight:600;position:sticky;left:0;background:var(--g2,#1f3b30)}.ptbl td.no{color:var(--mute)}.ptbl td.ed{color:var(--ok)}.ptbl td.ad{color:var(--cream)}
 .prow{display:flex;gap:10px;padding:7px 0;border-top:1px solid rgba(164,161,106,.18);font-size:14px}.prow b{min-width:92px;color:var(--gold2)}.prow span{color:var(--cream)}
 .updPrev{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}.updPrev figure{margin:0}.updPrev img{width:100%;border-radius:10px;border:1px solid var(--line);cursor:pointer;display:block}.updPrev figcaption{font-size:11.5px;color:var(--mute);margin-top:4px;text-align:center}
+.ctbl .ch,.ctbl .cr{display:grid;grid-template-columns:1.6fr .8fr .8fr .9fr;gap:6px;align-items:center;padding:8px 0;border-top:1px solid rgba(164,161,106,.18);font-size:13px;text-align:right}
+.ctbl .ch{border-top:0;font:600 10.5px Inter;letter-spacing:.05em;color:var(--gold2);text-transform:uppercase}.ctbl .ch span:first-child,.ctbl .cn{text-align:left}
+.ctbl .cn{color:var(--cream);font-size:14px}.ctbl .cn small{display:block;font-size:11px;color:var(--mute)}.ctbl .cr.mine{background:rgba(164,161,106,.1);border-radius:8px;padding-left:6px;padding-right:6px;margin:0 -6px}.ctbl .cr span{color:var(--cream)}
+.qnote,.qoff{margin-top:8px;padding:8px 10px;border:1px dashed var(--line);border-radius:10px}.qoff{color:var(--bad);border-color:rgba(220,120,120,.4)}
+.ctbl b.up{color:var(--ok)}.ctbl b.dn{color:var(--bad)}
+.xr{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;padding:9px 0;border-top:1px solid rgba(164,161,106,.18);font-size:14px}.xr:first-of-type{border-top:0}.xr.ok>span:first-child{opacity:.6}
 .psum{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}.psum div{border:1px solid rgba(164,161,106,.25);border-radius:12px;padding:8px 10px;font-size:12.5px;color:var(--mute)}.psum b{display:block;color:var(--cream);font-size:14px}.psum span{display:block}
 .ptab .ph,.ptab .pr{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:6px;align-items:center;padding:7px 0;border-top:1px solid rgba(164,161,106,.18)}
 .ptab .ph{border-top:0;font:600 11px Inter;letter-spacing:.05em;color:var(--gold2);text-transform:uppercase}.ptab .pn{font-size:14px;color:var(--cream)}
@@ -348,6 +354,7 @@ nav.main button{flex:0 0 auto;padding:8px 9px;font-size:12.5px}
 /* navegación tipo app: barra abajo + menú "Más" */
 nav.main{display:none!important}
 main{padding-bottom:110px}
+.bar #barLogo,.bar .t{cursor:pointer}
 .bnav{position:fixed;left:0;right:0;bottom:0;z-index:30;background:#082620;border-top:1px solid var(--line);padding:6px 4px calc(8px + env(safe-area-inset-bottom))}
 .bnav .in{max-width:680px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr)}
 .bnav button{background:none;border:0;color:var(--mute);font:600 10.5px Inter;padding:4px 0;position:relative;cursor:pointer}
@@ -365,6 +372,7 @@ main{padding-bottom:110px}
 .hello{padding:4px 2px 4px}.hello h1{font:700 30px/1.1 "Cormorant Garamond",serif;margin:2px 0;color:var(--cream)}.hello .sub{font-size:13px;color:var(--mute)}
 .todo{display:flex;align-items:center;gap:12px;background:var(--g3);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin-bottom:8px;cursor:pointer;width:100%;text-align:left;color:var(--cream);font:inherit}
 .todo i{font-style:normal;font-size:22px}.todo b{display:block;font-size:14.5px}.todo span{font-size:12px;color:var(--mute)}.todo .go{margin-left:auto;background:var(--cream);color:var(--g);font:700 12px Inter;padding:7px 12px;border-radius:999px;white-space:nowrap}
+.todo.info{background:transparent}.todo.info .go{background:transparent;color:var(--gold2);border:1px solid var(--line)}
 .todo.warn{border-color:rgba(229,154,143,.6)}.todo.warn span{color:var(--bad)}.todo.done{cursor:default;justify-content:center;color:var(--ok);font-weight:600}
 .hsec{font:600 11px Inter;letter-spacing:.14em;color:var(--gold2);text-transform:uppercase;margin:18px 2px 8px}
 #v-home .hero,#v-home .tiles{display:none}
@@ -662,17 +670,24 @@ async function homeTodo(){ const el=$("#homeTodo"); if(!el||!ME) return; const L
     const nk=(e.format==="stroke"||e.format==="individual")?3:e.matches.length+2, pl=(e.players||[]).find(x=>x.member_id===ME.id), B=e.bolsas||{}, comp=(+B.equipos||0)+(+B.podio||0);
     if(!e.joined) L.push({i:"🎯",t:`Entra a la quiniela · ${e.name}`,s:`$${e.aportacion} · cierra en ${left(e.lock_at)}`,go:"Entrar",ev:e.id});
     else if((e.my_n||0)<nk) L.push({i:"🎯",t:`Haz tus picks · ${e.name}`,s:`Llevas ${e.my_n||0} de ${nk} · cierran en ${left(e.lock_at)}`,go:"Picks",ev:e.id});
-    if(pl&&comp>0){ const inT=(e.torneo||[]).includes(pl.n), paid=(e.torneo_paid||[]).includes(pl.n);
-      if(!inT) L.push({i:"⚔️",t:`Inscríbete a la competencia · ${e.name}`,s:`${money(comp)} · solo jugadores`,go:"Ver",ev:e.id});
-      else if(!paid) L.push({i:"💵",t:`Competencia · ${money(comp)}`,s:"Pago pendiente",go:"Ver",ev:e.id,warn:1}); } });
+    const inT=pl&&comp>0&&(e.torneo||[]).includes(pl.n);
+    if(pl&&comp>0&&!inT) L.push({i:"⚔️",t:`Inscríbete a la competencia · ${e.name}`,s:`${money(comp)} · solo jugadores`,go:"Ver",ev:e.id});
+    if(e.joined||inT){ const parts=[e.joined?`quiniela ${money(e.aportacion)}`:null,inT?`competencia ${money(comp)}`:null].filter(Boolean), tot=(e.joined?+e.aportacion:0)+(inT?comp:0);
+      L.push({i:"🗓️",t:`${e.name}${e.event_date?" · "+new Date(e.event_date+"T12:00:00").toLocaleDateString("es-MX",{day:"numeric",month:"short"}):""}`,s:`Al terminar pagas lo que te toque: ${parts.join(" + ")}${parts.length>1?" = "+money(tot):""}`,go:"Ver",ev:e.id,info:1}); } });
+  // torneos cerrados (últimas 3 semanas): lo que pagas o te deben
+  const lim=Date.now()-21*864e5, closed=(EVENTS||[]).filter(e=>e.closed&&!e.solo_historico&&(!e.event_date||e.event_date>="2026-11-14")&&new Date((e.event_date||e.lock_at)+(e.event_date?"T12:00:00":""))>lim).slice(0,8);
+  for(const ce of closed){ try{ const full=await rpc("b_event_get",{p_token:TOKEN,p_event:ce.id}), keep=EV; EV=full; let C; try{ C=cuentas(); } finally{ EV=keep; }
+      const pay=C.X.filter(x=>x.payer===C.me&&!x.paid), get=C.X.filter(x=>x.payee===C.me&&!x.paid);
+      if(pay.length) L.push({i:"💸",t:`Pagas ${money(pay.reduce((a,x)=>a+x.amount,0))} · ${ce.name}`,s:pay.map(x=>`${money(x.amount)} a ${x.payee}`).join(" · "),go:"Cuentas",ev:ce.id,cu:1,warn:1});
+      if(get.length) L.push({i:"💰",t:`Te deben ${money(get.reduce((a,x)=>a+x.amount,0))} · ${ce.name}`,s:get.map(x=>`${x.payer} ${money(x.amount)}`).join(" · "),go:"Cuentas",ev:ce.id,cu:1}); }catch{} }
   const bp=+($("#bdgBoard").textContent||0); if(bp&&isBoard(ME)) L.push({i:"🗳️",t:`${bp} votación${bp>1?"es":""} pendiente${bp>1?"s":""}`,s:"Board · cambios al Código",go:"Votar",nav:"board"});
   if(!ME.guest){ try{ const z=n=>String(n).padStart(2,"0"), d0=new Date(); const days=[0,1,2,3,4,5,6].map(i=>{ const d=new Date(d0); d.setDate(d.getDate()+i); return d; }).filter(d=>d.getDay()===6||d.getDay()===0).slice(0,2);
       const me=[ME.nickname,ME.name].filter(Boolean).map(x=>x.toLowerCase());
       for(const d of days){ const ds=`${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}`, T=await rpc("s_get",{p_token:TOKEN,p_date:ds}); if(!T||!T.saved) continue;
         (T.slots||[]).forEach(sl=>(sl.carts||[]).forEach(c=>{ const ps=(c.p||[]).map(x=>String(x).toLowerCase()); if(ps.some(x=>me.includes(x))||(c.owner&&me.includes(String(c.owner).toLowerCase()))){
           const otros=(c.p||[]).filter(x=>!me.includes(String(x).toLowerCase())); L.push({i:"🛺",t:`${d.toLocaleDateString("es-MX",{weekday:"long"}).replace(/^./,m=>m.toUpperCase())} ${sl.t} · Hoyo ${sl.hoyo||10}`,s:c.owner&&c.owner!=="Trolley"?`Carrito de ${c.owner}${otros.length?" con "+otros.join(", "):""}`:otros.length?"Con "+otros.join(", "):"Tu salida",go:"Ver",nav:"tee",date:ds}); } })); } }catch{} }
-  L.sort((a,b)=>(a.go==="Entrar")-(b.go==="Entrar")); el.innerHTML=L.length?L.slice(0,4).map(x=>`<button class="todo ${x.warn?"warn":""}" ${x.ev?`data-todoev="${x.ev}"`:x.date?`data-todotee="${x.date}"`:`data-nav="${x.nav}"`}><i>${x.i}</i><div><b>${esc(x.t)}</b><span>${esc(x.s)}</span></div><span class="go">${x.go}</span></button>`).join(""):`<div class="todo done">✓ Estás al día</div>`; }
-document.addEventListener("click",e=>{ const a=e.target.closest("[data-todoev]"); if(a){ openEvent(a.dataset.todoev); return; } const b=e.target.closest("[data-todotee]"); if(b){ $("#teeDate").value=b.dataset.todotee; go("tee"); } });
+  const rk=x=>x.cu?0:x.info?3:x.go==="Entrar"?2:1; L.sort((a,b)=>rk(a)-rk(b)); el.innerHTML=L.length?L.slice(0,4).map(x=>`<button class="todo ${x.warn?"warn":""} ${x.info?"info":""}" ${x.ev?`data-todoev="${x.ev}" ${x.cu?"data-todocu=\"1\"":""}`:x.date?`data-todotee="${x.date}"`:`data-nav="${x.nav}"`}><i>${x.i}</i><div><b>${esc(x.t)}</b><span>${esc(x.s)}</span></div><span class="go">${x.go}</span></button>`).join(""):`<div class="todo done">✓ Estás al día</div>`; }
+document.addEventListener("click",async e=>{ const a=e.target.closest("[data-todoev]"); if(a){ if(a.dataset.todocu) ETAB="cuentas"; await openEvent(a.dataset.todoev); if(a.dataset.todocu) setETab("cuentas"); return; } const b=e.target.closest("[data-todotee]"); if(b){ $("#teeDate").value=b.dataset.todotee; go("tee"); } });
 
 /* ===== noticias ===== */
 let NEWS=null;
@@ -688,6 +703,7 @@ async function loadNews(){ try{ NEWS=await rpc("n_list",{p_token:TOKEN}); }catch
     <div>${n.link?`<button class="btn sm ghost" data-nlink="${esc(n.link)}">Ver</button>`:""}${NEWS.can_post?`<button class="btn sm ghost" data-ndel="${n.id}" title="Borrar" style="margin-left:4px">✕</button>`:""}</div></div>`).join(""):`<div class="note">Aún no hay noticias.</div>`;
   if(NEWS.unread){ rpc("n_seen",{p_token:TOKEN}).then(()=>bellSet(0)).catch(()=>{}); } else bellSet(0); }
 $("#bellBtn").onclick=()=>go("news");
+document.querySelector(".top .bar").addEventListener("click",e=>{ if(!ME) return; if(e.target.closest("#barLogo, .bar .t")) go("home"); });
 document.addEventListener("click",async e=>{ const t=e.target;
   if(t.dataset.nlink){ const l=t.dataset.nlink; if(l.startsWith("#e=")) openEvent(l.slice(3)); else if(l.startsWith("tee:")){ $("#teeDate").value=l.slice(4); go("tee"); } else go(l); return; }
   if(t.dataset.ndel){ if(!confirm("¿Borrar esta noticia?")) return; try{ await rpc("n_delete",{p_token:TOKEN,p_news:+t.dataset.ndel}); loadNews(); }catch(err){ toast(err.message); } return; }
@@ -858,13 +874,56 @@ function FIRSTK(){ return ST()?"p1":"ind1"; }
 function PJ(e){ return (e||EV)?.format==="parejas"; }
 function TB(){ const B=EV.bolsas||{}, opt=new Set(EV.torneo||[]), nP=opt.size, eq=+B.equipos||0, po=+B.podio||0; return {eq,po,nP,opt,nPl:(EV.players||[]).length,eqPot:eq*nP,poPot:po*nP,on:PJ()&&(eq>0||po>0)}; }
 /* premios del torneo: solo cobran los jugadores inscritos a la apuesta del torneo */
-function torneoPrizes(){ const T=TB(), PC=pairCalc(), R=EV.results||{}, out={team:null,pods:[]};
+/* ===== Quórum mínimo: si no se completa, esa apuesta se cancela y nadie paga ===== */
+const QMIN={q:w=>w===1?2:w===2?3:6, team:2, podio:12};
+function quorum(){ const T=TB(), w=EV.winners, nQ=EV.entries.length, mq=QMIN.q(w), tm=[0,1].map(i=>(EV.players||[]).filter(p=>p.team===i&&T.opt.has(p.n)).length);
+  const L=[{k:"q",ic:"🎯",t:"Quiniela",on:true,have:nQ,need:mq,ok:nQ>=mq,txt:`${nQ} de ${mq} inscritos`}];
+  if(T.on&&T.eq) L.push({k:"e",ic:"⚔️",t:`${EV.teams[0]} vs ${EV.teams[1]}`,on:true,have:Math.min(...tm),need:QMIN.team,ok:Math.min(...tm)>=QMIN.team,txt:`${tm[0]} vs ${tm[1]} inscritos (mín. ${QMIN.team} por equipo)`});
+  if(T.on&&T.po) L.push({k:"p",ic:"🏆",t:"Podio de parejas",on:true,have:T.nP,need:QMIN.podio,ok:T.nP>=QMIN.podio,txt:`${T.nP} de ${QMIN.podio} jugadores mín., ${QMIN.podio/2} parejas`});
+  const by=Object.fromEntries(L.map(x=>[x.k,x])); return {L,q:by.q.ok,e:!by.e||by.e.ok,p:!by.p||by.p.ok,by}; }
+function quorumNote(){ const Q=quorum(); if(EV.closed){ const off=Q.L.filter(x=>!x.ok); return off.length?`<div class="note qoff">🔒 ${off.map(x=>`<b>${esc(x.t)}</b>: apuesta cancelada por quórum (${esc(x.txt)}). Nadie paga ni cobra.`).join("<br>🔒 ")}</div>`:""; }
+  return `<div class="note qnote">🔒 <b>Quórum mínimo</b> para que se juegue cada apuesta: ${Q.L.map(x=>`${x.ic} ${esc(x.t)} ${x.ok?"✓":"· hoy "+esc(x.txt)}`).join(" · ")}. Si al cerrar no se completa, esa apuesta se cancela y nadie paga.</div>`; }
+/* ===== Cuentas: neto de cada quien y quién le paga a quién (directo entre socios) ===== */
+function cuentas(){ const T=TB(), P=new Map(), R=Math.round;
+  const who=(mid,fb)=>{ const pl=mid&&(EV.players||[]).find(p=>p.member_id===mid); return pl?pl.n:fb; };
+  const get=n=>{ if(!P.has(n)) P.set(n,{n,apQ:0,apC:0,gQ:0,gE:0,gP:0,det:[]}); return P.get(n); };
+  const Q=quorum(), cE=T.on&&Q.e?T.eq:0, cP=T.on&&Q.p?T.po:0;
+  if(Q.q) EV.entries.forEach(x=>get(who(x.member_id,x.name)).apQ+=+EV.aportacion);
+  if(cE+cP) [...T.opt].forEach(n=>get(n).apC+=cE+cP);
+  if(Q.q) ranked().forEach(r=>{ if(r.prize>0){ const o=get(who(r.e.member_id,r.e.name)); o.gQ+=r.prize; o.det.push(`🎯 ${r.rank}º quiniela`); } });
+  if(T.on){ const TP=torneoPrizes(); if(TP.team&&Q.e) TP.team.names.forEach(n=>{ const o=get(n); o.gE+=TP.team.each; o.det.push(`⚔️ equipo ${TP.team.name}`); });
+    if(Q.p) TP.pods.forEach(d=>d.names.forEach(n=>{ const o=get(n); o.gP+=d.each; o.det.push(`🏆 ${d.pos}ª pareja`); })); }
+  const L=[...P.values()].map(o=>({...o,ap:o.apQ+o.apC,gan:R(o.gQ+o.gE+o.gP)})).map(o=>({...o,net:o.gan-o.ap}));
+  const diff=L.reduce((a,o)=>a+o.net,0); if(diff&&L.length){ const top=L.slice().sort((a,b)=>b.net-a.net)[0]; top.net-=diff; top.gan-=diff; }
+  L.sort((a,b)=>b.net-a.net||a.n.localeCompare(b.n));
+  const deb=L.filter(o=>o.net<0).map(o=>({n:o.n,v:-o.net})).sort((a,b)=>b.v-a.v), cre=L.filter(o=>o.net>0).map(o=>({n:o.n,v:o.net})).sort((a,b)=>b.v-a.v), X=[];
+  let i=0,j=0; while(i<deb.length&&j<cre.length){ const v=Math.min(deb[i].v,cre[j].v); if(v>0) X.push({payer:deb[i].n,payee:cre[j].n,amount:v}); deb[i].v-=v; cre[j].v-=v; if(!deb[i].v) i++; if(!cre[j].v) j++; }
+  const paid=new Map((EV.settle_paid||[]).map(x=>[x.payer+"→"+x.payee,x.by]));
+  X.forEach(x=>{ x.paid=paid.has(x.payer+"→"+x.payee); x.by=paid.get(x.payer+"→"+x.payee); });
+  return {L,X,tot:L.reduce((a,o)=>a+o.ap,0),me:who(ME&&ME.id,ME&&ME.name)}; }
+function cuentasHTML(){ const C=cuentas(), mine=n=>n===C.me, canMark=x=>EV.can_admin||mine(x.payee);
+  if(!C.L.length) return `<div class="card"><div class="note">${quorum().L.some(x=>!x.ok)?"":"Nadie apostó en este torneo."}</div>${quorumNote()}</div>`;
+  const pend=C.X.filter(x=>!x.paid).length;
+  return `<div class="card"><div class="h">Cuentas del torneo <small>bolsa total ${money(C.tot)}</small></div>
+    <div class="note" style="margin-bottom:8px">Neto = lo que ganó − lo que apostó (quiniela + competencia). Lo que pierden unos es exactamente lo que ganan otros.</div>${quorumNote()}
+    <div class="ctbl"><div class="ch"><span>Socio</span><span>Apostó</span><span>Ganó</span><span>Neto</span></div>
+    ${C.L.map(o=>`<div class="cr ${mine(o.n)?"mine":""}"><span class="cn">${esc(o.n)}${o.det.length?`<small>${esc([...new Set(o.det)].join(" · "))}</small>`:""}</span><span>${money(o.ap)}</span><span>${o.gan?money(o.gan):"—"}</span><b class="${o.net>0?"up":o.net<0?"dn":""}">${o.net>0?"+":o.net<0?"−":""}${money(Math.abs(o.net))}</b></div>`).join("")}</div></div>
+    <div class="card"><div class="h">Quién le paga a quién <small>${pend?pend+" pendiente"+(pend===1?"":"s"):"todo liquidado ✓"}</small></div>
+    ${C.X.length?C.X.map(x=>`<div class="xr ${x.paid?"ok":""}"><span><b>${esc(x.payer)}</b> → <b>${esc(x.payee)}</b></span><b>${money(x.amount)}</b>${canMark(x)?`<button class="pc ${x.paid?"ok":"no"}" data-sp="${esc(x.payer)}" data-se="${esc(x.payee)}" data-son="${x.paid?0:1}">${x.paid?"Recibido ✓":"Marcar recibido"}</button>`:`<span class="pc ${x.paid?"ok":"dis"}">${x.paid?"Recibido ✓":"Pendiente"}</span>`}</div>`).join(""):`<div class="note">Nadie le debe a nadie.</div>`}
+    <div class="note" style="margin-top:8px">Cada quien le paga directo al ganador. Quien recibe (o el organizador) marca "recibido".</div>
+    <button class="btn ghost w" id="cuShare" style="margin-top:10px">📋 Copiar cuentas para WhatsApp</button></div>`; }
+function cuentasText(){ const C=cuentas();
+  return [`💰 *CUENTAS · ${EV.name.toUpperCase()}*`,`Bolsa total ${money(C.tot)}`,"",...C.L.map(o=>`${o.net>0?"🟢":o.net<0?"🔴":"⚪"} ${o.n}: apostó ${money(o.ap)} · ganó ${money(o.gan)} · *${o.net>0?"+":o.net<0?"−":""}${money(Math.abs(o.net))}*`),"","💸 *Quién le paga a quién*",...(C.X.length?C.X.map(x=>`${x.paid?"✅":"⏳"} ${x.payer} → ${x.payee}: *${money(x.amount)}*`):["Nadie le debe a nadie"]),"",`👉 ${location.origin+location.pathname}#e=${EV.id}`].join("\n"); }
+document.addEventListener("click",async e=>{ const t=e.target;
+  if(t.dataset&&t.dataset.sp!=null){ t.disabled=true; try{ EV=await rpc("b_settle_mark",{p_token:TOKEN,p_event:EV.id,p_payer:t.dataset.sp,p_payee:t.dataset.se,p_on:t.dataset.son==="1"}); renderEvent(); }catch(err){ toast(err.message); t.disabled=false; } return; }
+  if(t.id==="cuShare"){ try{ await navigator.clipboard.writeText(cuentasText()); toast("Cuentas copiadas ✓ · pégalas en WhatsApp"); }catch{ toast("No se pudo copiar"); } } });
+function torneoPrizes(){ const T=TB(), PC=pairCalc(), R=EV.results||{}, out={team:null,pods:[]}, Q=EV.closed?quorum():{e:true,p:true};
   const wt=R.team?EV.teams.indexOf(R.team):-1;
-  if(wt>=0){ const w=(EV.players||[]).filter(p=>p.team===wt&&T.opt.has(p.n)).map(p=>p.n); out.team={name:R.team,names:w,each:w.length?T.eqPot/w.length:0}; }
+  if(wt>=0&&Q.e){ const w=(EV.players||[]).filter(p=>p.team===wt&&T.opt.has(p.n)).map(p=>p.n); out.team={name:R.team,names:w,each:w.length?T.eqPot/w.length:0}; }
   const all=PC.P.length&&PC.P.every(x=>x.tot!=null);
   if(all){ const el=PC.ranked.filter(x=>x.ps.some(p=>T.opt.has(p.n))).slice(0,3).map(x=>({x,names:x.ps.filter(p=>T.opt.has(p.n)).map(p=>p.n)}));
     const tot=[0,0,0]; if(el[2]) tot[2]=T.po*el[2].names.length; if(el[1]) tot[1]=2*T.po*el[1].names.length; if(el[0]) tot[0]=Math.max(T.poPot-tot[1]-tot[2],0);
-    out.pods=el.map((o,i)=>({...o,pos:i+1,total:tot[i],each:tot[i]/(o.names.length||1)})); }
+    out.pods=el.map((o,i)=>({...o,pos:i+1,total:Q.p?tot[i]:0,each:Q.p?tot[i]/(o.names.length||1):0})); }
   return out; }
 function podioPrizes(T){ return [Math.max(T.poPot-6*T.po,0),4*T.po,2*T.po]; }
 function torneoCard(){ const T=TB(); if(!T.on) return ""; const x=EV.aportacion, n=EV.entries.length, pq=prizes();
@@ -874,9 +933,9 @@ function torneoCard(){ const T=TB(); if(!T.on) return ""; const x=EV.aportacion,
   ${T.eq?`<tr><td>⚔️ <b>${esc(EV.teams[0])} vs ${esc(EV.teams[1])}</b><div class="note">Gana el equipo que gane más partidos: ${EV.matches.length} partidos (${EV.matches.length/2||0} por día), cada uno vale 1 punto. Si quedan ${half(EV.matches.length/2)}–${half(EV.matches.length/2)}: gana el de menos golpes netos totales</div></td><td>${money(T.eq)}</td><td>${money(T.eqPot)}<div class="note">${T.nP} de ${T.nPl} jugadores</div></td><td style="text-align:left">Se reparte entre los inscritos del equipo ganador <span class="note">(≈ el doble de su cuota)</span></td></tr>`:""}
   ${T.po?`<tr><td>🏆 <b>Podio de parejas</b><div class="note">Best ball net, suma de los 2 días</div></td><td>${money(T.po)}</td><td>${money(T.poPot)}</td><td style="text-align:left">Por jugador inscrito:<br>3ª ${money(T.po)} <span class="note">(reintegro)</span><br>2ª ${money(2*T.po)} <span class="note">(doble)</span><br>1ª el resto de la bolsa</td></tr>`:""}
   <tr><td><b>Ambas</b></td><td><b>${money(x+T.eq+T.po)}</b></td><td><b>${money(x*n+T.eqPot+T.poPot)}</b></td><td></td></tr></table>
-  <div class="note" style="margin-top:8px">🎯 La quiniela es para cualquier socio, juegue o no. ⚔️🏆 La apuesta del torneo (${money(T.eq+T.po)}) es solo para jugadores y solo cobran quienes se inscriban a ella. Sin empates en el podio: desempata el net del compañero y luego el HCP combinado.</div></div>`; }
+  <div class="note" style="margin-top:8px">🎯 La quiniela es para cualquier socio, juegue o no. ⚔️🏆 La apuesta del torneo (${money(T.eq+T.po)}) es solo para jugadores y solo cobran quienes se inscriban a ella. Sin empates en el podio: desempata el net del compañero y luego el HCP combinado.</div>${quorumNote()}</div>`; }
 function inscripcionCard(){ const T=TB(); if(!T.on) return ""; const mine=myEntry(), open=!EV.closed&&!locked(), mePl=(EV.players||[]).find(p=>p.member_id===ME.id), inT=mePl&&T.opt.has(mePl.n), picks=mine&&Object.keys(mine.picks||{}).length, tPaid=mePl&&(EV.torneo_paid||[]).includes(mePl.n);
-  const st=(on,paid)=>on?`<span class="st2 ${paid?"ok":"pend"}">${paid?"INSCRITO · PAGADO":"INSCRITO · DEBE"}</span>`:`<span class="st2 pend">NO INSCRITO</span>`;
+  const st=(on)=>on?`<span class="st2 ok">INSCRITO</span>`:`<span class="st2 pend">NO INSCRITO</span>`;
   const row=(ic,t,price,on,paid,btn,note)=>`<div class="trow"><span class="nm2">${ic} <b>${t}</b> · ${money(price)}${note?`<div class="note">${note}</div>`:""}</span>${st(on,paid)}${open&&btn?btn:""}</div>`;
   return `<div class="card"><div class="h">Tu inscripción <small>2 apuestas: entra a una o a las dos</small></div>
     ${row("🎯","Quiniela",EV.aportacion,!!mine,mine&&mine.paid,mine?(picks?"":`<button class="btn sm ghost" id="leaveQ">Salir</button>`):`<button class="btn sm gold" id="joinBtn">Entrar</button>`,mine?(picks?"Ya tienes picks guardados":"Para cualquier socio"):"Para cualquier socio, juegue o no")}
@@ -886,7 +945,7 @@ function torneoResultsCard(){ const T=TB(); if(!T.on) return ""; const PC=pairCa
   if(T.eq) h+=`<div class="pzl"><span>⚔️ ${esc(EV.teams[0])} vs ${esc(EV.teams[1])}</span><b>${TP.team?esc(TP.team.name)+(TP.team.names.length?": "+money(TP.team.each)+" c/u":": nadie inscrito, se regresa"):"por definir"}</b></div>`;
   if(T.po){ if(!TP.pods.length) h+=`<div class="pzl"><span>🏆 Podio de parejas</span><b>por definir</b></div>`;
     else h+=TP.pods.map(o=>`<div class="pzl"><span>🏆 ${o.pos}ª · ${esc(o.x.label)} (${o.x.tot})${o.names.length<o.x.ps.length?`<div class="note">cobra solo ${esc(o.names.join(", "))}</div>`:""}</span><b>${money(o.total)}${o.names.length>1?` <span class="note">(${money(o.each)} c/u)</span>`:""}</b></div>`).join(""); }
-  return `<div class="card"><div class="h">Premios del torneo <small>${EV.closed?"final":"en vivo"}</small></div>${h}</div>`; }
+  return `<div class="card"><div class="h">Premios del torneo <small>${EV.closed?"final":"en vivo"}</small></div>${h}${EV.closed?quorumNote():""}</div>`; }
 function half(x){ return x%1?(Math.floor(x)||"")+"½":String(x); }
 function pairsOf(e){ e=e||EV; const m={}; (e.players||[]).forEach(p=>{ (m[p.pair]=m[p.pair]||{no:p.pair,team:p.team,ps:[]}).ps.push(p); }); return Object.values(m).map(x=>({...x,label:x.ps.map(p=>p.n).join(" / ")})).sort((a,b)=>a.no-b.no); }
 function pairCalc(e){ e=e||EV; const S={}; (e.scores||[]).forEach(x=>S[x.n]=x);
@@ -905,7 +964,7 @@ function locked(){ return Date.now()+skew>=lockAt(); }
 function ptOf(k){ const p=EV.pts; return /^m\d/.test(k)?p.match:p[k]; }
 function maxPts(){ const p=EV.pts; return ST()?(+p.p1||0)+(+p.p2||0)+(+p.p3||0):EV.matches.length*p.match+p.team+p.ind1; }
 function bolsa(){ return EV.aportacion*EV.entries.length; }
-function prizes(){ const B=bolsa(), e=EV.aportacion, w=EV.winners; if(w===1) return [B]; if(w===2){const s=Math.round(B*.3/100)*100;return [B-s,s];} return [Math.max(B-3*e,0),2*e,e]; }
+function prizes(){ const B=bolsa(), e=EV.aportacion, w=EV.winners; if(EV.closed&&!quorum().q) return [0,0,0]; if(w===1) return [B]; if(w===2){const s=Math.round(B*.3/100)*100;return [B-s,s];} return [Math.max(B-3*e,0),2*e,e]; }
 function isComplete(p){ return KEYS().every(k=>p&&p[k]); }
 function myEntry(){ return EV.entries.find(x=>x.member_id===ME.id); }
 function picksDisabled(){ if(!target) return true; if(target.admin) return false; return locked()||EV.closed; }
@@ -925,13 +984,14 @@ function setETab(t){ ETAB=t; renderEvent(); show("event"); }
 function renderEvent(){
   const [c,l]=evStatus(EV); $("#v-event").classList.toggle("tblue",/azul|blue/i.test(EV.teams?.[0]||""));
   $("#evPlaque").innerHTML=`<div class="pt">${esc(l)}</div><div class="pn">${esc(EV.name)}</div><div class="ps">${esc(EV.course||"")}${EV.course?" · ":""}${esc(fdate(EV.event_date))}</div>`;
-  const tabs=[["principal","Principal"],["picks","Mis picks"],["ranking","Ranking"]].concat(EV.can_admin?[["admin","Admin"]]:[]);
+  const tabs=[["principal","Principal"],["picks","Mis picks"],["ranking","Ranking"]].concat(EV.closed?[["cuentas","Cuentas"]]:[]).concat(EV.can_admin?[["admin","Admin"]]:[]);
   $("#evTabs").innerHTML=tabs.map(([k,t])=>`<button class="${ETAB===k?"on":""}" data-etab="${k}">${t}</button>`).join("");
   const b=$("#evBody");
   if(ETAB==="principal") b.innerHTML=principalHTML();
   if(ETAB==="picks") b.innerHTML=picksHTML();
   if(ETAB==="ranking") b.innerHTML=rankingHTML();
   if(ETAB==="admin") b.innerHTML=adminHTML();
+  if(ETAB==="cuentas") b.innerHTML=cuentasHTML();
   $("#saveBar").classList.toggle("hide",!(VIEW==="event"&&ETAB==="picks"&&target&&!picksDisabled()));
   if(ETAB==="picks") updateProg();
   if(ETAB==="principal"||ETAB==="ranking") setTimeout(updatePreview,50);
@@ -953,7 +1013,7 @@ function principalHTML(){
     <li><i>Puntos</i><span>Partido ${p.match} · Equipo ${p.team} · 1ª pareja ${p.ind1}.</span></li>`:`<li><i>Formato</i><span>Ryder · match play por equipos.</span></li><li><i>Picks</i><span>${EV.matches.length} matches, equipo ganador (${esc(EV.teams.join(" o "))}) y 1er lugar individual.</span></li>
     <li><i>Puntos</i><span>Match ${p.match} · Equipo ${p.team} · 1er lugar ${p.ind1}.</span></li>`}<li><i>Premios</i><span>${premios}</span></li>
     <li><i>${PJ()?"Empate quiniela":"Empate"}</i><span>Gana quien más se acerque al ${PJ()?"net total de la 1ª pareja":SB()?"puntaje stableford del 1er lugar":"score net del 1er lugar"}.</span></li>
-    <li><i>Cierre</i><span>${new Date(EV.lock_at).toLocaleString("es-MX",{weekday:"long",day:"numeric",month:"short",hour:"numeric",minute:"2-digit"})}. Todos los picks son públicos.</span></li></ul>
+    <li><i>Cierre</i><span>${new Date(EV.lock_at).toLocaleString("es-MX",{weekday:"long",day:"numeric",month:"short",hour:"numeric",minute:"2-digit"})}. Todos los picks son públicos.</span></li>${T0.on?"":`<li><i>Quórum</i><span>Mínimo ${QMIN.q(w)} inscritos para que se juegue; si no se completa, se cancela y nadie paga${EV.closed&&!quorum().q?" · <b style=\"color:var(--bad)\">cancelada: "+n+" inscritos</b>":""}.</span></li>`}</ul>
     ${cta?`<div style="margin-top:12px">${cta}</div>`:""}
     ${EV.convocatoria_url?`<a class="btn ghost w" style="margin-top:8px" href="${esc(EV.convocatoria_url)}" target="_blank" rel="noopener">Ver convocatoria</a>`:""}</div>`;
   h+=inscripcionCard()+torneoCard();
@@ -1278,15 +1338,15 @@ function adminHTML(){
 function pagosCard(notIn){ const T=TB(); if(!T.on) return ""; const E=new Map(EV.entries.map(x=>[x.member_id,x])), TP=new Set(EV.torneo_paid||[]), nk=KEYS().length;
   const rows=[...(EV.players||[]).map(p=>({n:p.n,mid:p.member_id||null,pl:true})),...EV.entries.filter(x=>!(EV.players||[]).some(p=>p.member_id===x.member_id)).map(x=>({n:x.name,mid:x.member_id,pl:false}))];
   const q=EV.entries, qp=q.filter(x=>x.paid).length, t=[...T.opt], tp=t.filter(n=>TP.has(n)).length;
-  const cell=(on,paid,attrs,dis)=>dis?`<span class="pc dis">—</span>`:on?`<button class="pc ${paid?"ok":"debe"}" ${attrs} data-pp="${paid?0:1}">${paid?"Pagó ✓":"Debe"}</button>`:`<button class="pc no" ${attrs} data-pin="1">+ Entrar</button>`;
-  return `<div class="card"><div class="h">Inscripciones y pagos <small>toca para marcar</small></div>
-    <div class="psum"><div><b>🎯 Quiniela</b><span>${q.length} inscritos · ${qp} pagados</span><span>${money(EV.aportacion*q.length)}</span></div><div><b>⚔️ Competencia</b><span>${t.length} de ${(EV.players||[]).length} · ${tp} pagados</span><span>${money(T.eqPot+T.poPot)}</span></div></div>
+  const cell=(on,paid,attrs,dis)=>dis?`<span class="pc dis">—</span>`:on?`<span class="pc ok">Inscrito ✓</span>`:`<button class="pc no" ${attrs} data-pin="1">+ Entrar</button>`;
+  return `<div class="card"><div class="h">Inscripciones <small>los pagos se liquidan al terminar, en Cuentas</small></div>
+    <div class="psum"><div><b>🎯 Quiniela</b><span>${q.length} inscritos</span><span>${money(EV.aportacion*q.length)}</span></div><div><b>⚔️ Competencia</b><span>${t.length} de ${(EV.players||[]).length} inscritos</span><span>${money(T.eqPot+T.poPot)}</span></div></div>
     <div class="ptab"><div class="ph"><span>Socio</span><span>🎯 Quiniela</span><span>⚔️ Competencia</span></div>
     ${rows.map(r=>{ const e=r.mid&&E.get(r.mid), on=T.opt.has(r.n);
       return `<div class="pr"><span class="pn">${esc(r.n)}${!r.pl?` <span class="note">no juega</span>`:""}${e?` <span class="note">${Object.keys(e.picks||{}).length}/${nk}</span>`:""}${e?` <button class="lnk" data-cap="${r.mid}">capturar</button>`:""}</span>
         <span>${cell(!!e,e&&e.paid,`data-pq="${r.mid||""}"`,!r.mid)}${e&&!Object.keys(e.picks||{}).length?`<button class="lnk" data-ent="remove" data-mid="${r.mid}">quitar</button>`:""}</span>
         <span>${cell(on,TP.has(r.n),`data-pt="${esc(r.n)}"`,!r.pl)}${on&&!TP.has(r.n)?`<button class="lnk" data-at="${esc(r.n)}" data-on="0">quitar</button>`:""}</span></div>`; }).join("")}</div>
-    <div class="note" style="margin-top:8px">“—” = no aplica: la quiniela requiere cuenta en la app y la competencia es solo para jugadores. Para quitar a alguien que ya pagó, primero desmarca el pago.</div>
+    <div class="note" style="margin-top:8px">“—” = no aplica: la quiniela requiere cuenta en la app y la competencia es solo para jugadores. Al terminar, la pestaña Cuentas dice quién le paga a quién.</div>
     ${notIn.length?`<div class="row2" style="grid-template-columns:1fr auto;margin-top:10px"><select id="addMem" class="t">${notIn.map(m=>`<option value="${m.id}">${esc(m.name)}</option>`).join("")}</select><button class="btn" id="addMemBtn">Sumar a quiniela</button></div>`:""}</div>`; }
 function adminRest(hasPicks,notIn,skipBettors){
   return `${skipBettors?"":`<div class="card"><div class="h">Apostadores <small>${EV.entries.length}</small></div>
