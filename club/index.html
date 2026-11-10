@@ -99,6 +99,7 @@ input.t:focus,select.t:focus,textarea.t:focus{outline:2px solid var(--gold);bord
 .ev .n{font:700 20px "Cormorant Garamond",serif;color:var(--cream)}
 .ev .m{font-size:12.5px;color:var(--mute)}
 body.guest .noguest{display:none}
+body.guest .agseg{display:none}
 .ptbl{overflow-x:auto;margin:0 -4px}.ptbl table{border-collapse:collapse;font-size:12px;min-width:560px;width:100%}.ptbl th,.ptbl td{padding:7px 5px;border-bottom:1px solid rgba(164,161,106,.18);text-align:center}
 .ptbl th{font:600 11px Inter;color:var(--gold2);text-transform:uppercase;letter-spacing:.04em}.ptbl th small{display:block;color:var(--mute);text-transform:none;letter-spacing:0;font-weight:400}
 .ptbl td:first-child,.ptbl th:first-child{text-align:left;color:var(--cream);font-weight:600;position:sticky;left:0;background:var(--g2,#1f3b30)}.ptbl td.no{color:var(--mute)}.ptbl td.ed{color:var(--ok)}.ptbl td.ad{color:var(--cream)}
@@ -344,6 +345,32 @@ table.att td.ok{color:var(--ok);font-weight:700}table.att td.ko{color:var(--bad)
 nav.main{flex-wrap:wrap;justify-content:center;overflow:visible}
 nav.main button{flex:0 0 auto;padding:8px 9px;font-size:12.5px}
 .code{font:700 30px "Cormorant Garamond",serif;letter-spacing:.5em;text-align:center}
+/* navegación tipo app: barra abajo + menú "Más" */
+nav.main{display:none!important}
+main{padding-bottom:110px}
+.bnav{position:fixed;left:0;right:0;bottom:0;z-index:30;background:#082620;border-top:1px solid var(--line);padding:6px 4px calc(8px + env(safe-area-inset-bottom))}
+.bnav .in{max-width:680px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr)}
+.bnav button{background:none;border:0;color:var(--mute);font:600 10.5px Inter;padding:4px 0;position:relative;cursor:pointer}
+.bnav button i{font-style:normal;display:block;font-size:21px;line-height:1.15;margin-bottom:2px}
+.bnav button.on{color:var(--cream)}.bnav button.on::before{content:"";position:absolute;top:-7px;left:32%;right:32%;height:3px;border-radius:2px;background:var(--gold)}
+.bnav .bdg{position:absolute;top:0;left:calc(50% + 6px);min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:#d23b32;color:#fff;font:700 10px/17px Inter}
+.save{bottom:calc(64px + env(safe-area-inset-bottom))!important}
+.more{position:fixed;inset:0;z-index:40;display:none}.more.on{display:block}
+.more .dim{position:absolute;inset:0;background:rgba(0,0,0,.5)}
+.more .pnl{position:absolute;top:0;bottom:0;right:0;width:min(320px,86vw);background:var(--g2);border-left:1px solid var(--line);padding:calc(20px + env(safe-area-inset-top)) 18px 90px;overflow-y:auto}
+.more .mhead{display:flex;gap:10px;align-items:center;padding-bottom:14px;border-bottom:1px solid var(--line);cursor:pointer}.more .mhead b{display:block;font-size:15px;color:var(--cream)}.more .mhead span{font:600 11px Inter;color:var(--gold2);letter-spacing:.1em;text-transform:uppercase}
+.more .sec{font:600 10.5px Inter;letter-spacing:.15em;color:var(--gold2);margin:16px 0 4px;text-transform:uppercase}
+.more .it{display:flex;align-items:center;gap:12px;width:100%;padding:10px 4px;font:500 15px Inter;color:var(--cream);background:none;border:0;text-align:left;cursor:pointer}.more .it i{font-style:normal;width:24px;text-align:center}.more .it small{margin-left:auto;font-size:11px;color:#ff8a80}
+.more .adm{border:1px dashed rgba(164,161,106,.5);border-radius:14px;padding:2px 10px}
+.hello{padding:4px 2px 4px}.hello h1{font:700 30px/1.1 "Cormorant Garamond",serif;margin:2px 0;color:var(--cream)}.hello .sub{font-size:13px;color:var(--mute)}
+.todo{display:flex;align-items:center;gap:12px;background:var(--g3);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin-bottom:8px;cursor:pointer;width:100%;text-align:left;color:var(--cream);font:inherit}
+.todo i{font-style:normal;font-size:22px}.todo b{display:block;font-size:14.5px}.todo span{font-size:12px;color:var(--mute)}.todo .go{margin-left:auto;background:var(--cream);color:var(--g);font:700 12px Inter;padding:7px 12px;border-radius:999px;white-space:nowrap}
+.todo.warn{border-color:rgba(229,154,143,.6)}.todo.warn span{color:var(--bad)}.todo.done{cursor:default;justify-content:center;color:var(--ok);font-weight:600}
+.hsec{font:600 11px Inter;letter-spacing:.14em;color:var(--gold2);text-transform:uppercase;margin:18px 2px 8px}
+#v-home .hero,#v-home .tiles{display:none}
+#v-home .kpis{grid-template-columns:repeat(3,1fr);gap:6px}#v-home .kpi{padding:9px 4px}#v-home .kpi b{font-size:22px}#v-home .kpi span{font-size:9.5px}#v-home .kpi.wide{grid-column:auto}#v-home .kpi .ksub,#v-home .kdelta{font-size:10px}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:0 0 10px}.seg button{border:1px solid var(--line);background:none;color:var(--mute);border-radius:999px;padding:9px;font:600 13px Inter;cursor:pointer}.seg button.on{background:var(--cream);color:var(--g)}
+#bellBtn{display:none!important}
 </style>
 </head>
 <body>
@@ -410,9 +437,13 @@ nav.main button{flex:0 0 auto;padding:8px 9px;font-size:12.5px}
 
   <!-- HOME -->
   <section class="view" id="v-home">
-    <div class="hero"><img class="logo" alt="Hermanos McGregor"><h1 id="hiName">Bienvenido</h1><div class="sub" id="hiRole"></div></div>
-    <div class="kpis" id="homeKpis"></div>
+    <div class="hero"><img class="logo" alt="Hermanos McGregor"></div>
+    <div class="hello"><h1 id="hiName">Bienvenido</h1><div class="sub"><span id="hiRole"></span> · <span id="hiDate"></span></div></div>
+    <div class="hsec">Tienes pendiente</div><div id="homeTodo"><div class="todo done">Revisando…</div></div>
+    <div id="homeNext"></div>
     <div id="homeNews"></div>
+    <div class="hsec">El club en <span id="hiYear"></span></div>
+    <div class="kpis" id="homeKpis"></div>
 
     <div class="tiles">
       <button class="tile" data-nav="news"><i>📰</i><b>Noticias <span class="bdg hide" id="bdgNews"></span></b><span>Lo nuevo del club</span></button>
@@ -428,7 +459,6 @@ nav.main button{flex:0 0 auto;padding:8px 9px;font-size:12.5px}
       <button class="tile" data-nav="members"><i>🏌️</i><b>Miembros</b><span>Socios y roles</span></button>
       <button class="tile" data-nav="social"><i>📣</i><b>Redes Sociales</b><span>Instagram, YouTube y TikTok</span></button>
     </div>
-    <div id="homeNext"></div>
 
   </section>
 
@@ -447,6 +477,7 @@ nav.main button{flex:0 0 auto;padding:8px 9px;font-size:12.5px}
 
   <!-- CALENDARIO -->
   <section class="view" id="v-cal">
+    <div class="seg agseg"><button data-nav="cal">🗓️ Calendario</button><button data-nav="tee" class="noguest">🛺 Salidas</button></div>
     <div class="plaque"><div class="pt">Hermanos McGregor</div><div class="pn">Calendario Championships</div><div class="ps">Torneos del año y a quién se dedican</div></div>
     <div class="card"><label class="f" for="calSel" style="margin-top:0">Año</label><select id="calSel" class="t"></select></div>
     <div class="card" id="calCard"><div class="h">Torneos <small id="calYear"></small></div><div id="calList"><div class="note">Cargando…</div></div><div id="calAdmin"></div></div>
@@ -482,6 +513,7 @@ nav.main button{flex:0 0 auto;padding:8px 9px;font-size:12.5px}
 
   <!-- ASISTENCIAS -->
   <section class="view" id="v-tee">
+    <div class="seg agseg"><button data-nav="cal">🗓️ Calendario</button><button data-nav="tee" class="noguest">🛺 Salidas</button></div>
     <div class="plaque"><div class="pt">Salidas</div><div class="pn">Horarios y Carritos</div><div class="ps">Quién sale a qué hora y en qué carrito</div></div>
     <div class="card"><div class="row2"><div><label class="f" for="teeDate" style="margin-top:0">Fecha</label><input id="teeDate" class="t" type="date"></div><div><label class="f" style="margin-top:0">&nbsp;</label><div class="note" id="teeInfo"></div></div></div></div>
     <div id="teeEdit"></div>
@@ -561,6 +593,14 @@ nav.main button{flex:0 0 auto;padding:8px 9px;font-size:12.5px}
     <div class="card"><div class="h">Socios</div><div class="etabs" id="memFilt"></div><div id="memList"></div></div>
   </section>
 </main>
+<nav class="bnav hide" id="bnav"><div class="in">
+  <button data-nav="home" data-bn="home"><i>🏠</i>Inicio</button>
+  <button data-nav="bets" data-bn="bets"><i>🎯</i>Apuestas</button>
+  <button data-nav="cal" data-bn="agenda"><i>🗓️</i>Agenda</button>
+  <button data-nav="news" data-bn="news"><i>🔔</i>Noticias<span class="bdg hide" id="bnNews"></span></button>
+  <button id="bnMore" data-bn="more"><i>☰</i>Más<span class="bdg hide" id="bnMoreB"></span></button>
+</div></nav>
+<div class="more" id="morePnl"><div class="dim" data-closemore></div><div class="pnl" id="moreBody"></div></div>
 <div class="save hide" id="saveBar"><div class="inner"><div class="prog" id="prog"></div><button class="btn gold" id="saveBtn" disabled>Guardar picks</button></div></div>
 <div class="toast" id="toast"></div>
 
@@ -602,9 +642,41 @@ async function rpc(fn,args={},bearer){
 let TOKEN=store.get("mcg_token"), ME=null, VIEW="login";
 let EVENTS=[], EV=null, ETAB="principal", skew=0, form={picks:{},tb:""}, target=null, dirty=false, saving=false, openRow=null, res={}, MEMBERS=[], HIST=null, hSort="pct", HTAB="jug", pSort="wins";
 
+/* ===== menú "Más" ===== */
+function moreItems(){ const can=v=>!ME.guest||GUEST_OK.has(v), bp=+($("#bdgBoard").textContent||0);
+  const it=(v,i,t,x)=>can(v)?`<button class="it" data-nav="${v}"><i>${i}</i>${t}${x?`<small>${x}</small>`:""}</button>`:"";
+  const club=it("honor","🏆","Cuadro de Honor")+it("hist","📈","Históricos")+it("code","📖","El Código")+it("social","📣","Redes")+it("members","👥","Miembros");
+  const adm=ME.guest?"":it("att","📋","Asistencias")+it("treas","💰","Tesorería")+(isBoard(ME)?it("board","🗳️","Board",bp?bp+" voto"+(bp>1?"s":""):"")+it("usage","📊","Uso y permisos"):"");
+  return `<div class="mhead" data-nav="profile">${avatarHTML(ME)}<div><b>${esc(ME.nickname||ME.name)}</b><span>${ME.hidden?"Administrador":PROFS[prof(ME)]}</span></div></div>
+    <div class="sec">El club</div>${club}${adm?`<div class="sec">${isBoard(ME)?"Administración":"Cuentas del club"}</div><div class="adm">${adm}</div>`:""}
+    <div class="sec">Tu cuenta</div><button class="it" data-nav="profile"><i>👤</i>Mi perfil</button><button class="it" id="moreOut"><i>↪</i>Salir</button>`; }
+function openMore(){ $("#moreBody").innerHTML=moreItems(); $("#morePnl").classList.add("on"); }
+function closeMore(){ const m=$("#morePnl"); if(m) m.classList.remove("on"); }
+document.addEventListener("click",e=>{ if(e.target.closest("#bnMore")){ $("#morePnl").classList.contains("on")?closeMore():openMore(); return; }
+  if(e.target.closest("[data-closemore]")){ closeMore(); return; }
+  if(e.target.closest("#moreOut")){ closeMore(); $("#logoutBtn").click(); } });
+
+/* ===== Casa Club: lo que tienes pendiente ===== */
+async function homeTodo(){ const el=$("#homeTodo"); if(!el||!ME) return; const L=[], now=Date.now()+skew, left=t=>fmtLeft(new Date(t)-now);
+  (EVENTS||[]).filter(e=>!e.closed&&!e.solo_historico&&new Date(e.lock_at)>now).sort((a,b)=>new Date(a.lock_at)-new Date(b.lock_at)).forEach(e=>{
+    const nk=(e.format==="stroke"||e.format==="individual")?3:e.matches.length+2, pl=(e.players||[]).find(x=>x.member_id===ME.id), B=e.bolsas||{}, comp=(+B.equipos||0)+(+B.podio||0);
+    if(!e.joined) L.push({i:"🎯",t:`Entra a la quiniela · ${e.name}`,s:`$${e.aportacion} · cierra en ${left(e.lock_at)}`,go:"Entrar",ev:e.id});
+    else if((e.my_n||0)<nk) L.push({i:"🎯",t:`Haz tus picks · ${e.name}`,s:`Llevas ${e.my_n||0} de ${nk} · cierran en ${left(e.lock_at)}`,go:"Picks",ev:e.id});
+    if(pl&&comp>0){ const inT=(e.torneo||[]).includes(pl.n), paid=(e.torneo_paid||[]).includes(pl.n);
+      if(!inT) L.push({i:"⚔️",t:`Inscríbete a la competencia · ${e.name}`,s:`${money(comp)} · solo jugadores`,go:"Ver",ev:e.id});
+      else if(!paid) L.push({i:"💵",t:`Competencia · ${money(comp)}`,s:"Pago pendiente",go:"Ver",ev:e.id,warn:1}); } });
+  const bp=+($("#bdgBoard").textContent||0); if(bp&&isBoard(ME)) L.push({i:"🗳️",t:`${bp} votación${bp>1?"es":""} pendiente${bp>1?"s":""}`,s:"Board · cambios al Código",go:"Votar",nav:"board"});
+  if(!ME.guest){ try{ const z=n=>String(n).padStart(2,"0"), d0=new Date(); const days=[0,1,2,3,4,5,6].map(i=>{ const d=new Date(d0); d.setDate(d.getDate()+i); return d; }).filter(d=>d.getDay()===6||d.getDay()===0).slice(0,2);
+      const me=[ME.nickname,ME.name].filter(Boolean).map(x=>x.toLowerCase());
+      for(const d of days){ const ds=`${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}`, T=await rpc("s_get",{p_token:TOKEN,p_date:ds}); if(!T||!T.saved) continue;
+        (T.slots||[]).forEach(sl=>(sl.carts||[]).forEach(c=>{ const ps=(c.p||[]).map(x=>String(x).toLowerCase()); if(ps.some(x=>me.includes(x))||(c.owner&&me.includes(String(c.owner).toLowerCase()))){
+          const otros=(c.p||[]).filter(x=>!me.includes(String(x).toLowerCase())); L.push({i:"🛺",t:`${d.toLocaleDateString("es-MX",{weekday:"long"}).replace(/^./,m=>m.toUpperCase())} ${sl.t} · Hoyo ${sl.hoyo||10}`,s:c.owner&&c.owner!=="Trolley"?`Carrito de ${c.owner}${otros.length?" con "+otros.join(", "):""}`:otros.length?"Con "+otros.join(", "):"Tu salida",go:"Ver",nav:"tee",date:ds}); } })); } }catch{} }
+  L.sort((a,b)=>(a.go==="Entrar")-(b.go==="Entrar")); el.innerHTML=L.length?L.slice(0,4).map(x=>`<button class="todo ${x.warn?"warn":""}" ${x.ev?`data-todoev="${x.ev}"`:x.date?`data-todotee="${x.date}"`:`data-nav="${x.nav}"`}><i>${x.i}</i><div><b>${esc(x.t)}</b><span>${esc(x.s)}</span></div><span class="go">${x.go}</span></button>`).join(""):`<div class="todo done">✓ Estás al día</div>`; }
+document.addEventListener("click",e=>{ const a=e.target.closest("[data-todoev]"); if(a){ openEvent(a.dataset.todoev); return; } const b=e.target.closest("[data-todotee]"); if(b){ $("#teeDate").value=b.dataset.todotee; go("tee"); } });
+
 /* ===== noticias ===== */
 let NEWS=null;
-function bellSet(n){ for(const id of ["#bellN","#bdgNews"]){ const b=$(id); if(!b) continue; b.textContent=n>9?"9+":String(n); b.classList.toggle("hide",!n); } }
+function bellSet(n){ for(const id of ["#bellN","#bdgNews","#bnNews"]){ const b=$(id); if(!b) continue; b.textContent=n>9?"9+":String(n); b.classList.toggle("hide",!n); } }
 function homeNews(){ const h=$("#homeNews"); if(!h) return; const L=(NEWS&&NEWS.items||[]).slice(0,3); if(!L.length){ h.innerHTML=""; return; }
   h.innerHTML=`<div class="card" data-nav="news" style="cursor:pointer"><div class="h">📰 Lo último ${NEWS.unread?`<small style="color:#ff8a80">${NEWS.unread} sin leer</small>`:"<small>al día</small>"}</div>${L.map(n=>`<div class="nw ${n.new?"new":""}" style="grid-template-columns:30px 1fr"><i>${esc(n.icon)}</i><div><b>${esc(n.title)}</b><div class="s">${newsAgo(n.at)}</div></div></div>`).join("")}<div class="note" style="margin-top:6px">Ver todas ›</div></div>`; }
 async function newsTick(){ if(!TOKEN||!ME) return; try{ NEWS=await rpc("n_list",{p_token:TOKEN}); bellSet(NEWS.unread); if(VIEW==="home") homeNews(); }catch{} }
@@ -633,6 +705,9 @@ function show(v){
   VIEW=v; document.querySelectorAll(".view").forEach(s=>s.classList.toggle("on",s.id==="v-"+v));
   const nv = v==="event"?"bets":v;
   document.querySelectorAll("nav.main button").forEach(b=>b.classList.toggle("on",b.dataset.nav===nv));
+  const bn={home:"home",bets:"bets",event:"bets",cal:"agenda",tee:"agenda",news:"news"}[v]||"more";
+  document.querySelectorAll(".bnav [data-bn]").forEach(b=>b.classList.toggle("on",b.dataset.bn===bn)); $("#bnav").classList.toggle("hide",v==="login"||!ME); closeMore();
+  document.querySelectorAll(".seg [data-nav]").forEach(b=>b.classList.toggle("on",b.dataset.nav===v));
   $("#mainNav").classList.toggle("hide",v==="login"); $("#whoBtn").classList.toggle("hide",v==="login"||!ME); $("#bellBtn").classList.toggle("hide",v==="login"||!ME); $("#logoutBtn").classList.toggle("hide",v==="login"||!ME);
   $("#saveBar").classList.toggle("hide",!(v==="event"&&ETAB==="picks"&&target&&!picksDisabled()));
   window.scrollTo(0,0);
@@ -736,16 +811,17 @@ async function afterLogin(){
 
 /* ===== home ===== */
 async function renderHome(){ newsTick();
-  $("#hiName").textContent="Bienvenido, "+(ME.nickname||ME.name);
+  $("#hiName").textContent="Hola, "+(ME.nickname||ME.name).replace(/^(El|La)\s+/,""); $("#hiDate").textContent=new Date().toLocaleDateString("es-MX",{weekday:"long",day:"numeric",month:"long"}); $("#hiYear").textContent=new Date().getFullYear();
   $("#hiRole").textContent=ME.hidden?"Administrador":PROFS[prof(ME)];
   rpc("c_home_stats",{p_token:TOKEN}).then(k=>{ const n=x=>Number(x||0).toLocaleString("es-MX");
-    const bp=+k.board_pending||0; $("#bdgBoard").textContent=bp; $("#bdgBoard").classList.toggle("hide",!bp); $("#navBoard").textContent=bp?`Board (${bp})`:"Board";
+    const bp=+k.board_pending||0; $("#bnMoreB").textContent=bp; $("#bnMoreB").classList.toggle("hide",!(bp&&isBoard(ME))); $("#bdgBoard").textContent=bp; $("#bdgBoard").classList.toggle("hide",!bp); $("#navBoard").textContent=bp?`Board (${bp})`:"Board";
     $("#homeKpis").innerHTML=`<div class="kpi"><b>${n(k.hermanos)}</b><span>Hermanos</span></div>${k.torneos_year!=null?`<div class="kpi"><b>${n(k.torneos_year)}</b><span>Torneos ${k.asist_year}</span>${kDelta(k.torneos_year,k.torneos_prev,"",k.asist_year-1)}</div>`:`<div class="kpi"><b>${n(k.torneos)}</b><span>Torneos jugados</span></div>`}
       ${k.quinielas!=null?`<div class="kpi wide"><b>${money(k.quinielas)}</b><span>Total apostado en quinielas</span><small class="ksub">${n(k.apuestas)} apuestas en ${n(k.n_quinielas)} quiniela${k.n_quinielas==1?"":"s"}</small></div>
       <div class="kpi"><b>${money(k.hio)}</b><span>Bolsa Hole in One</span></div>`:`<div class="kpi wide"><b>${money(k.hio)}</b><span>Bolsa Hole in One</span></div><div class="kpi"><b>${n(k.horas)}</b><span>Horas jugadas juntos</span></div>`}${k.asistencia!=null?`<div class="kpi"><b>${k.asistencia}%</b><span>Asistencia ${k.asist_year}</span>${kDelta(k.asistencia,k.asist_prev," pt",k.asist_year-1)}</div><div class="kpi wide">`:`<div class="kpi">`}<b>${n(k.honores)}</b><span>Reconocimientos</span></div>`; }).catch(()=>{ $("#homeKpis").innerHTML=""; });
   try{ EVENTS=await rpc("b_events_list",{p_token:TOKEN}); }catch{ EVENTS=[]; }
   const nx=EVENTS.filter(e=>!e.closed).sort((a,b)=>new Date(a.lock_at)-new Date(b.lock_at))[0];
-  $("#homeNext").innerHTML = nx ? `<div class="card"><div class="h">${new Date(nx.lock_at)>new Date()?"Próximo torneo":"En juego"}</div>${evCard(nx)}</div>` : "";
+  $("#homeNext").innerHTML = nx ? `<div class="hsec">${new Date(nx.lock_at)>new Date()?"Próximo torneo":"En juego"}</div>${evCard(nx)}` : "";
+  homeTodo();
 }
 
 /* ===== events list ===== */
