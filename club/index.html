@@ -98,6 +98,11 @@ input.t:focus,select.t:focus,textarea.t:focus{outline:2px solid var(--gold);bord
 .ev:first-of-type{border-top:0}
 .ev .n{font:700 20px "Cormorant Garamond",serif;color:var(--cream)}
 .ev .m{font-size:12.5px;color:var(--mute)}
+body.guest .noguest{display:none}
+.ptbl{overflow-x:auto;margin:0 -4px}.ptbl table{border-collapse:collapse;font-size:12px;min-width:560px;width:100%}.ptbl th,.ptbl td{padding:7px 5px;border-bottom:1px solid rgba(164,161,106,.18);text-align:center}
+.ptbl th{font:600 11px Inter;color:var(--gold2);text-transform:uppercase;letter-spacing:.04em}.ptbl th small{display:block;color:var(--mute);text-transform:none;letter-spacing:0;font-weight:400}
+.ptbl td:first-child,.ptbl th:first-child{text-align:left;color:var(--cream);font-weight:600;position:sticky;left:0;background:var(--g2,#1f3b30)}.ptbl td.no{color:var(--mute)}.ptbl td.ed{color:var(--ok)}.ptbl td.ad{color:var(--cream)}
+.prow{display:flex;gap:10px;padding:7px 0;border-top:1px solid rgba(164,161,106,.18);font-size:14px}.prow b{min-width:92px;color:var(--gold2)}.prow span{color:var(--cream)}
 .updPrev{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}.updPrev figure{margin:0}.updPrev img{width:100%;border-radius:10px;border:1px solid var(--line);cursor:pointer;display:block}.updPrev figcaption{font-size:11.5px;color:var(--mute);margin-top:4px;text-align:center}
 .psum{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}.psum div{border:1px solid rgba(164,161,106,.25);border-radius:12px;padding:8px 10px;font-size:12.5px;color:var(--mute)}.psum b{display:block;color:var(--cream);font-size:14px}.psum span{display:block}
 .ptab .ph,.ptab .pr{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:6px;align-items:center;padding:7px 0;border-top:1px solid rgba(164,161,106,.18)}
@@ -525,8 +530,9 @@ nav.main button{flex:0 0 auto;padding:8px 9px;font-size:12.5px}
   </section>
 
   <section class="view" id="v-usage">
-    <div class="plaque"><div class="pt">Solo superadmin</div><div class="pn">Uso de la app</div><div class="ps">Quién entra, cuándo y qué usa</div></div>
-    <div class="card"><label class="f" style="margin-top:0">Periodo</label><select class="t" id="uDays"><option value="7">Últimos 7 días</option><option value="30" selected>Últimos 30 días</option><option value="90">Últimos 90 días</option><option value="365">Último año</option></select></div>
+    <div class="plaque"><div class="pt">Board</div><div class="pn">Uso de la app</div><div class="ps">Actividad y permisos por perfil</div></div>
+    <div class="etabs" id="uTabs"><button data-utab="act" class="on">Actividad</button><button data-utab="perm">Permisos</button></div>
+    <div class="card" id="uAct"><label class="f" style="margin-top:0">Periodo</label><select class="t" id="uDays"><option value="7">Últimos 7 días</option><option value="30" selected>Últimos 30 días</option><option value="90">Últimos 90 días</option><option value="365">Último año</option></select></div>
     <div id="uBody"></div>
   </section>
 
@@ -601,7 +607,7 @@ let NEWS=null;
 function bellSet(n){ for(const id of ["#bellN","#bdgNews"]){ const b=$(id); if(!b) continue; b.textContent=n>9?"9+":String(n); b.classList.toggle("hide",!n); } }
 function homeNews(){ const h=$("#homeNews"); if(!h) return; const L=(NEWS&&NEWS.items||[]).slice(0,3); if(!L.length){ h.innerHTML=""; return; }
   h.innerHTML=`<div class="card" data-nav="news" style="cursor:pointer"><div class="h">📰 Lo último ${NEWS.unread?`<small style="color:#ff8a80">${NEWS.unread} sin leer</small>`:"<small>al día</small>"}</div>${L.map(n=>`<div class="nw ${n.new?"new":""}" style="grid-template-columns:30px 1fr"><i>${esc(n.icon)}</i><div><b>${esc(n.title)}</b><div class="s">${newsAgo(n.at)}</div></div></div>`).join("")}<div class="note" style="margin-top:6px">Ver todas ›</div></div>`; }
-async function newsTick(){ if(!TOKEN||!ME||ME.guest){ const h=$("#homeNews"); if(h) h.innerHTML=""; return; } try{ NEWS=await rpc("n_list",{p_token:TOKEN}); bellSet(NEWS.unread); if(VIEW==="home") homeNews(); }catch{} }
+async function newsTick(){ if(!TOKEN||!ME) return; try{ NEWS=await rpc("n_list",{p_token:TOKEN}); bellSet(NEWS.unread); if(VIEW==="home") homeNews(); }catch{} }
 function newsAgo(t){ const d=(Date.now()-new Date(t))/6e4; if(d<1) return "ahora"; if(d<60) return `hace ${Math.round(d)} min`; if(d<1440) return `hace ${Math.round(d/60)} h`; if(d<2880) return "ayer";
   return new Date(t).toLocaleDateString("es-MX",{day:"numeric",month:"short"}); }
 async function loadNews(){ try{ NEWS=await rpc("n_list",{p_token:TOKEN}); }catch(e){ $("#newsList").innerHTML=`<div class="note">${esc(e.message)}</div>`; return; }
@@ -627,7 +633,7 @@ function show(v){
   VIEW=v; document.querySelectorAll(".view").forEach(s=>s.classList.toggle("on",s.id==="v-"+v));
   const nv = v==="event"?"bets":v;
   document.querySelectorAll("nav.main button").forEach(b=>b.classList.toggle("on",b.dataset.nav===nv));
-  $("#mainNav").classList.toggle("hide",v==="login"); $("#whoBtn").classList.toggle("hide",v==="login"||!ME); $("#bellBtn").classList.toggle("hide",v==="login"||!ME||!!ME.guest); $("#logoutBtn").classList.toggle("hide",v==="login"||!ME);
+  $("#mainNav").classList.toggle("hide",v==="login"); $("#whoBtn").classList.toggle("hide",v==="login"||!ME); $("#bellBtn").classList.toggle("hide",v==="login"||!ME); $("#logoutBtn").classList.toggle("hide",v==="login"||!ME);
   $("#saveBar").classList.toggle("hide",!(v==="event"&&ETAB==="picks"&&target&&!picksDisabled()));
   window.scrollTo(0,0);
 }
@@ -647,7 +653,7 @@ function go(v){
   if(v==="board") loadBoard();
   if(v==="home") renderHome();
   if(v==="news") loadNews();
-  if(v==="usage"){ if(!ME.superadmin){ v="home"; renderHome(); } else loadUsage(); }
+  if(v==="usage"){ if(!isBoard(ME)){ v="home"; renderHome(); } else loadUsage(); }
   show(v);
 }
 document.addEventListener("click",e=>{const n=e.target.closest("[data-nav]"); if(n){ if(dirty&&!confirm("Tienes picks sin guardar. ¿Salir?")) return; dirty=false; go(n.dataset.nav);} });
@@ -701,26 +707,26 @@ $("#logoutBtn").onclick=()=>{ if(confirm("¿Cerrar sesión?")) logout(false); };
 $("#whoBtn").onclick=()=>go("profile");
 const ini=n=>String(n||"?").trim().split(/\s+/).map(w=>w[0]).slice(0,2).join("").toUpperCase();
 function avatarHTML(m,cls){ return m&&m.avatar?`<img src="${m.avatar}" alt="" ${cls?`class="${cls}"`:""}>`:`<span class="ini ${cls||""}">${esc(ini(m&&(m.nickname||m.name)))}</span>`; }
-const GUEST_OK=new Set(["home","bets","event","honor","social","profile","login"]);
+const GUEST_OK=new Set(["home","bets","event","honor","social","profile","login","code","news","cal","hist"]);
 function renderWho(){ $("#whoBtn").innerHTML=avatarHTML(ME)+`<span>${esc(ME.nickname||ME.name)}</span>`;
   document.querySelectorAll("nav.main [data-nav], .tiles [data-nav]").forEach(b=>{ if(b.id==="navBoard"||b.id==="tileBoard"||b.id==="navUsage") return; b.classList.toggle("hide",!!ME.guest&&!GUEST_OK.has(b.dataset.nav)); });
-  $("#navBoard").classList.toggle("hide",!ME.board||!!ME.guest); $("#tileBoard").classList.toggle("hide",!ME.board||!!ME.guest); $("#navUsage").classList.toggle("hide",!ME.superadmin);
+  $("#navBoard").classList.toggle("hide",!isBoard(ME)); $("#tileBoard").classList.toggle("hide",!isBoard(ME)); $("#navUsage").classList.toggle("hide",!isBoard(ME));
   document.body.classList.toggle("guest",!!ME.guest); }
-/* etiquetas del perfil: cargo, board, fundador, permisos y datos de juego */
-function memTags(m,full){ const t=[], L={sabado:"LIGA SÁB",domingo:"LIGA DOM",ambas:"LIGA SÁB+DOM"};
-  if(["presidente","tesorero","secretario"].includes(m.role)) t.push(`<span class="badge g">${ROLES[m.role].toUpperCase()}</span>`);
-  if(m.board) t.push(`<span class="badge" title="Vota en el board y puede sumar socios">BOARD</span>`);
-  if(m.guest) t.push(`<span class="badge i" title="Invitado: solo ve Casa Club, Apuestas, Honor y Redes">INVITADO</span>`);
-  if(m.fundador) t.push(`<span class="badge f" title="Socio fundador">★ FUNDADOR</span>`);
-  if(m.liga_status) t.push(m.liga_status==="en_liga"?`<span class="badge p" title="Pagó la liga de esta temporada">EN LIGA</span>`:m.liga_status==="no_juega"?`<span class="badge i" title="No juega la liga esta temporada">FUERA DE LIGA</span>`:`<span class="badge i" title="Aún no paga la liga de esta temporada">LIGA PENDIENTE</span>`);
-  if(m.superadmin) t.push(`<span class="badge p" title="Acceso total a la app">SUPERADMIN</span>`);
-  else { if(m.bet_admin) t.push(`<span class="badge p" title="Puede abrir y administrar torneos y quinielas">ABRE TORNEOS</span>`);
-    if(m.role==="presidente"||m.role==="secretario") t.push(`<span class="badge p" title="Administra socios">ADMIN SOCIOS</span>`); }
+/* etiquetas del perfil: un solo perfil + liga + datos de juego */
+function memTags(m,full){ const t=[], L={sabado:"LIGA SÁB",domingo:"LIGA DOM",ambas:"LIGA SÁB+DOM"}, pf=prof(m);
+  if(CARGOS.includes(pf)) t.push(`<span class="badge g">${PROFS[pf].toUpperCase()}</span>`);
+  else if(pf==="board") t.push(`<span class="badge" title="Vota en el board, abre torneos y arma salidas">BOARD</span>`);
+  else if(pf==="invitado") t.push(`<span class="badge i" title="Invitado">INVITADO</span>`);
+  if(m.liga_status&&pf!=="invitado") t.push(m.liga_status==="en_liga"?`<span class="badge p" title="Pagó la liga de esta temporada">EN LIGA</span>`:m.liga_status==="no_juega"?`<span class="badge i" title="No juega la liga esta temporada">FUERA DE LIGA</span>`:`<span class="badge i" title="Aún no paga la liga de esta temporada">LIGA PENDIENTE</span>`);
   if(full){ if(m.liga&&L[m.liga]) t.push(`<span class="badge i">${L[m.liga]}</span>`); if(m.hcp!=null&&m.hcp!=="") t.push(`<span class="badge i">HCP ${esc(m.hcp)}</span>`); if(m.active===false) t.push(`<span class="badge c">INACTIVO</span>`); }
   return t.join(""); }
-function isAdminBets(){ return ME&&(ME.superadmin||ME.bet_admin); }
+const CARGOS=["presidente","secretario","tesorero"];
+const PROFS={invitado:"Invitado",socio:"Socio",board:"Board",tesorero:"Tesorero",secretario:"Secretario",presidente:"Presidente"};
+function prof(m){ return !m?"socio":m.guest?"invitado":CARGOS.includes(m.role)?m.role:m.board?"board":"socio"; }
+function isBoard(m){ return !!m&&!m.guest&&(m.superadmin||m.board||CARGOS.includes(m.role)); }
+function isAdminBets(){ return isBoard(ME); }
 function isAdminMembers(){ return ME&&(ME.superadmin||ME.role==="presidente"||ME.role==="secretario"); }
-function canDelMembers(){ return ME&&(ME.superadmin||ME.role==="presidente"||ME.board); }
+function canDelMembers(){ return isAdminMembers(); }
 async function afterLogin(){
   renderWho(); track(LOGIN_KIND); LOGIN_KIND="abrir";
   if(!MEMBERS.length){ try{ MEMBERS=await rpc("c_members_list",{p_token:TOKEN}); }catch{} }
@@ -731,7 +737,7 @@ async function afterLogin(){
 /* ===== home ===== */
 async function renderHome(){ newsTick();
   $("#hiName").textContent="Bienvenido, "+(ME.nickname||ME.name);
-  $("#hiRole").textContent=ME.guest?"Invitado":[ROLES[ME.role], ME.fundador?"Fundador":null, ME.superadmin?"Administrador":ME.bet_admin?"Admin de apuestas":null].filter(Boolean).join(" · ");
+  $("#hiRole").textContent=ME.hidden?"Administrador":PROFS[prof(ME)];
   rpc("c_home_stats",{p_token:TOKEN}).then(k=>{ const n=x=>Number(x||0).toLocaleString("es-MX");
     const bp=+k.board_pending||0; $("#bdgBoard").textContent=bp; $("#bdgBoard").classList.toggle("hide",!bp); $("#navBoard").textContent=bp?`Board (${bp})`:"Board";
     $("#homeKpis").innerHTML=`<div class="kpi"><b>${n(k.hermanos)}</b><span>Hermanos</span></div>${k.torneos_year!=null?`<div class="kpi"><b>${n(k.torneos_year)}</b><span>Torneos ${k.asist_year}</span>${kDelta(k.torneos_year,k.torneos_prev,"",k.asist_year-1)}</div>`:`<div class="kpi"><b>${n(k.torneos)}</b><span>Torneos jugados</span></div>`}
@@ -1354,9 +1360,8 @@ $("#newEvBtn").onclick=()=>{ $("#evNext").closest(".card").insertAdjacentHTML("b
 
 /* ===== members ===== */
 let MEMK="all";
-const MEMF=[["all","Todos",m=>true],["board","Board",m=>m.board],["cargos","Cargos",m=>["presidente","tesorero","secretario"].includes(m.role)],["fund","Fundadores",m=>m.fundador],
-  ["liga","En liga",m=>m.liga_status==="en_liga"],["fuera","Fuera de liga",m=>m.liga_status==="no_juega"],["pend","Liga pendiente",m=>m.liga_status==="pendiente"],
-  ["torneos","Abren torneos",m=>m.superadmin||m.bet_admin],["admin","Admins",m=>m.superadmin||m.role==="presidente"||m.role==="secretario"],["guest","Invitados",m=>m.guest],["inact","Inactivos",m=>m.active===false]];
+const MEMF=[["all","Todos",m=>true],["board","Board",m=>isBoard(m)],["cargos","Cargos",m=>CARGOS.includes(m.role)&&!m.guest],["guest","Invitados",m=>m.guest],
+  ["liga","En liga",m=>!m.guest&&m.liga_status==="en_liga"],["fuera","Fuera de liga",m=>!m.guest&&m.liga_status==="no_juega"],["pend","Liga pendiente",m=>!m.guest&&m.liga_status==="pendiente"],["inact","Inactivos",m=>m.active===false]];
 document.addEventListener("click",e=>{ const b=e.target.closest("[data-memf]"); if(!b) return; MEMK=b.dataset.memf; renderMembers(); });
 async function loadMembers(){
   try{ MEMBERS=await rpc("c_members_list",{p_token:TOKEN}); }catch(e){ toast(e.message); return; }
@@ -1364,7 +1369,7 @@ async function loadMembers(){
 function renderMembers(){
   const act=MEMBERS.filter(m=>m.active&&!m.guest);
   $("#memCount").textContent=`${act.length} socios activos`;
-  $("#newMemBtn").classList.toggle("hide",!(isAdminMembers()||ME.board));
+  $("#newMemBtn").classList.toggle("hide",!(isAdminMembers()||isBoard(ME)));
   const rk=m=>m.role==="presidente"?1:m.role==="tesorero"?2:m.role==="secretario"?3:m.board?4:5;
   const F=MEMF.filter(([k,,f])=>k==="all"||MEMBERS.some(f)); if(!F.some(x=>x[0]===MEMK)) MEMK="all";
   $("#memFilt").innerHTML=F.map(([k,n,f])=>`<button type="button" data-memf="${k}" class="${k===MEMK?"on":""}">${n} <span style="opacity:.7">${MEMBERS.filter(f).length}</span></button>`).join("");
@@ -1376,19 +1381,17 @@ function renderMembers(){
     <div class="mtags">${memTags(m)}</div></div>`).join("");
 }
 function memberForm(m){
-  m=m||{name:"",email:"",role:"miembro",fundador:false,liga:"",hcp:"",active:true,bet_admin:false};
+  m=m||{name:"",email:"",role:"miembro",liga:"",hcp:"",active:true};
   const opt=(o,v)=>Object.entries(o).map(([k,l])=>`<option value="${k}" ${v===k?"selected":""}>${l}</option>`).join("");
   return `<div class="h">${m.id?"Editar socio":"Nuevo socio"}</div>
     <div class="row2"><div><label class="f">Nombre</label><input class="t" id="mName" value="${esc(m.name)}"></div><div><label class="f">Apodo</label><input class="t" id="mNick" maxlength="30" value="${esc(m.nickname||"")}" placeholder="Ej. La Bala"></div></div>
     <label class="f">Correo (para entrar)</label><input class="t" id="mEmail" type="email" value="${esc(m.email||"")}">
-    ${isAdminMembers()?`<div class="row2"><div><label class="f">Rol</label><select class="t" id="mRole">${opt(ROLES,m.role)}</select></div><div><label class="f">Liga</label><select class="t" id="mLiga"><option value="">—</option>${opt(LIGAS,m.liga)}</select></div></div>`:`<label class="f">Liga</label><select class="t" id="mLiga"><option value="">—</option>${opt(LIGAS,m.liga)}</select>`}
+    ${isAdminMembers()?`<div class="row2"><div><label class="f">Perfil</label><select class="t" id="mProf">${Object.entries(PROFS).map(([k,v])=>`<option value="${k}" ${prof(m)===k?"selected":""}>${v}</option>`).join("")}</select></div><div><label class="f">Liga</label><select class="t" id="mLiga"><option value="">—</option>${opt(LIGAS,m.liga)}</select></div></div>`:`<label class="f">Liga</label><select class="t" id="mLiga"><option value="">—</option>${opt(LIGAS,m.liga)}</select>`}
     <div class="row2"><div><label class="f">HCP</label><input class="t" id="mHcp" inputmode="decimal" value="${esc(m.hcp??"")}"></div>
-    ${isAdminMembers()?`<div><label class="f">Fundador</label><select class="t" id="mFund"><option value="false">No</option><option value="true" ${m.fundador?"selected":""}>Sí</option></select></div>`:"<div></div>"}</div>
-    ${isAdminMembers()?`<label class="f">Board (vota cambios al Código)</label><select class="t" id="mBoard"><option value="false">No</option><option value="true" ${m.board?"selected":""}>Sí</option></select>`:`<div class="note" style="margin-top:8px">Como miembro del board das de alta al nuevo hermano; roles y permisos los asigna el Presidente o el Secretario.</div>`}
-    ${isAdminMembers()&&!m.superadmin?`<label class="f">Perfil</label><select class="t" id="mGuest"><option value="false">Socio</option><option value="true" ${m.guest?"selected":""}>Invitado · solo Casa Club, Apuestas, Honor y Redes</option></select>`:""}
+    <div></div></div>
+    ${isAdminMembers()?`<div class="note" style="margin-top:8px">Tesorero, Secretario y Presidente son Board automáticamente. <a href="#" data-goperm>Ver qué puede hacer cada perfil ›</a></div>`:`<div class="note" style="margin-top:8px">Como miembro del board das de alta al nuevo hermano como Socio; el perfil lo asigna el Presidente o el Secretario.</div>`}
     ${m.id&&!m.superadmin?`<label class="f">Estatus</label><select class="t" id="mAct"><option value="true">Activo</option><option value="false" ${m.active?"":"selected"}>Inactivo</option></select>`:""}
-    ${ME.superadmin&&m.id&&!m.superadmin?`<label class="f">Admin de apuestas (puede abrir torneos)</label><select class="t" id="mBet"><option value="false">No</option><option value="true" ${m.bet_admin?"selected":""}>Sí</option></select>`:""}
-    ${isAdminMembers()||(ME.board&&!m.id)?`<button class="btn gold w" id="mSave" data-id="${m.id||""}" style="margin-top:14px">${m.id?"Guardar":"Dar de alta"}</button>`:""}
+    ${isAdminMembers()||(isBoard(ME)&&!m.id)?`<button class="btn gold w" id="mSave" data-id="${m.id||""}" style="margin-top:14px">${m.id?"Guardar":"Dar de alta"}</button>`:""}
     ${m.id&&canDelMembers()&&!m.superadmin&&m.id!==ME.id?`<button class="btn danger w" id="mDel" data-id="${m.id}" style="margin-top:8px">Eliminar socio</button>`:""}
     <button class="btn ghost w" id="mCancel" style="margin-top:8px">Cancelar</button>`;
 }
@@ -1399,12 +1402,11 @@ document.addEventListener("click",async e=>{
   if(e.target.id==="mDel"){ const mm=MEMBERS.find(x=>x.id===e.target.dataset.id); if(!confirm(`¿Eliminar a ${mm?mm.name:"este socio"} del club? Ya no podrá entrar. Su historial de asistencias y quinielas se conserva.`)) return;
     try{ MEMBERS=await rpc("c_admin_delete_member",{p_token:TOKEN,p_id:e.target.dataset.id}); toast("Socio eliminado"); $("#memForm").classList.add("hide"); loadMembers(); }catch(err){ toast(err.message); } return; }
   if(e.target.id==="mSave"){ const id=e.target.dataset.id||null, prev=MEMBERS.find(m=>m.id===id);
-    const d={id,name:$("#mName").value.trim(),nickname:$("#mNick").value.trim(),email:$("#mEmail").value.trim(),role:$("#mRole")?$("#mRole").value:"miembro",liga:$("#mLiga").value||null,hcp:$("#mHcp").value.trim(),fundador:$("#mFund")?$("#mFund").value==="true":false,board:$("#mBoard")?$("#mBoard").value==="true":false,active:$("#mAct")?$("#mAct").value==="true":true};
+    const d={id,name:$("#mName").value.trim(),nickname:$("#mNick").value.trim(),email:$("#mEmail").value.trim(),role:$("#mProf")&&CARGOS.includes($("#mProf").value)?$("#mProf").value:(prev&&!$("#mProf")?prev.role:"miembro"),liga:$("#mLiga").value||null,hcp:$("#mHcp").value.trim(),board:$("#mProf")?["board",...CARGOS].includes($("#mProf").value):!!prev?.board,active:$("#mAct")?$("#mAct").value==="true":true};
     e.target.disabled=true;
     try{ MEMBERS=await rpc("c_admin_save_member",{p_token:TOKEN,p_data:d});
-      if($("#mBet")&&id&&(($("#mBet").value==="true")!==!!prev?.bet_admin)) MEMBERS=await rpc("c_admin_set_bet_admin",{p_token:TOKEN,p_id:id,p_on:$("#mBet").value==="true"});
-      if($("#mGuest")&&(($("#mGuest").value==="true")!==!!prev?.guest)){ const nid=id||(MEMBERS.find(x=>d.email&&(x.email||"").toLowerCase()===d.email.toLowerCase())||MEMBERS.find(x=>x.name===d.name)||{}).id;
-        if(nid) MEMBERS=await rpc("c_admin_set_guest",{p_token:TOKEN,p_id:nid,p_on:$("#mGuest").value==="true"}); }
+      if($("#mProf")&&(($("#mProf").value==="invitado")!==!!prev?.guest)){ const nid=id||(MEMBERS.find(x=>d.email&&(x.email||"").toLowerCase()===d.email.toLowerCase())||MEMBERS.find(x=>x.name===d.name)||{}).id;
+        if(nid) MEMBERS=await rpc("c_admin_set_guest",{p_token:TOKEN,p_id:nid,p_on:$("#mProf").value==="invitado"}); }
       toast("Socio guardado ✓"); $("#memForm").classList.add("hide"); loadMembers();
       if(id===ME.id){ ME=await rpc("c_me",{p_token:TOKEN}); renderWho(); } }
     catch(err){ toast(err.message); e.target.disabled=false; } }
@@ -1823,7 +1825,24 @@ async function handleCreq(){ const q=new URLSearchParams(location.search), id=q.
 /* ===== uso de la app (solo superadmin) ===== */
 const VNAME={home:"Casa Club",cal:"Calendario",bets:"Apuestas",event:"Torneo (quiniela)",att:"Asistencias",treas:"Tesorería",honor:"Honor",code:"Código",board:"Board",hist:"Históricos",members:"Miembros",social:"Redes",profile:"Mi perfil",usage:"Uso",tee:"Salidas"};
 let US=null, ULOG="";
-async function loadUsage(){ $("#uBody").innerHTML=`<div class="card"><div class="note">Cargando…</div></div>`;
+let UTAB="act";
+const PERM_COLS=["invitado","socio","board","tesorero","secretario","presidente"];
+const PERM_ROWS=[["Casa Club","👁","👁","👁","👁","👁","👁"],["Apuestas","👁 entra","👁 entra","✏️ + pagos","✏️ + pagos","✏️ + pagos","✏️ + pagos"],
+  ["Honor","👁","➕ publica","➕ publica","➕ publica","✏️ + borra","✏️ + borra"],["Redes","👁","👁","👁","👁","👁","👁"],
+  ["Código","👁","➕ propone","➕ vota","➕ vota","✏️ vota + publica","✏️ vota + publica"],["Noticias","👁","👁","✏️ publica","✏️ publica","✏️ publica","✏️ publica"],
+  ["Calendario","👁","👁","👁","👁","✏️","✏️"],["Históricos","👁","👁","👁","👁","👁","👁"],["Salidas","—","👁","✏️","✏️","✏️","✏️"],["Asistencias","—","👁","✏️","✏️","✏️","✏️"],
+  ["Tesorería (liga)","—","👁 su cuota","👁","✏️","✏️","✏️"],["Board","—","—","✏️","✏️","✏️","✏️"],["Miembros","—","👁","➕ altas","➕ altas","✏️ + elimina","✏️ + elimina"],["Uso","—","—","👁","👁","👁","👁"]];
+async function renderPerm(){ $("#uAct").classList.add("hide"); let M=MEMBERS; if(!M||!M.length){ try{ M=MEMBERS=await rpc("c_members_list",{p_token:TOKEN}); }catch{ M=[]; } }
+  const who=k=>M.filter(m=>m.active&&prof(m)===k).map(m=>esc(m.nickname||m.name)); const cnt=k=>M.filter(m=>m.active&&prof(m)===k).length;
+  $("#uBody").innerHTML=`<div class="card"><div class="h">Permisos por perfil <small>👁 ve · ➕ ve y agrega lo suyo · ✏️ edita y administra · — sin acceso</small></div>
+    <div class="ptbl"><table><thead><tr><th>Módulo</th>${PERM_COLS.map(k=>`<th>${PROFS[k]}<small>${cnt(k)}</small></th>`).join("")}</tr></thead>
+    <tbody>${PERM_ROWS.map(r=>`<tr><td>${r[0]}</td>${r.slice(1).map(c=>`<td class="${c==="—"?"no":c.startsWith("✏️")?"ed":c.startsWith("➕")?"ad":"vw"}">${c}</td>`).join("")}</tr>`).join("")}</tbody></table></div>
+    <div class="note" style="margin-top:8px">Tesorero, Secretario y Presidente son Board por regla: tienen todo lo del Board y algo más. "Entra" = inscribirse a quiniela/competencia y hacer picks. "+ pagos" = marcar Debe/Pagó en los torneos.</div></div>
+    <div class="card"><div class="h">Quién tiene cada perfil</div>${["presidente","secretario","tesorero","board","invitado"].map(k=>`<div class="prow"><b>${PROFS[k]}</b><span>${who(k).join(", ")||"—"}</span></div>`).join("")}<div class="prow"><b>Socio</b><span>${cnt("socio")} socios</span></div>
+    <div class="note" style="margin-top:6px">El perfil se cambia en Miembros (Presidente o Secretario).</div></div>`; }
+document.addEventListener("click",e=>{ const t=e.target.closest("[data-utab]"); if(t){ UTAB=t.dataset.utab; document.querySelectorAll("#uTabs [data-utab]").forEach(b=>b.classList.toggle("on",b===t)); loadUsage(); return; }
+  if(e.target.closest("[data-goperm]")){ e.preventDefault(); UTAB="perm"; go("usage"); document.querySelectorAll("#uTabs [data-utab]").forEach(b=>b.classList.toggle("on",b.dataset.utab==="perm")); } });
+async function loadUsage(){ if(UTAB==="perm") return renderPerm(); $("#uAct").classList.remove("hide"); $("#uBody").innerHTML=`<div class="card"><div class="note">Cargando…</div></div>`;
   try{ US=await rpc("u_stats",{p_token:TOKEN,p_days:+$("#uDays").value}); }catch(e){ $("#uBody").innerHTML=`<div class="card"><div class="note">${esc(e.message)}</div></div>`; return; } renderUsage(); }
 document.addEventListener("change",e=>{ if(e.target.id==="uDays") loadUsage(); if(e.target.id==="uLogF"){ ULOG=e.target.value; renderUsage(); } });
 function renderUsage(){ const U=US, K=U.kpis, ago=t=>{ if(!t) return "nunca"; const d=(Date.now()-new Date(t))/864e5; return d<1/24?"hace minutos":d<1?"hace "+Math.round(d*24)+" h":d<2?"ayer":"hace "+Math.floor(d)+" días"; };
@@ -1908,7 +1927,7 @@ function honorForm(h){ h=h||{category:"liga_sabado",season:"",event_name:"",date
    <label class="f">Notas (score, hoyo, anécdota)</label><input class="t" id="hfNotes" value="${esc(h.notes||"")}">
    <label class="f">Foto del campeón</label><div class="hfph"><span id="hfPrev">${h.photo?`<img src="${h.photo.thumb}" alt="">`:""}</span><button type="button" class="btn sm ghost" id="hfPhoto">${h.photo?"Cambiar foto":"📷 Elegir foto"}</button></div>
    <button class="btn gold w" id="hfSave" data-id="${h.id||""}" style="margin-top:12px">${h.id?"Guardar":"Publicar"}</button>
-   ${h.id?`<button class="btn danger w" id="hfDel" data-id="${h.id}" style="margin-top:8px">Borrar</button>`:""}
+   ${h.id&&HN.can_admin?`<button class="btn danger w" id="hfDel" data-id="${h.id}" style="margin-top:8px">Borrar</button>`:""}
    <button class="btn ghost w" id="hfCancel" style="margin-top:8px">Cerrar</button>`; }
 let HFPHOTO=null;
 async function shrink(file,max,q){ const img=await new Promise((ok,ko)=>{const i=new Image(); i.onload=()=>ok(i); i.onerror=ko; i.src=URL.createObjectURL(file);});
@@ -1947,10 +1966,10 @@ function renderCode(){
   if(KTAB==="code"){ const v=KVIEW;
     h=v?`<div class="card"><div class="h">Versión ${esc(v.label)} <small>${new Date(v.published_at+"T12:00:00").toLocaleDateString("es-MX",{day:"numeric",month:"long",year:"numeric"})}</small></div>${v.id!==KC.current?.id?`<div class="banner">Estás viendo una versión anterior. <a href="#" data-kcur>Ver la vigente</a></div>`:""}${codeHTML(v.body)}
       ${v.pdf_url?`<a class="btn ghost w" style="margin-top:12px" href="${esc(v.pdf_url)}" target="_blank" rel="noopener">Ver PDF oficial</a>`:""}</div>
-      <div class="card"><div class="note">¿Algo que cambiar para la próxima temporada? El código no se modifica durante la temporada; las propuestas las revisa el board.</div><button class="btn gold w" data-ktab="prop" style="margin-top:10px">Proponer un cambio</button></div>`:`<div class="card"><div class="note">Aún no hay código publicado.</div></div>`;
+      <div class="card noguest"><div class="note">¿Algo que cambiar para la próxima temporada? El código no se modifica durante la temporada; las propuestas las revisa el board.</div><button class="btn gold w" data-ktab="prop" style="margin-top:10px">Proponer un cambio</button></div>`:`<div class="card"><div class="note">Aún no hay código publicado.</div></div>`;
   }
   if(KTAB==="prop"){
-    h=`<div class="card"><div class="h">Nueva propuesta</div>
+    h=`<div class="card noguest"><div class="h">Nueva propuesta</div>
       ${propFormHTML()}<div class="note" style="margin-top:6px">El board vota en su módulo; se les avisa por correo. Los nuevos miembros los da de alta cualquier miembro del board en Miembros.</div></div>`;
     if(KC.is_board) h+=`<div class="banner">Eres del board: vota en <a href="#" data-goboard>el módulo Board ›</a></div>`;
     h+=KC.proposals.map(p=>{ const tot=p.si+p.no, pct=x=>tot?x/tot*100:0, st={abierta:"open",aprobada:"open",incorporada:"fin",rechazada:"live",vencida:"fin"}[p.status];
