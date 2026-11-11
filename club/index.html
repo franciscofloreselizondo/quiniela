@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b3029">
 <title>Hermanos McGregor · Golf Club</title>
-<link rel="icon" href="https://njdvluvuzcczsrrrwyzt.supabase.co/storage/v1/object/public/quiniela/icon180.png">
-<link rel="apple-touch-icon" href="https://njdvluvuzcczsrrrwyzt.supabase.co/storage/v1/object/public/quiniela/icon180.png">
+<link rel="icon" type="image/png" href="/icons/favicon-192.png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -922,16 +922,19 @@ function torneoPrizes(){ const T=TB(), PC=pairCalc(), R=EV.results||{}, out={tea
   if(wt>=0&&Q.e){ const w=(EV.players||[]).filter(p=>p.team===wt&&T.opt.has(p.n)).map(p=>p.n); out.team={name:R.team,names:w,each:w.length?T.eqPot/w.length:0}; }
   const all=PC.P.length&&PC.P.every(x=>x.tot!=null);
   if(all){ const el=PC.ranked.filter(x=>x.ps.some(p=>T.opt.has(p.n))).slice(0,3).map(x=>({x,names:x.ps.filter(p=>T.opt.has(p.n)).map(p=>p.n)}));
-    const tot=[0,0,0]; if(el[2]) tot[2]=T.po*el[2].names.length; if(el[1]) tot[1]=2*T.po*el[1].names.length; if(el[0]) tot[0]=Math.max(T.poPot-tot[1]-tot[2],0);
+    const tot=[0,0,0]; [2,1].forEach(i=>{ if(el[i]) tot[i]=podEach(T,i,el[i].x.ps.length)*el[i].names.length; }); if(el[0]) tot[0]=Math.max(T.poPot-tot[1]-tot[2],0);
     out.pods=el.map((o,i)=>({...o,pos:i+1,total:Q.p?tot[i]:0,each:Q.p?tot[i]/(o.names.length||1):0})); }
   return out; }
-function podioPrizes(T){ return [Math.max(T.poPot-6*T.po,0),4*T.po,2*T.po]; }
+/* podio de parejas: 1ª 60% · 2ª 25% · 3ª 15% de la bolsa; por jugador inscrito, redondeado a $100; lo que sobre (redondeo o compañeros no inscritos) va a la 1ª */
+const PODIO_PCT=[.60,.25,.15];
+function podEach(T,i,ps){ return Math.round(T.poPot*PODIO_PCT[i]/(ps||2)/100)*100; }
+function podioPrizes(T){ const p3=2*podEach(T,2), p2=2*podEach(T,1); return [Math.max(T.poPot-p2-p3,0),p2,p3]; }
 function torneoCard(){ const T=TB(); if(!T.on) return ""; const x=EV.aportacion, n=EV.entries.length, pq=prizes();
   return `<div class="card"><div class="h">¿Cómo funciona la bolsa? <small>entras a una o a las dos</small></div>
   <table class="ht" id="bolsaTbl"><tr><th>Bolsa</th><th>Cuota</th><th>Total</th><th>Premios</th></tr>
   <tr><td>🎯 <b>Quiniela</b><div class="note">Individual · más puntos con tus picks</div></td><td>${money(x)}</td><td>${money(x*n)}<div class="note">${n} inscrito${n===1?"":"s"}</div></td><td style="text-align:left">1º el resto <span class="note">(hoy ${money(pq[0])})</span><br>2º ${money(pq[1]||0)} <span class="note">(doble)</span><br>3º ${money(pq[2]||0)} <span class="note">(reintegro)</span></td></tr>
   ${T.eq?`<tr><td>⚔️ <b>${esc(EV.teams[0])} vs ${esc(EV.teams[1])}</b><div class="note">Gana el equipo que gane más partidos: ${EV.matches.length} partidos (${EV.matches.length/2||0} por día), cada uno vale 1 punto. Si quedan ${half(EV.matches.length/2)}–${half(EV.matches.length/2)}: gana el de menos golpes netos totales</div></td><td>${money(T.eq)}</td><td>${money(T.eqPot)}<div class="note">${T.nP} de ${T.nPl} jugadores</div></td><td style="text-align:left">Se reparte entre los inscritos del equipo ganador <span class="note">(≈ el doble de su cuota)</span></td></tr>`:""}
-  ${T.po?`<tr><td>🏆 <b>Podio de parejas</b><div class="note">Best ball net, suma de los 2 días</div></td><td>${money(T.po)}</td><td>${money(T.poPot)}</td><td style="text-align:left">Por jugador inscrito:<br>3ª ${money(T.po)} <span class="note">(reintegro)</span><br>2ª ${money(2*T.po)} <span class="note">(doble)</span><br>1ª el resto de la bolsa</td></tr>`:""}
+  ${T.po?`<tr><td>🏆 <b>Podio de parejas</b><div class="note">Best ball net, suma de los 2 días</div></td><td>${money(T.po)}</td><td>${money(T.poPot)}</td><td style="text-align:left">1ª 60% <span class="note">(hoy ${money(podioPrizes(T)[0]/2)} c/u)</span><br>2ª 25% <span class="note">(hoy ${money(podEach(T,1))} c/u)</span><br>3ª 15% <span class="note">(hoy ${money(podEach(T,2))} c/u)</span><div class="note">Cobra cada jugador inscrito de la pareja</div></td></tr>`:""}
   <tr><td><b>Ambas</b></td><td><b>${money(x+T.eq+T.po)}</b></td><td><b>${money(x*n+T.eqPot+T.poPot)}</b></td><td></td></tr></table>
   <div class="note" style="margin-top:8px">🎯 La quiniela es para cualquier socio, juegue o no. ⚔️🏆 La apuesta del torneo (${money(T.eq+T.po)}) es solo para jugadores y solo cobran quienes se inscriban a ella. Sin empates en el podio: desempata el net del compañero y luego el HCP combinado.</div>${quorumNote()}</div>`; }
 function inscripcionCard(){ const T=TB(); if(!T.on) return ""; const mine=myEntry(), open=!EV.closed&&!locked(), mePl=(EV.players||[]).find(p=>p.member_id===ME.id), inT=mePl&&T.opt.has(mePl.n), picks=mine&&Object.keys(mine.picks||{}).length, tPaid=mePl&&(EV.torneo_paid||[]).includes(mePl.n);
