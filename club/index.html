@@ -720,6 +720,14 @@ document.addEventListener("click",async e=>{ const t=e.target;
     try{ await rpc("n_post",{p_token:TOKEN,p_title:ti,p_body:$("#newsBody").value}); $("#newsTitle").value=""; $("#newsBody").value=""; toast("Aviso publicado ✓"); loadNews(); }catch(err){ toast(err.message); } t.disabled=false; } });
 setInterval(()=>{ if(document.visibilityState==="visible") newsTick(); },120000);
 document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") newsTick(); });
+/* auto-actualización (app en pantalla de inicio): si se publicó una versión nueva, recarga sola al volver a la app */
+(()=>{ const h=t=>{ let x=0; for(let i=0;i<t.length;i++) x=(x*31+t.charCodeAt(i))|0; return x; }; let base=null, busy=false;
+  const get=()=>fetch(location.pathname+"?v="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():null).then(t=>t?h(t):null).catch(()=>null);
+  const own=()=>fetch(location.pathname,{cache:"force-cache"}).then(r=>r.ok?r.text():null).then(t=>t?h(t):null).catch(()=>null);
+  const check=async()=>{ if(busy) return; busy=true; try{ if(base==null){ base=await own(); if(base==null) return; } const v=await get(); if(v==null) return;
+      const editing=(typeof dirty!=="undefined"&&dirty)||(document.activeElement&&/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName));
+      if(v!==base&&!editing) location.reload(); } finally{ busy=false; } };
+  check(); document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") check(); }); setInterval(check,5*60e3); })();
 
 /* ===== routing ===== */
 let LOGIN_KIND="abrir", LASTV={v:"",t:0};
