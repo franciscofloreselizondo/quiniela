@@ -257,7 +257,7 @@ textarea.copy{width:100%;min-height:150px;font:12px/1.4 ui-monospace,monospace;b
 .pairrow{display:grid;grid-template-columns:22px 1fr 48px 1fr 48px 74px 26px;gap:4px;margin-bottom:6px;align-items:center}
 .pmrow{display:grid;grid-template-columns:62px 1fr 1fr 58px 26px;gap:4px;margin-bottom:6px;align-items:center}
 .pairrow input,.pairrow select,.pmrow input,.pmrow select{padding:7px 5px;font-size:12.5px}
-.pjsc{display:grid;grid-template-columns:1fr 60px 60px;gap:6px;margin-bottom:5px;align-items:center}
+.pjsc{display:grid;grid-template-columns:1fr 66px 66px;gap:6px;margin-bottom:5px;align-items:center}.pjsc .pjnet{font-size:11px}.pjbb{background:rgba(164,161,106,.08);border-radius:8px;padding:4px 6px;margin-bottom:10px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .ent{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:8px 0;border-top:1px solid rgba(164,161,106,.2)}.ent:first-child{border-top:0}
 .ent .nm2{flex:1;min-width:110px}
@@ -950,10 +950,11 @@ function torneoResultsCard(){ const T=TB(); if(!T.on) return ""; const PC=pairCa
     else h+=TP.pods.map(o=>`<div class="pzl"><span>🏆 ${o.pos}ª · ${esc(o.x.label)} (${o.x.tot})${o.names.length<o.x.ps.length?`<div class="note">cobra solo ${esc(o.names.join(", "))}</div>`:""}</span><b>${money(o.total)}${o.names.length>1?` <span class="note">(${money(o.each)} c/u)</span>`:""}</b></div>`).join(""); }
   return `<div class="card"><div class="h">Premios del torneo <small>${EV.closed?"final":"en vivo"}</small></div>${h}${EV.closed?quorumNote():""}</div>`; }
 function half(x){ return x%1?(Math.floor(x)||"")+"½":String(x); }
+const hc80=p=>Math.round(0.8*(+p.h||0)); /* torneo general: HCP al 80% del índice */
 function pairsOf(e){ e=e||EV; const m={}; (e.players||[]).forEach(p=>{ (m[p.pair]=m[p.pair]||{no:p.pair,team:p.team,ps:[]}).ps.push(p); }); return Object.values(m).map(x=>({...x,label:x.ps.map(p=>p.n).join(" / ")})).sort((a,b)=>a.no-b.no); }
 function pairCalc(e){ e=e||EV; const S={}; (e.scores||[]).forEach(x=>S[x.n]=x);
   const P=pairsOf(e).map(x=>{ const v=k=>x.ps.map(p=>S[p.n]?.[k]).filter(v=>v!=null), mn=k=>{const a=v(k); return a.length?Math.min(...a):null;}, mx=k=>{const a=v(k); return a.length?Math.max(...a):null;};
-    const b1=mn("d1"),b2=mn("d2"),w1=mx("d1"),w2=mx("d2"), hs=x.ps.map(p=>p.h).filter(h=>h!=null&&h!==""); return {...x,b1,b2,w1,w2,h:hs.length?hs.reduce((a,b)=>a+ +b,0):null,tot:b1!=null&&b2!=null?b1+b2:null,wtot:w1!=null&&w2!=null?w1+w2:null}; });
+    const bb=k=>{ const a=v(k); return a.length?Math.min(...a):null; }, b1=bb("bb1")??mn("d1"), b2=bb("bb2")??mn("d2"), w1=mx("d1"),w2=mx("d2"), hs=x.ps.map(p=>p.h).filter(h=>h!=null&&h!==""); return {...x,b1,b2,w1,w2,h:hs.length?hs.reduce((a,b)=>a+ +b,0):null,tot:b1!=null&&b2!=null?b1+b2:null,wtot:w1!=null&&w2!=null?w1+w2:null}; });
   const by=no=>P.find(x=>x.no===no), N=v=>v==null?999:v; let wp=0,rp=0;
   // sin empates: best ball del día → net del compañero ese día → best ball del otro día → menor HCP combinado
   const key=(x,d)=>x?[d==2?x.b2:x.b1, N(d==2?x.w2:x.w1), N(d==2?x.b1:x.b2), N(x.h)]:null;
@@ -1317,10 +1318,13 @@ function adminHTML(){
     <button class="btn w" id="saveScores" style="margin-top:10px">Guardar tabla final</button></div>`;
   if(ST()) return scoreCard+adminRest(hasPicks,notIn);
   if(PJ()){ const S={}; (EV.scores||[]).forEach(x=>S[x.n]=x);
-    return `<div class="card"><div class="h">Scores por día <small>net individual</small></div>
-    <div class="note" style="margin-bottom:8px">Captura el net de cada jugador por día. La app calcula el best ball de cada pareja, los partidos, el marcador, el equipo ganador y el podio de parejas.</div>
+    const g0=(p,d)=>{ const x=S[p.n]; if(!x) return ""; const g=x["g"+d]; if(g!=null) return g; const n=x["d"+d]; return n!=null?n+hc80(p):""; };
+    return `<div class="card"><div class="h">Scores por día <small>gross + best ball</small></div>
+    <div class="note" style="margin-bottom:8px">Captura el <b>gross</b> de cada jugador: la app calcula su net con el 80% de su HCP. En la fila de cada pareja captura el <b>best ball net</b> que da el torneo. Con eso salen los partidos, el marcador, el equipo ganador y el podio.</div>
     <div class="pjsc note"><span>Jugador</span><span>Día 1</span><span>Día 2</span></div>
-    <div id="pjTbl">${pairsOf().map(x=>`<div class="mt"><span class="dot ${x.team===1?"r":"w"}"></span>${esc(x.label)}</div>`+x.ps.map(p=>`<div class="pjsc" data-ps="${esc(p.n)}"><span class="nm2">${esc(p.n)}</span><input class="t" type="number" inputmode="numeric" value="${esc(S[p.n]?.d1??"")}" placeholder="Net"><input class="t" type="number" inputmode="numeric" value="${esc(S[p.n]?.d2??"")}" placeholder="Net"></div>`).join("")).join("")}</div>
+    <div id="pjTbl">${pairsOf().map(x=>{ const s0=x.ps.map(p=>S[p.n]).find(v=>v&&(v.bb1!=null||v.bb2!=null))||{};
+      return `<div class="mt"><span class="dot ${x.team===1?"r":"w"}"></span>${esc(x.label)}</div>`+x.ps.map(p=>`<div class="pjsc" data-ps="${esc(p.n)}" data-hc="${hc80(p)}"><span class="nm2">${esc(p.n)}<div class="note pjnet">HCP ${p.h??"—"} → ${hc80(p)} golpes</div></span><input class="t" type="number" inputmode="numeric" value="${esc(g0(p,1))}" placeholder="G"><input class="t" type="number" inputmode="numeric" value="${esc(g0(p,2))}" placeholder="G"></div>`).join("")
+      +`<div class="pjsc pjbb" data-pp="${x.no}"><span class="nm2"><b>Best ball net pareja</b></span><input class="t" type="number" inputmode="numeric" value="${esc(s0.bb1??"")}" placeholder="BB"><input class="t" type="number" inputmode="numeric" value="${esc(s0.bb2??"")}" placeholder="BB"></div>`; }).join("")}</div>
     <button class="btn w" id="savePairSc" style="margin-top:10px">Guardar scores y calcular</button>
     <button class="btn ghost w" id="mailPairSc" style="margin-top:8px" ${(EV.scores||[]).length?"":"disabled"}>📧 Enviar resumen del día por correo</button>
     <div class="note" style="margin-top:6px">Manda a apostadores y jugadores el marcador ${esc(EV.teams[0])} vs ${esc(EV.teams[1])}, los partidos, la tabla de parejas con premios y el ranking de la quiniela.</div></div>
@@ -1474,7 +1478,9 @@ document.addEventListener("click",async e=>{
   if(t.id==="saveBolsas"){ t.disabled=true; try{ EV=await rpc("b_admin_set_bolsas",{p_token:TOKEN,p_event:EV.id,p_bolsas:{equipos:+$("#bqEq").value||0,podio:+$("#bqPo").value||0}}); toast("Bolsas guardadas ✓"); renderEvent(); }catch(err){ toast(err.message); t.disabled=false; } return; }
   if(t.id==="mailPairSc"){ if(!confirm("¿Mandar el resumen por correo a apostadores y jugadores?")) return; t.disabled=true; try{ const r=await rpc("b_mail_pair_summary",{p_token:TOKEN,p_event:EV.id}); toast(`Resumen enviado a ${r.sent} ✓`); }catch(err){ toast(err.message); } finally{ t.disabled=false; } return; }
   if(t.id==="savePairSc"){ t.disabled=true;
-    const sc=[...document.querySelectorAll("#pjTbl [data-ps]")].map(r=>{const i=r.querySelectorAll("input"); const nv=x=>x.value===""?null:Math.round(Number(x.value)); return {n:r.dataset.ps,d1:nv(i[0]),d2:nv(i[1])};});
+    const nv=x=>x.value===""?null:Math.round(Number(x.value)), net=(g,h)=>g==null?null:g-h;
+    const sc=[...document.querySelectorAll("#pjTbl [data-ps]")].map(r=>{const i=r.querySelectorAll("input"), h=+r.dataset.hc||0, g1=nv(i[0]), g2=nv(i[1]); return {n:r.dataset.ps,g1,g2,d1:net(g1,h),d2:net(g2,h)};})
+      .concat([...document.querySelectorAll("#pjTbl [data-pp]")].map(r=>{const i=r.querySelectorAll("input"); return {pair:+r.dataset.pp,bb1:nv(i[0]),bb2:nv(i[1])};}));
     try{ EV=await rpc("b_admin_set_pair_scores",{p_token:TOKEN,p_event:EV.id,p_scores:sc}); res={...EV.results}; toast("Scores guardados ✓"); renderEvent(); }
     catch(err){ toast(err.message); t.disabled=false; } return; }
   if(t.id==="saveScores"){ t.disabled=true;
