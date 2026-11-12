@@ -132,6 +132,10 @@ body.guest .agseg{display:none}
 /* tabs inside event */
 .etabs{display:flex;gap:6px;margin:0 0 12px;overflow-x:auto;scrollbar-width:none}
 .etabs button{flex:1 0 auto;border:1px solid var(--line);background:transparent;color:var(--mute);font:600 13px Inter;padding:8px 10px;border-radius:999px}
+.stk{position:sticky;top:var(--toph,72px);z-index:9;background:rgba(11,48,41,.96);backdrop-filter:blur(6px);margin-left:-14px;margin-right:-14px;padding:8px 14px}
+.etabs.stk{margin-bottom:10px}
+.gojump{position:fixed;right:14px;bottom:calc(84px + env(safe-area-inset-bottom));z-index:29;width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:rgba(8,38,32,.92);color:var(--cream);font-size:20px;line-height:1;display:none;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,.35)}
+.gojump.on{display:flex}
 .etabs button.on{background:var(--cream);color:var(--g);border-color:var(--cream)}
 .back{background:none;border:0;color:var(--gold);font:600 13px Inter;padding:0 0 10px}
 /* stats */
@@ -485,7 +489,7 @@ main{padding-bottom:110px}
 
   <!-- CALENDARIO -->
   <section class="view" id="v-cal">
-    <div class="seg agseg"><button data-nav="cal">🗓️ Calendario</button><button data-nav="tee" class="noguest">🛺 Salidas</button></div>
+    <div class="seg agseg stk"><button data-nav="cal">🗓️ Calendario</button><button data-nav="tee" class="noguest">🛺 Salidas</button></div>
     <div class="plaque"><div class="pt">Hermanos McGregor</div><div class="pn">Calendario Championships</div><div class="ps">Torneos del año y a quién se dedican</div></div>
     <div class="card"><label class="f" for="calSel" style="margin-top:0">Año</label><select id="calSel" class="t"></select></div>
     <div class="card" id="calCard"><div class="h">Torneos <small id="calYear"></small></div><div id="calList"><div class="note">Cargando…</div></div><div id="calAdmin"></div></div>
@@ -503,14 +507,14 @@ main{padding-bottom:110px}
   <section class="view" id="v-event">
     <button class="back" data-nav="bets">‹ Apuestas</button>
     <div class="plaque" id="evPlaque"></div>
-    <div class="etabs" id="evTabs"></div>
+    <div class="etabs stk" id="evTabs"></div>
     <div id="evBody"></div>
   </section>
 
   <!-- HISTORY -->
   <section class="view" id="v-hist">
     <div class="plaque"><div class="pt">Históricos</div><div class="pn">Libro de Récords</div><div class="ps">Tu récord como jugador y como apostador</div></div>
-    <div class="etabs" id="hTabs"><button data-htab="jug" class="on">Como jugador</button><button data-htab="apo">Como apostador</button></div>
+    <div class="etabs stk" id="hTabs"><button data-htab="jug" class="on">Como jugador</button><button data-htab="apo">Como apostador</button></div>
     <div class="card">
       <div class="h">Rango de fechas</div>
       <div class="row2"><div><label class="f" for="hFrom">Desde</label><input id="hFrom" class="t" type="date"></div><div><label class="f" for="hTo">Hasta</label><input id="hTo" class="t" type="date"></div></div>
@@ -521,7 +525,7 @@ main{padding-bottom:110px}
 
   <!-- ASISTENCIAS -->
   <section class="view" id="v-tee">
-    <div class="seg agseg"><button data-nav="cal">🗓️ Calendario</button><button data-nav="tee" class="noguest">🛺 Salidas</button></div>
+    <div class="seg agseg stk"><button data-nav="cal">🗓️ Calendario</button><button data-nav="tee" class="noguest">🛺 Salidas</button></div>
     <div class="plaque"><div class="pt">Salidas</div><div class="pn">Horarios y Carritos</div><div class="ps">Quién sale a qué hora y en qué carrito</div></div>
     <div class="card"><div class="row2"><div><label class="f" for="teeDate" style="margin-top:0">Fecha</label><input id="teeDate" class="t" type="date"></div><div><label class="f" style="margin-top:0">&nbsp;</label><div class="note" id="teeInfo"></div></div></div></div>
     <div id="teeEdit"></div>
@@ -559,7 +563,7 @@ main{padding-bottom:110px}
   <!-- CODIGO -->
   <section class="view" id="v-code">
     <div class="plaque"><div class="pt">Hermanos McGregor</div><div class="pn">Old Golf Bro Code</div><div class="ps" id="kSub"></div></div>
-    <div class="etabs" id="kTabs"><button data-ktab="code" class="on">El Código</button><button data-ktab="prop">Propuestas</button><button data-ktab="hist">Versiones</button></div>
+    <div class="etabs stk" id="kTabs"><button data-ktab="code" class="on">El Código</button><button data-ktab="prop">Propuestas</button><button data-ktab="hist">Versiones</button></div>
     <div id="kBody"></div>
   </section>
 
@@ -571,7 +575,7 @@ main{padding-bottom:110px}
 
   <section class="view" id="v-usage">
     <div class="plaque"><div class="pt">Board</div><div class="pn">Uso de la app</div><div class="ps">Actividad y permisos por perfil</div></div>
-    <div class="etabs" id="uTabs"><button data-utab="act" class="on">Actividad</button><button data-utab="perm">Permisos</button></div>
+    <div class="etabs stk" id="uTabs"><button data-utab="act" class="on">Actividad</button><button data-utab="perm">Permisos</button></div>
     <div class="card" id="uAct"><label class="f" style="margin-top:0">Periodo</label><select class="t" id="uDays"><option value="7">Últimos 7 días</option><option value="30" selected>Últimos 30 días</option><option value="90">Últimos 90 días</option><option value="365">Último año</option></select></div>
     <div id="uBody"></div>
   </section>
@@ -703,6 +707,11 @@ async function loadNews(){ try{ NEWS=await rpc("n_list",{p_token:TOKEN}); }catch
     <div>${n.link?`<button class="btn sm ghost" data-nlink="${esc(n.link)}">Ver</button>`:""}${NEWS.can_post?`<button class="btn sm ghost" data-ndel="${n.id}" title="Borrar" style="margin-left:4px">✕</button>`:""}</div></div>`).join(""):`<div class="note">Aún no hay noticias.</div>`;
   if(NEWS.unread){ rpc("n_seen",{p_token:TOKEN}).then(()=>bellSet(0)).catch(()=>{}); } else bellSet(0); }
 $("#bellBtn").onclick=()=>go("news");
+(()=>{ const top=document.querySelector(".top"), setH=()=>document.documentElement.style.setProperty("--toph",(top?top.offsetHeight:72)+"px"); setH(); addEventListener("resize",setH); setTimeout(setH,800);
+  const b=document.createElement("button"); b.className="gojump"; b.id="goJump"; b.setAttribute("aria-label","Ir arriba o abajo"); document.body.appendChild(b);
+  const upd=()=>{ const H=document.documentElement.scrollHeight, long=H>innerHeight*1.6, down=scrollY<200; b.classList.toggle("on",long); b.textContent=down?"↓":"↑"; b.dataset.dir=down?"down":"up"; };
+  addEventListener("scroll",upd,{passive:true}); addEventListener("resize",upd); new MutationObserver(()=>requestAnimationFrame(upd)).observe(document.body,{childList:true,subtree:true}); upd();
+  b.onclick=()=>scrollTo({top:b.dataset.dir==="down"?document.documentElement.scrollHeight:0,behavior:"smooth"}); })();
 document.querySelector(".top .bar").addEventListener("click",e=>{ if(!ME) return; if(e.target.closest("#barLogo, .bar .t")) go("home"); });
 document.addEventListener("click",async e=>{ const t=e.target;
   if(t.dataset.nlink){ const l=t.dataset.nlink; if(l.startsWith("#e=")) openEvent(l.slice(3)); else if(l.startsWith("tee:")){ $("#teeDate").value=l.slice(4); go("tee"); } else go(l); return; }
@@ -1110,7 +1119,7 @@ function teamOf(name){ for(const m of EV.matches){ if(m.w[0]===name) return "w";
 function summaryHTML(){
   const R=EV.results||{}, K=KEYS(), nres=K.filter(k=>R[k]).length, withP=EV.entries.filter(b=>Object.keys(b.picks||{}).length);
   const fin=EV.closed, live=!fin&&(nres>0||locked());
-  let h=`<div class="status ${fin?"fin":live?"live":""}"><i></i><span id="stTxt">${fin?"Final · evento cerrado":nres?`En juego · ${nres}/${K.length} resultados`:locked()?"En juego · esperando resultados":"Antes del torneo · picks abiertos"}</span></div>`;
+  let h=(fin||nres||locked())?`<div class="status ${fin?"fin":live?"live":""}"><i></i><span id="stTxt">${fin?"Final · evento cerrado":nres?`En juego · ${nres}/${K.length} resultados`:"En juego · esperando resultados"}</span></div>`:"";
   if(!nres) return h+`<div class="card"><div class="note" style="text-align:center">El resumen aparece en cuanto se capture el primer resultado.</div></div>`;
   const pctOf=(k,v)=>{const n=withP.filter(b=>b.picks?.[k]===v).length;return withP.length?Math.round(n/withP.length*100):0;};
   const netOf=n=>{const s=(EV.scores||[]).find(x=>x.n===n); return s?s.net:null;};
@@ -2168,7 +2177,7 @@ function renderBoard(){
   if(!KC.is_board){ $("#bdBody").innerHTML=`<div class="card"><div class="note">Este módulo es solo para los miembros del board.</div></div>`; return; }
   $("#bdSub").textContent=KC.board.map(b=>b.nickname||b.name.split(" ")[0]).join(" · ");
   const P=KC.proposals.filter(p=>p.kind==="codigo"), open=P.filter(p=>p.status==="abierta"), todo=open.filter(p=>!p.mine), done=open.filter(p=>p.mine), hist=P.filter(p=>p.status!=="abierta");
-  let h=`<div class="etabs" id="bdTabs"><button data-btab="vot" class="${BTAB==="vot"?"on":""}">Votaciones${todo.length?` (${todo.length})`:""}</button><button data-btab="new" class="${BTAB==="new"?"on":""}">Proponer</button><button data-btab="hist" class="${BTAB==="hist"?"on":""}">Historial</button></div>`;
+  let h=`<div class="etabs stk" id="bdTabs"><button data-btab="vot" class="${BTAB==="vot"?"on":""}">Votaciones${todo.length?` (${todo.length})`:""}</button><button data-btab="new" class="${BTAB==="new"?"on":""}">Proponer</button><button data-btab="hist" class="${BTAB==="hist"?"on":""}">Historial</button></div>`;
   if(BTAB==="vot"){
     h+=`<div class="hnhead"><span class="t1">Te falta votar</span><small class="note">${todo.length}</small></div>`+(todo.length?todo.map(p=>vcardHTML(p,true)).join(""):`<div class="card"><div class="note">Estás al día. No tienes votos pendientes.</div></div>`);
     if(done.length) h+=`<div class="hnhead" style="margin-top:6px"><span class="t1">Ya votaste · siguen abiertas</span></div>`+done.map(p=>vcardHTML(p,false)).join("");
