@@ -205,11 +205,11 @@ body.guest .agseg{display:none}
 .mres .lose{color:var(--mute);font-size:12px}
 .mres .pc{font-size:11.5px;color:var(--mute);text-align:right}
 .tag{font-size:10px;font-weight:700;letter-spacing:.06em;border-radius:6px;padding:2px 6px;margin-left:4px;background:rgba(229,154,143,.2);color:var(--bad)}
-.podium{display:grid;grid-template-columns:1fr 1.15fr 1fr;align-items:end;gap:6px;text-align:center}
-.podium .st{border:1px solid var(--line);border-radius:12px 12px 4px 4px;padding:10px 4px 8px;background:rgba(255,253,244,.05)}
+.podium{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr) minmax(0,1fr);max-width:100%;align-items:end;gap:6px;text-align:center}
+.podium .st{min-width:0;overflow:hidden;border:1px solid var(--line);border-radius:12px 12px 4px 4px;padding:10px 4px 8px;background:rgba(255,253,244,.05)}
 .podium .st.p1{background:rgba(164,161,106,.2);border-color:var(--gold);padding-top:16px}
 .podium .md{font:700 26px/1 "Cormorant Garamond",serif;color:var(--gold)}
-.podium .nm{font-weight:700;font-size:14px;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.podium .nm{font-weight:700;font-size:12.5px;line-height:1.25;margin-top:4px;overflow:hidden;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical}
 .podium .sc{font-size:12px;color:var(--gold2);margin-top:2px}
 .podium .pz{font-size:12px;color:var(--ok);font-weight:700;margin-top:3px}
 .podium .st.empty .nm{color:var(--mute);font-weight:500}
@@ -1132,7 +1132,7 @@ function summaryHTML(){
   const pctOf=(k,v)=>{const n=withP.filter(b=>b.picks?.[k]===v).length;return withP.length?Math.round(n/withP.length*100):0;};
   const netOf=n=>{const s=(EV.scores||[]).find(x=>x.n===n); return s?s.net:null;};
   if(ST()){ const P=["p1","p2","p3"].map(k=>R[k]?{n:R[k],net:k==="p1"&&EV.net_ganador!=null?EV.net_ganador:netOf(R[k])}:null);
-    const st=(x,i)=>`<div class="st ${i===0?"p1":""} ${x?"":"empty"}"><div class="md">${i+1}º</div><div class="nm">${x?esc(x.n):"por definir"}</div><div class="sc">${x&&x.net!=null?(SB()?esc(x.net)+" pts":"Net "+esc(x.net)):"&nbsp;"}</div><div class="pz" style="background:none;color:var(--mute)">${x?pctOf("p"+(i+1),x.n)+"% le atinó":""}</div></div>`;
+    const st=(x,i)=>`<div class="st ${i===0?"p1":""} ${x?"":"empty"}"><div class="md">${i+1}º</div><div class="nm">${x?esc(x.n).replace(" / ","<br>"):"por definir"}</div><div class="sc">${x&&x.net!=null?(SB()?esc(x.net)+" pts":"Net "+esc(x.net)):"&nbsp;"}</div><div class="pz" style="background:none;color:var(--mute)">${x?pctOf("p"+(i+1),x.n)+"% le atinó":""}</div></div>`;
     h+=`<div class="card"><div class="h">${SB()?"Podio stableford net":"Podio stroke net"}</div><div class="podium" id="podNet">${st(P[1],1)}${st(P[0],0)}${st(P[2],2)}</div></div>`; }
   else {
   const PC=PJ()?pairCalc():null;
@@ -1148,7 +1148,7 @@ function summaryHTML(){
     const lo=v===m.w[0]?m.r[0]:m.w[0], pc=pctOf(k,v);
     return `<div class="mres"><span class="n">M${i+1}</span><span><span class="dot ${teamOf(v)}"></span><b>${esc(v)}</b> <span class="lose">le ganó a ${esc(lo)}${pm?` (${v===m.w[0]?pm.wb:pm.rb} vs ${v===m.w[0]?pm.rb:pm.wb}${pm.tb?", desempate":""})`:""}</span>${withP.length&&pc<35?'<span class="tag">SORPRESA</span>':""}</span><span class="pc">${pc}% le atinó</span></div>`;}).join("")+`</div>`;
   const P=[R.ind1?{n:R.ind1,net:EV.net_ganador}:null, EV.podio?.p2||null, EV.podio?.p3||null];
-  if(P.some(Boolean)){ const st=(x,i)=>`<div class="st ${i===0?"p1":""} ${x?"":"empty"}"><div class="md">${i+1}º</div><div class="nm">${x?esc(x.n):"por definir"}</div><div class="sc">${x&&x.net!=null?"Net "+esc(x.net):"&nbsp;"}</div></div>`;
+  if(P.some(Boolean)){ const st=(x,i)=>`<div class="st ${i===0?"p1":""} ${x?"":"empty"}"><div class="md">${i+1}º</div><div class="nm">${x?esc(x.n).replace(" / ","<br>"):"por definir"}</div><div class="sc">${x&&x.net!=null?"Net "+esc(x.net):"&nbsp;"}</div></div>`;
     h+=`<div class="card"><div class="h">${PC?"Podio de parejas · 2 días":"Podio net individual"}</div><div class="podium" id="podNet">${st(P[1],1)}${st(P[0],0)}${st(P[2],2)}</div></div>`; }
   }
   if((EV.scores||[]).length) h+=PJ()?pairTableHTML():finalTableHTML();
