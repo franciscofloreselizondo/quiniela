@@ -891,6 +891,96 @@ function FIRSTK(){ return ST()?"p1":"ind1"; }
 function PJ(e){ return (e||EV)?.format==="parejas"; }
 function TB(){ const B=EV.bolsas||{}, opt=new Set(EV.torneo||[]), nP=opt.size, eq=+B.equipos||0, po=+B.podio||0; return {eq,po,nP,opt,nPl:(EV.players||[]).length,eqPot:eq*nP,poPot:po*nP,on:PJ()&&(eq>0||po>0)}; }
 /* premios del torneo: solo cobran los jugadores inscritos a la apuesta del torneo */
+/* ===== Reporte PDF de resultados (estándar para todos los torneos) ===== */
+function reportPages(){
+  const R=EV.results||{}, T=TB(), C=cuentas(), RK=ranked(), PR=prizes(), PC=PJ()?pairCalc():null, logo=LOGO64?`<img src="${LOGO64}">`:"";
+  const FOOT=`<div class="rp-foot"><span>Hermanos McGregor</span><span>${esc(EV.name)} · ${EV.event_date?new Date(EV.event_date+"T12:00:00").toLocaleDateString("es-MX",{day:"numeric",month:"short",year:"numeric"}):""}</span></div>`;
+  const head=(k,t)=>`<div class="rp-hd">${logo}<div><div class="rp-k">${k}</div><h1>${t}</h1></div></div>`;
+  let p1=head(`Resultados finales${EV.course?" · "+esc(EV.course):""}`, esc(EV.name));
+  // marcador por equipos
+  if(EV.teams&&EV.teams.length===2&&(EV.matches||[]).length){
+    let w=0,r=0, days={}; if(PC){ w=PC.wp; r=PC.rp; PC.M.forEach(m=>{ const d=m.d||1; days[d]=days[d]||[0,0]; if(m.res==="w") days[d][0]++; else if(m.res==="r") days[d][1]++; else if(m.res==="t"){ days[d][0]+=.5; days[d][1]+=.5; } }); }
+    else EV.matches.forEach((m,i)=>{ const v=R["m"+(i+1)]; if(v===m.w[0]) w++; else if(v===m.r[0]) r++; });
+    const dl=Object.keys(days).length>1?Object.entries(days).map(([d,[a,b]])=>`Día ${d}: ${a>b?esc(EV.teams[0]):b>a?esc(EV.teams[1]):"empate"} ${half(Math.max(a,b))}–${half(Math.min(a,b))}`).join("<br>"):"";
+    let tie=""; if(w===r&&PC){ const tt=i=>PC.P.filter(x=>x.team===i&&x.tot!=null).reduce((a,x)=>a+x.tot,0); tie=`<b>Empate ${half(w)}–${half(r)}</b>desempate por golpes netos<br><b style="font-size:32px">${tt(0)} vs ${tt(1)}</b>`; }
+    p1+=`<div class="rp-hero"><div class="rp-tm az"><b>${half(w)}</b><span>${esc(EV.teams[0])}</span></div><div class="rp-mid">${dl}${tie||(dl?"":"Marcador final")}</div><div class="rp-tm rj"><b>${half(r)}</b><span>${esc(EV.teams[1])}</span></div></div>`
+      +`<div class="rp-win">${R.team?`🏆 Gana el <b>equipo ${esc(R.team)}</b>`:"Equipo ganador por definir"}</div>`;
+  }
+  // competencia
+  if(T.on){ const TP=torneoPrizes(), Q=quorum();
+    p1+=`<h2>⚔️ Competencia <small>· ${money(T.eq+T.po)} por jugador · ${T.nP} inscritos</small></h2>`;
+    if(T.eq){ p1+=`<div class="rp-card">`+(Q.e&&TP.team?`<div class="rp-tw"><span class="rp-chip">${esc(TP.team.name.toUpperCase())}</span><div style="flex:1"><b style="font-size:28px">Bolsa de equipos ${money(T.eq*T.nP)}</b><div class="rp-note" style="margin-top:4px">${money(TP.team.each)} a cada uno: ${TP.team.names.map(esc).join(", ")}</div></div><div class="rp-amt">${money(TP.team.each)}<span style="font-size:20px;font-weight:600"> c/u</span></div></div>`:`<div class="rp-note">${Q.e?"Equipo ganador por definir.":"Apuesta de equipos cancelada por quórum: nadie paga ni cobra."}</div>`)+`</div>`; }
+    if(T.po){ p1+=`<div class="rp-card" style="margin-top:14px"><div style="font-size:26px;font-weight:800;margin-bottom:4px">Podio de parejas · bolsa ${money(T.po*T.nP)} (60 / 25 / 15)</div>`
+      +(Q.p?TP.pods.slice(0,3).map(d=>`<div class="rp-row r${d.pos}"><div class="rp-pos">${d.pos}ª</div><div class="rp-who"><b>${d.names.map(esc).join(" / ")}</b><span>${money(d.each)} a cada uno${d.tot!=null?" · net "+d.tot:""}</span></div><div class="rp-amt">${money(d.total)}</div></div>`).join(""):`<div class="rp-note">Apuesta del podio cancelada por quórum: nadie paga ni cobra.</div>`)+`</div>`; }
+  } else if(ST()&&(R.p1||R.ind1)){ const P=["p1","p2","p3"].map(k=>R[k]).filter(Boolean);
+    p1+=`<h2>🏆 Podio <small>· ${SB()?"stableford net":"stroke net"}</small></h2><div class="rp-card">${P.map((n,i)=>`<div class="rp-row r${i+1}"><div class="rp-pos">${i+1}º</div><div class="rp-who"><b>${esc(n)}</b></div><div></div></div>`).join("")}</div>`; }
+  // quiniela
+  if(EV.entries.length){ const q3=RK.slice(0,3), qok=!EV.closed||quorum().q;
+    p1+=`<h2>🎯 Quiniela <small>· ${money(EV.aportacion)} · ${EV.entries.length} apostadores · bolsa ${money(bolsa())}</small></h2><div class="rp-card">`
+      +(qok?q3.map(r=>`<div class="rp-row r${r.rank}"><div class="rp-pos">${r.rank}º</div><div class="rp-who"><b>${esc(r.e.name)}</b><span>${r.p} pts${r.e.tb!=null?" · desempate "+r.e.tb:""}</span></div><div class="rp-amt">${money(r.prize)}</div></div>`).join(""):`<div class="rp-note">Quiniela cancelada por quórum: nadie paga ni cobra.</div>`)
+      +(qok&&q3.length>1&&q3[0].p===q3[1].p&&EV.net_ganador!=null?`<div class="rp-note">Empate a ${q3[0].p} puntos: gana quien más se acercó al net ganador (${EV.net_ganador}).</div>`:"")+`</div>`; }
+  p1+=FOOT;
+  // página 2: cuentas
+  const byp=new Map(); [...C.X].sort((a,b)=>(C.L.find(l=>l.n===b.payee)?.net||0)-(C.L.find(l=>l.n===a.payee)?.net||0)).forEach(x=>{ if(!byp.has(x.payee)) byp.set(x.payee,[]); byp.get(x.payee).push(x); });
+  const sgn=v=>v>0?"+"+money(v):v<0?"−"+money(-v):money(0);
+  let p2=head(`${esc(EV.name)} · Cuentas`,"¿Quién le paga a quién?")
+    +`<p class="rp-note" style="font-size:23px;margin:0 0 18px">Pagos directos entre socios: cada quien paga solo lo que perdió y cobra solo lo que ganó. Son ${C.X.length} pagos y suman ${money(C.X.reduce((a,x)=>a+x.amount,0))}. Marca "recibido" en la pestaña <b>Cuentas</b> de la app.</p>`
+    +(C.X.length?`<div class="rp-payees">${[...byp].map(([p,xs])=>`<div class="rp-payee"><div class="rp-ph"><b>${esc(p)}</b><span>cobra ${money(xs.reduce((a,x)=>a+x.amount,0))}</span></div>${xs.map(x=>`<div class="rp-pr"><span>${esc(x.payer)}${x.paid?" ✓":""}</span><i>→</i><b>${money(x.amount)}</b></div>`).join("")}</div>`).join("")}</div>`:`<div class="rp-card"><div class="rp-note">No hay pagos pendientes.</div></div>`)
+    +`<h2 style="margin-top:28px">Neto de cada quien <small>· apostó, ganó y neto</small></h2><div class="rp-card"><table><tr><th>Socio</th><th class="r">Apostó</th><th class="r">Ganó</th><th class="r">Neto</th></tr>${C.L.map(l=>`<tr><td>${esc(l.n)}</td><td class="r">${money(l.ap)}</td><td class="r">${money(l.gan)}</td><td class="r ${l.net>0?"up":l.net<0?"dn":""}">${sgn(l.net)}</td></tr>`).join("")}</table></div>`+FOOT;
+  return [p1,p2];
+}
+const RP_CSS=`.rp-page{width:1100px;min-height:1956px;position:relative;overflow:hidden;background:#f5f0e4;color:#1c2a24;padding:70px 80px 110px;font-family:Inter,system-ui,sans-serif;box-sizing:border-box}
+.rp-page *{box-sizing:border-box}.rp-page:before{content:"";position:absolute;left:0;right:0;top:0;height:14px;background:#133a2b}
+.rp-foot{position:absolute;left:80px;right:80px;bottom:46px;display:flex;justify-content:space-between;font-size:19px;letter-spacing:.18em;text-transform:uppercase;color:#8a8650;border-top:1.5px solid #a4a16a;padding-top:16px}
+.rp-hd{display:flex;align-items:center;gap:24px;margin:10px 0 26px}.rp-hd img{width:120px;height:120px}
+.rp-k{font-weight:700;font-size:24px;letter-spacing:.14em;text-transform:uppercase;color:#8a8650}
+.rp-page h1{font:700 64px/1 "Cormorant Garamond",Georgia,serif;color:#133a2b;margin:4px 0 0}
+.rp-page h2{font-weight:700;font-size:32px;letter-spacing:.06em;text-transform:uppercase;color:#133a2b;margin:30px 0 14px}
+.rp-page h2 small{font-size:20px;font-weight:600;letter-spacing:.02em;text-transform:none;color:#8a8650}
+.rp-hero{background:#133a2b;color:#f5f0e4;border-radius:26px;padding:30px 36px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px}
+.rp-tm{text-align:center}.rp-tm b{display:block;font:700 110px/1 "Cormorant Garamond",Georgia,serif}.rp-tm span{font-size:26px;letter-spacing:.2em;text-transform:uppercase;font-weight:700}
+.rp-tm.az b{color:#9fc2f2}.rp-tm.rj b{color:#f0a3ab}
+.rp-mid{text-align:center;font-size:22px;color:#d8d3a8;line-height:1.35}.rp-mid b{display:block;font-weight:700;font-size:38px;color:#fff;margin:4px 0}
+.rp-win{margin-top:16px;text-align:center;font-size:26px}.rp-win b{color:#2f5d9e}
+.rp-card{background:#fffdf7;border:1.5px solid #ddd5bf;border-radius:22px;padding:20px 26px}
+.rp-row{display:grid;grid-template-columns:74px 1fr auto;align-items:center;gap:16px;padding:14px 0;border-top:1.5px solid #e9e1cb}.rp-row:first-child{border-top:0}
+.rp-pos{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:26px;color:#fff;background:#b9b29a}
+.r1 .rp-pos{background:#c9a13b}.r2 .rp-pos{background:#9aa3a8}.r3 .rp-pos{background:#b07a4a}
+.rp-who b{display:block;font-size:29px}.rp-who span{font-size:21px;color:#6b766f}
+.rp-amt{font-weight:800;font-size:42px;color:#133a2b}
+.rp-note{font-size:21px;color:#5d6a63;line-height:1.45;margin-top:10px}
+.rp-tw{display:flex;align-items:center;gap:22px}.rp-tw .rp-amt{font-size:52px}
+.rp-chip{display:inline-block;background:#2f5d9e;color:#fff;border-radius:12px;padding:6px 16px;font-size:22px;font-weight:700;letter-spacing:.06em}
+.rp-payees{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.rp-payee{background:#fffdf7;border:1.5px solid #ddd5bf;border-radius:20px;padding:16px 20px}
+.rp-ph{display:flex;justify-content:space-between;align-items:baseline;border-bottom:2px solid #a4a16a;padding-bottom:8px;margin-bottom:6px}
+.rp-ph b{font-weight:800;font-size:25px;color:#133a2b}.rp-ph span{font-size:20px;font-weight:700;color:#2f7a4a}
+.rp-pr{display:grid;grid-template-columns:1fr 26px auto;gap:6px;font-size:22px;padding:5px 0}.rp-pr i{font-style:normal;color:#8a8650}.rp-pr b{font-weight:800}
+.rp-page table{width:100%;border-collapse:collapse;font-size:20px}
+.rp-page th{text-align:left;font-weight:700;text-transform:uppercase;letter-spacing:.06em;font-size:17px;color:#8a8650;padding:0 0 8px}
+.rp-page td{padding:5px 0;border-top:1px solid #e9e1cb}.rp-page td.r,.rp-page th.r{text-align:right}.rp-page td.up{color:#2f7a4a;font-weight:800}.rp-page td.dn{color:#a8323e;font-weight:700}`;
+const loadJS=src=>new Promise((ok,ko)=>{ if(document.querySelector(`script[src="${src}"]`)) return ok(); const s=document.createElement("script"); s.src=src; s.onload=ok; s.onerror=()=>ko(new Error("No cargó "+src)); document.head.appendChild(s); });
+async function downloadReport(btn){
+  const old=btn?.textContent; if(btn){ btn.disabled=true; btn.textContent="Generando PDF…"; }
+  const box=document.createElement("div"); box.style.cssText="position:fixed;left:-12000px;top:0;z-index:-1";
+  try{
+    await logoData().catch(()=>null);
+    await Promise.all([loadJS("/vendor/html2canvas.min.js"),loadJS("/vendor/jspdf.umd.min.js")]);
+    box.innerHTML=`<style>${RP_CSS}</style>`+reportPages().map(h=>`<div class="rp-page">${h}</div>`).join(""); document.body.appendChild(box);
+    if(document.fonts?.ready) await document.fonts.ready;
+    const pages=[...box.querySelectorAll(".rp-page")], hs=pages.map(pg=>Math.max(1956,Math.ceil(pg.scrollHeight)));
+    pages.forEach((pg,i)=>pg.style.height=hs[i]+"px");
+    const pdf=new window.jspdf.jsPDF({unit:"px",format:[1100,hs[0]],orientation:"portrait",hotfixes:["px_scaling"]});
+    for(let i=0;i<pages.length;i++){ const c=await html2canvas(pages[i],{scale:1.5,backgroundColor:"#f5f0e4",useCORS:true,logging:false}); if(i) pdf.addPage([1100,hs[i]],"portrait"); pdf.addImage(c.toDataURL("image/jpeg",.9),"JPEG",0,0,1100,hs[i]); }
+    const name=`Resultados_${(EV.name||"torneo").replace(/[^\wáéíóúñÁÉÍÓÚÑ]+/g,"_")}.pdf`, blob=pdf.output("blob"), file=new File([blob],name,{type:"application/pdf"});
+    window.__lastReport={name,size:blob.size,pages:pages.length};
+    if(navigator.canShare&&navigator.canShare({files:[file]})){ try{ await navigator.share({files:[file],title:name}); return; }catch(e){ if(e&&e.name==="AbortError") return; } }
+    const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },4000);
+  }catch(e){ toast("No se pudo generar el PDF: "+(e.message||e)); }
+  finally{ box.remove(); if(btn){ btn.disabled=false; btn.textContent=old; } }
+}
+document.addEventListener("click",e=>{ const b=e.target.closest("#rpDl"); if(b) downloadReport(b); });
+
 /* ===== Quórum mínimo: si no se completa, esa apuesta se cancela y nadie paga ===== */
 const QMIN={q:w=>w===1?2:w===2?3:6, team:2, podio:12};
 function quorum(){ const T=TB(), w=EV.winners, nQ=EV.entries.length, mq=QMIN.q(w), tm=[0,1].map(i=>(EV.players||[]).filter(p=>p.team===i&&T.opt.has(p.n)).length);
@@ -1013,6 +1103,7 @@ function renderEvent(){
   if(ETAB==="ranking") b.innerHTML=rankingHTML();
   if(ETAB==="admin") b.innerHTML=adminHTML();
   if(ETAB==="cuentas") b.innerHTML=cuentasHTML();
+  if((ETAB==="ranking"||ETAB==="cuentas")&&(EV.closed||EV.results?.team)) b.insertAdjacentHTML("beforeend",`<button class="btn gold w" id="rpDl" style="margin:6px 0 14px">📄 Descargar resultados (PDF)</button><div class="note" style="text-align:center;margin-bottom:10px">Ganadores, quiniela, competencia y quién le paga a quién.</div>`);
   $("#saveBar").classList.toggle("hide",!(VIEW==="event"&&ETAB==="picks"&&target&&!picksDisabled()));
   if(ETAB==="picks") updateProg();
   if(ETAB==="principal"||ETAB==="ranking") setTimeout(updatePreview,50);
