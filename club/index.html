@@ -726,7 +726,11 @@ document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==
   const own=()=>fetch(location.pathname,{cache:"force-cache"}).then(r=>r.ok?r.text():null).then(t=>t?h(t):null).catch(()=>null);
   const check=async()=>{ if(busy) return; busy=true; try{ if(base==null){ base=await own(); if(base==null) return; } const v=await get(); if(v==null) return;
       const editing=(typeof dirty!=="undefined"&&dirty)||(document.activeElement&&/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName));
-      if(v!==base&&!editing) location.reload(); } finally{ busy=false; } };
+      if(v===base||editing) return;
+      let done=null; try{ done=sessionStorage.getItem("upd_v"); }catch(e){}
+      if(done===String(v)){ base=v; return; }
+      try{ sessionStorage.setItem("upd_v",String(v)); }catch(e){}
+      location.replace(location.pathname+"?u="+(v>>>0)+location.hash); } finally{ busy=false; } };
   check(); document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") check(); }); setInterval(check,5*60e3); })();
 
 /* ===== routing ===== */
