@@ -5,10 +5,35 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b3029">
 <title>Hermanos McGregor · Golf Club</title>
+<script>
+/* RESCATE anti pantalla en blanco (estándar iPhone/WebKit). Si la app no avisa que arrancó (window.__appOK) en 10 s,
+   o falla la carga de un archivo, muestra "Recargar app": desregistra service workers, borra cachés y recarga fresco.
+   ?reset=1 en la URL lo hace directo. */
+(function(){
+  var OK=false, shown=false;
+  function fresh(){ location.replace(location.pathname+"?fresh="+Date.now()+location.hash); }
+  function reset(){ var sw=navigator.serviceWorker, p=Promise.resolve();
+    try{ if(sw&&sw.getRegistrations) p=p.then(function(){ return sw.getRegistrations(); }).then(function(rs){ return Promise.all(rs.map(function(r){ return r.unregister(); })); }); }catch(e){}
+    try{ if(window.caches) p=p.then(function(){ return caches.keys(); }).then(function(ks){ return Promise.all(ks.map(function(k){ return caches.delete(k); })); }); }catch(e){}
+    p.then(fresh,fresh); setTimeout(fresh,4000); }
+  window.__rescue=reset;
+  if(/[?&]reset=1(&|$)/.test(location.search)){ reset(); return; }
+  function show(){ if(OK||shown) return; shown=true;
+    var d=document.createElement("div"); d.id="rescue";
+    d.style.cssText="position:fixed;inset:0;z-index:2147483647;background:#0b1512;color:#efe9cf;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:32px;text-align:center;font:16px/1.45 system-ui,-apple-system,sans-serif";
+    d.innerHTML='<div style="font-size:42px">⛳</div><b style="font-size:19px">La app no terminó de cargar</b><div style="opacity:.75;max-width:320px">Puede ser una versión vieja guardada en el teléfono o una conexión lenta.</div><button type="button" style="margin-top:6px;border:0;border-radius:12px;padding:14px 26px;font:700 16px system-ui;background:#a4a16a;color:#0b3029">Recargar app</button>';
+    d.querySelector("button").onclick=function(){ this.disabled=true; this.textContent="Recargando…"; reset(); };
+    (document.body||document.documentElement).appendChild(d); }
+  window.__appOK=function(){ OK=true; var r=document.getElementById("rescue"); if(r) r.remove(); var b=document.getElementById("bootLd"); if(b) b.remove(); };
+  setTimeout(show,10000);
+  /* archivo que no cargó (script/css/fuente): rescate si la app aún no arrancó; error de JS antes de arrancar: igual */
+  window.addEventListener("error",function(e){ var t=e.target; var res=t&&t!==window&&/^(SCRIPT|LINK)$/.test(t.tagName||"");
+    setTimeout(function(){ if(!OK) show(); }, res?2500:2000); },true);
+})();
+</script>
 <link rel="icon" type="image/png" href="/icons/favicon-192.png">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/fonts/fonts.css?v=2">
 <style>
 :root{
   --g:#0b3029;--g2:#0e3a32;--g3:#14453b;--gold:#a4a16a;--gold2:#c9c59a;--cream:#efe9cf;--cream2:#f7f3e3;
@@ -386,6 +411,7 @@ main{padding-bottom:110px}
 </style>
 </head>
 <body>
+<div id="bootLd" style="position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;color:#c9c59a;font:600 15px system-ui,sans-serif;letter-spacing:.5px">Cargando…</div>
 <div class="top">
   <div class="bar">
     <img id="barLogo" alt="">
@@ -720,24 +746,41 @@ document.addEventListener("click",async e=>{ const t=e.target;
     try{ await rpc("n_post",{p_token:TOKEN,p_title:ti,p_body:$("#newsBody").value}); $("#newsTitle").value=""; $("#newsBody").value=""; toast("Aviso publicado ✓"); loadNews(); }catch(err){ toast(err.message); } t.disabled=false; } });
 setInterval(()=>{ if(document.visibilityState==="visible") newsTick(); },120000);
 document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") newsTick(); });
-/* auto-actualización (app en pantalla de inicio): si se publicó una versión nueva, recarga sola al volver a la app */
-(()=>{ const h=t=>{ let x=0; for(let i=0;i<t.length;i++) x=(x*31+t.charCodeAt(i))|0; return x; }; let base=null, busy=false;
-  const get=()=>fetch(location.pathname+"?v="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():null).then(t=>t?h(t):null).catch(()=>null);
-  const own=()=>fetch(location.pathname,{cache:"force-cache"}).then(r=>r.ok?r.text():null).then(t=>t?h(t):null).catch(()=>null);
-  const check=async()=>{ if(busy) return; busy=true; try{ if(base==null){ base=await own(); if(base==null) return; } const v=await get(); if(v==null) return;
+/* auto-actualización: al volver a la app y cada 10 min compara version.json con APP_VER; si cambió, actualiza el SW
+   y recarga UNA sola vez por versión (sessionStorage evita bucles). bump.sh sube APP_VER y version.json juntos. */
+const APP_VER="2";
+(()=>{ let busy=false;
+  const check=async()=>{ if(busy||document.hidden) return; busy=true; try{
+      const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"}); if(!r.ok) return;
+      const v=String(((await r.json())||{}).v||""); if(!v||v===APP_VER) return;
       const editing=(typeof dirty!=="undefined"&&dirty)||(document.activeElement&&/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName));
-      if(v===base||editing) return;
-      let done=null; try{ done=sessionStorage.getItem("upd_v"); }catch(e){}
-      if(done===String(v)){ base=v; return; }
-      try{ sessionStorage.setItem("upd_v",String(v)); }catch(e){}
-      location.replace(location.pathname+"?u="+(v>>>0)+location.hash); } finally{ busy=false; } };
-  check(); document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") check(); }); setInterval(check,5*60e3); })();
+      if(editing) return;
+      let done=null; try{ done=sessionStorage.getItem("upd_v"); }catch(e){} if(done===v) return;
+      try{ sessionStorage.setItem("upd_v",v); }catch(e){}
+      try{ const reg=navigator.serviceWorker&&await navigator.serviceWorker.getRegistration(); if(reg) await reg.update(); }catch(e){}
+      location.replace(location.pathname+"?u="+encodeURIComponent(v)+location.hash);
+    }catch(e){} finally{ busy=false; } };
+  setTimeout(check,4000); document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") check(); }); setInterval(check,10*60e3);
+  /* service worker "red primero" (sw.js junto a esta página) */
+  try{ if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{})); }catch(e){}
+})();
+/* sin red al arrancar: no se borra la sesión; se ofrece reintentar */
+function bootNetFail(){ if(window.__appOK) window.__appOK(); const d=document.createElement("div"); d.id="netFail";
+  d.style.cssText="position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:30px;text-align:center;background:var(--g)";
+  d.innerHTML=`<b style="font-size:18px">No hay conexión con el servidor</b><div class="note">Revisa tu internet e inténtalo de nuevo.</div><div style="display:flex;gap:10px"><button class="btn gold" onclick="location.reload()">Reintentar</button><button class="btn ghost" onclick="window.__rescue()">Limpiar y recargar</button></div>`;
+  document.body.appendChild(d); }
+/* "Cargando…" que tarda más de 15 s → Reintentar / Limpiar y recargar */
+setInterval(()=>{ document.querySelectorAll(".note").forEach(n=>{ if(n.textContent.trim()!=="Cargando…"){ delete n.dataset.t0; return; }
+    if(!n.dataset.t0){ n.dataset.t0=Date.now(); return; }
+    if(Date.now()-n.dataset.t0>15000) n.innerHTML=`La carga está tardando más de lo normal.<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn sm gold" data-retryload>Reintentar</button><button class="btn sm ghost" data-hardreload>Limpiar y recargar</button></div>`; }); },2000);
+document.addEventListener("click",e=>{ if(e.target.closest("[data-hardreload]")){ window.__rescue(); return; }
+  if(e.target.closest("[data-retryload]")){ e.target.closest(".note").textContent="Cargando…"; if(VIEW==="event"&&EV) openEvent(EV.id); else if(VIEW==="usage") loadUsage(); else go(VIEW==="login"?"home":VIEW); } });
 
 /* ===== routing ===== */
 let LOGIN_KIND="abrir", LASTV={v:"",t:0};
 function devName(){ const u=navigator.userAgent; return /iPhone/.test(u)?"iPhone":/iPad/.test(u)?"iPad":/Android/.test(u)?"Android":/Macintosh/.test(u)?"Mac":/Windows/.test(u)?"Windows":"Otro"; }
 function track(kind,view,detail){ if(!TOKEN) return; rpc("u_track",{p_token:TOKEN,p_kind:kind,p_view:view||null,p_detail:detail||null,p_device:devName()}).catch(()=>{}); }
-function show(v){
+function show(v){ if(window.__appOK) window.__appOK();
   if(ME&&v!=="login"){ const det=v==="event"?EV?.name:null, key=v+"|"+(det||""), now=Date.now(); if(key!==LASTV.v||now-LASTV.t>60000){ LASTV={v:key,t:now}; track("vista",v,det); } }
   VIEW=v; document.querySelectorAll(".view").forEach(s=>s.classList.toggle("on",s.id==="v-"+v));
   const nv = v==="event"?"bets":v;
@@ -2307,7 +2350,7 @@ $("#calSel").addEventListener("change",e=>loadCal(+e.target.value));
   document.querySelectorAll("img.logo").forEach(i=>i.src=STORE+"logo.webp"); $("#barLogo").src=STORE+"icon180.png";
   if(await handleCreq()) return;
   if(await oauthReturn()) return;
-  if(TOKEN){ try{ ME=await rpc("c_me",{p_token:TOKEN}); }catch{ ME=null; TOKEN=null; store.set("mcg_token",null); } }
+  if(TOKEN){ try{ ME=await rpc("c_me",{p_token:TOKEN}); }catch(e){ if(e instanceof TypeError){ bootNetFail(); return; } ME=null; TOKEN=null; store.set("mcg_token",null); } }
   if(ME){ try{ MEMBERS=await rpc("c_members_list",{p_token:TOKEN}); }catch{} afterLogin(); } else show("login");
   setInterval(async()=>{ if(document.hidden||!ME||dirty) return; if(VIEW==="event"&&ETAB!=="admin"){ try{ const y=window.scrollY; EV=await rpc("b_event_get",{p_token:TOKEN,p_event:EV.id}); renderEvent(); window.scrollTo(0,y);}catch{} } },30000);
 })();
