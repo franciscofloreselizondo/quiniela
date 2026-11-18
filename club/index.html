@@ -33,7 +33,7 @@
 </script>
 <link rel="icon" type="image/png" href="/icons/favicon-192.png">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
-<link rel="stylesheet" href="/fonts/fonts.css?v=4">
+<link rel="stylesheet" href="/fonts/fonts.css?v=5">
 <style>
 :root{
   --g:#0b3029;--g2:#0e3a32;--g3:#14453b;--gold:#a4a16a;--gold2:#c9c59a;--cream:#efe9cf;--cream2:#f7f3e3;
@@ -594,6 +594,10 @@ main{padding-bottom:110px}
   </section>
 
   <!-- MEMBERS -->
+  <section class="view" id="v-saldos">
+    <div class="plaque"><div class="pt">Hermanos McGregor</div><div class="pn">Saldos de apuestas</div><div class="ps">Lo que debes y te deben en todos los torneos</div></div>
+    <div id="sdBody"></div>
+  </section>
   <section class="view" id="v-board">
     <div class="plaque"><div class="pt">Hermanos McGregor</div><div class="pn">Board</div><div class="ps" id="bdSub">Votaciones del board</div></div>
     <div id="bdBody"></div>
@@ -684,10 +688,10 @@ let EVENTS=[], EV=null, ETAB="principal", skew=0, form={picks:{},tb:""}, target=
 function moreItems(){ const can=v=>!ME.guest||GUEST_OK.has(v), bp=+($("#bdgBoard").textContent||0);
   const it=(v,i,t,x)=>can(v)?`<button class="it" data-nav="${v}"><i>${i}</i>${t}${x?`<small>${x}</small>`:""}</button>`:"";
   const club=it("honor","🏆","Cuadro de Honor")+it("hist","📈","Históricos")+it("code","📖","El Código")+it("social","📣","Redes")+it("members","👥","Miembros");
-  const adm=ME.guest?"":it("att","📋","Asistencias")+it("treas","💰","Tesorería")+(isBoard(ME)?it("board","🗳️","Board",bp?bp+" voto"+(bp>1?"s":""):"")+it("usage","📊","Uso y permisos"):"");
+  const adm=ME.guest?"":it("att","📋","Asistencias")+it("treas","💰","Tesorería")+(isBoard(ME)?it("board","🗳️","Board",bp?bp+" voto"+(bp>1?"s":""):"")+it("usage","📊","Uso y permisos")+`<a class="it" id="manBoard" href="/club/manual-board.pdf?v=${APP_VER}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit"><i>📘</i>Manual del Board<small>PDF</small></a>`:"");
   return `<div class="mhead" data-nav="profile">${avatarHTML(ME)}<div><b>${esc(ME.nickname||ME.name)}</b><span>${ME.hidden?"Administrador":PROFS[prof(ME)]}</span></div></div>
     <div class="sec">El club</div>${club}${adm?`<div class="sec">${isBoard(ME)?"Administración":"Cuentas del club"}</div><div class="adm">${adm}</div>`:""}
-    <div class="sec">Tu cuenta</div><button class="it" data-nav="profile"><i>👤</i>Mi perfil</button><button class="it" id="moreOut"><i>↪</i>Salir</button>`; }
+    <div class="sec">Tu cuenta</div><button class="it" data-nav="saldos"><i>💸</i>${isBoard(ME)?"Saldos de apuestas":"Mis saldos"}</button><button class="it" data-nav="profile"><i>👤</i>Mi perfil</button><button class="it" id="moreOut"><i>↪</i>Salir</button>`; }
 function openMore(){ $("#moreBody").innerHTML=moreItems(); $("#morePnl").classList.add("on"); }
 function closeMore(){ const m=$("#morePnl"); if(m) m.classList.remove("on"); }
 document.addEventListener("click",e=>{ if(e.target.closest("#bnMore")){ $("#morePnl").classList.contains("on")?closeMore():openMore(); return; }
@@ -748,7 +752,7 @@ setInterval(()=>{ if(document.visibilityState==="visible") newsTick(); },120000)
 document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") newsTick(); });
 /* auto-actualización: al volver a la app y cada 10 min compara version.json con APP_VER; si cambió, actualiza el SW
    y recarga UNA sola vez por versión (sessionStorage evita bucles). bump.sh sube APP_VER y version.json juntos. */
-const APP_VER="4";
+const APP_VER="5";
 (()=>{ let busy=false;
   const check=async()=>{ if(busy||document.hidden) return; busy=true; try{
       const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"}); if(!r.ok) return;
@@ -806,6 +810,7 @@ function go(v){
   if(v==="honor") loadHonor();
   if(v==="code") loadCode();
   if(v==="board") loadBoard();
+  if(v==="saldos") loadSaldos();
   if(v==="home") renderHome();
   if(v==="news") loadNews();
   if(v==="usage"){ if(!isBoard(ME)){ v="home"; renderHome(); } else loadUsage(); }
@@ -862,7 +867,7 @@ $("#logoutBtn").onclick=()=>{ if(confirm("¿Cerrar sesión?")) logout(false); };
 $("#whoBtn").onclick=()=>go("profile");
 const ini=n=>String(n||"?").trim().split(/\s+/).map(w=>w[0]).slice(0,2).join("").toUpperCase();
 function avatarHTML(m,cls){ return m&&m.avatar?`<img src="${m.avatar}" alt="" ${cls?`class="${cls}"`:""}>`:`<span class="ini ${cls||""}">${esc(ini(m&&(m.nickname||m.name)))}</span>`; }
-const GUEST_OK=new Set(["home","bets","event","honor","social","profile","login","code","news","cal","hist"]);
+const GUEST_OK=new Set(["home","bets","event","honor","social","profile","login","code","news","cal","hist","saldos"]);
 function renderWho(){ $("#whoBtn").innerHTML=avatarHTML(ME)+`<span>${esc(ME.nickname||ME.name)}</span>`;
   document.querySelectorAll("nav.main [data-nav], .tiles [data-nav]").forEach(b=>{ if(b.id==="navBoard"||b.id==="tileBoard"||b.id==="navUsage") return; b.classList.toggle("hide",!!ME.guest&&!GUEST_OK.has(b.dataset.nav)); });
   $("#navBoard").classList.toggle("hide",!isBoard(ME)); $("#tileBoard").classList.toggle("hide",!isBoard(ME)); $("#navUsage").classList.toggle("hide",!isBoard(ME));
@@ -1039,6 +1044,42 @@ function quorum(){ const T=TB(), w=EV.winners, nQ=EV.entries.length, mq=QMIN.q(w
   const by=Object.fromEntries(L.map(x=>[x.k,x])); return {L,q:by.q.ok,e:!by.e||by.e.ok,p:!by.p||by.p.ok,by}; }
 function quorumNote(){ const Q=quorum(); if(EV.closed){ const off=Q.L.filter(x=>!x.ok); return off.length?`<div class="note qoff">🔒 ${off.map(x=>`<b>${esc(x.t)}</b>: apuesta cancelada por quórum (${esc(x.txt)}). Nadie paga ni cobra.`).join("<br>🔒 ")}</div>`:""; }
   return `<div class="note qnote">🔒 <b>Quórum mínimo</b> para que se juegue cada apuesta: ${Q.L.map(x=>`${x.ic} ${esc(x.t)} ${x.ok?"✓":"· hoy "+esc(x.txt)}`).join(" · ")}. Si al cerrar no se completa, esa apuesta se cancela y nadie paga.</div>`; }
+/* ===== Saldos de apuestas: junta los pagos de Cuentas de todos los torneos cerrados (desde la Rosa).
+   No compensa entre torneos: cada pago es el de su torneo; aquí solo se suma lo pendiente. ===== */
+const SALDO_DESDE="2026-11-14"; let SD=null, SDTAB="mio";
+async function loadSaldos(){ $("#sdBody").innerHTML=`<div class="card"><div class="note">Cargando…</div></div>`;
+  try{ const L=await rpc("b_events_list",{p_token:TOKEN}); EVENTS=L;
+    const ev=L.filter(e=>e.closed&&!e.solo_historico&&(!e.event_date||e.event_date>=SALDO_DESDE)), X=[], keep=EV; let me=null;
+    for(const ce of ev){ const full=await rpc("b_event_get",{p_token:TOKEN,p_event:ce.id}); EV=full;
+      try{ const C=cuentas(); me=C.me; C.X.forEach(x=>X.push({...x,ev:ce.id,evn:ce.name,d:ce.event_date})); } finally{ EV=keep; } }
+    SD={X,me:me||(ME.nickname||ME.name),n:ev.length}; renderSaldos(); }
+  catch(e){ $("#sdBody").innerHTML=`<div class="card"><div class="note">${esc(e.message)}</div></div>`; } }
+function saldosBy(X){ const P=new Map(), g=n=>{ if(!P.has(n)) P.set(n,{n,debe:0,cobra:0}); return P.get(n); };
+  X.filter(x=>!x.paid).forEach(x=>{ g(x.payer).debe+=x.amount; g(x.payee).cobra+=x.amount; });
+  return [...P.values()].map(o=>({...o,net:o.cobra-o.debe})).sort((a,b)=>a.net-b.net||a.n.localeCompare(b.n)); }
+function sdRow(x,act){ const mine=x.payee===SD.me, can=act&&!x.paid&&(mine||(EVENTS.find(e=>e.id===x.ev)||{}).can_admin||isBoard(ME));
+  return `<div class="xr ${x.paid?"ok":""}"><span><b>${esc(x.payer)}</b> → <b>${esc(x.payee)}</b><small style="display:block;opacity:.7">${esc(x.evn)}</small></span><b>${money(x.amount)}</b>${can?`<button class="pc no" data-sdp="${esc(x.payer)}" data-sde="${esc(x.payee)}" data-sdev="${x.ev}">Marcar recibido</button>`:`<span class="pc ${x.paid?"ok":"dis"}">${x.paid?"Recibido ✓":"Pendiente"}</span>`}</div>`; }
+function renderSaldos(){ const X=SD.X, me=SD.me, mine=X.filter(x=>x.payer===me||x.payee===me), pend=mine.filter(x=>!x.paid), done=mine.filter(x=>x.paid);
+  const debo=pend.filter(x=>x.payer===me).reduce((a,x)=>a+x.amount,0), cobro=pend.filter(x=>x.payee===me).reduce((a,x)=>a+x.amount,0);
+  const tabs=isBoard(ME)?`<div class="seg" style="margin-bottom:10px"><button class="${SDTAB==="mio"?"on":""}" data-sdtab="mio">💸 Mis saldos</button><button class="${SDTAB==="club"?"on":""}" data-sdtab="club">👥 Todo el club</button></div>`:"";
+  if(SDTAB==="club"&&isBoard(ME)){ const B=saldosBy(X), P=X.filter(x=>!x.paid), tot=P.reduce((a,x)=>a+x.amount,0);
+    $("#sdBody").innerHTML=tabs+`<div class="card"><div class="h">Pendiente en el club <small>${SD.n} torneo${SD.n===1?"":"s"} desde la Rosa</small></div>
+      <div class="stats"><div><b>${money(tot)}</b><span>POR PAGAR</span></div><div><b>${P.length}</b><span>PAGOS PENDIENTES</span></div><div><b>${X.length-P.length}</b><span>YA PAGADOS</span></div></div></div>
+      <div class="card"><div class="h">Por socio <small>solo lo pendiente</small></div>${B.length?`<div class="ctbl"><div class="ch"><span>Socio</span><span>Debe</span><span>Le deben</span><span>Neto</span></div>${B.map(o=>`<div class="cr ${o.n===me?"mine":""}"><span class="cn">${esc(o.n)}</span><span>${o.debe?money(o.debe):"—"}</span><span>${o.cobra?money(o.cobra):"—"}</span><b class="${o.net>0?"up":o.net<0?"dn":""}">${o.net>0?"+":o.net<0?"−":""}${money(Math.abs(o.net))}</b></div>`).join("")}</div>`:`<div class="note">Nadie debe nada ✓</div>`}</div>
+      <div class="card"><div class="h">Pagos pendientes</div>${P.length?P.map(x=>sdRow(x,true)).join(""):`<div class="note">Todo liquidado ✓</div>`}
+      <button class="btn ghost w" id="sdShare" style="margin-top:10px">📋 Copiar pendientes para WhatsApp</button></div>`; return; }
+  $("#sdBody").innerHTML=tabs+`<div class="card"><div class="h">Tu saldo <small>torneos desde la Rosa</small></div>
+    <div class="stats"><div><b class="${debo?"dn":""}">${money(debo)}</b><span>DEBES</span></div><div><b class="${cobro?"up":""}">${money(cobro)}</b><span>TE DEBEN</span></div><div><b>${(cobro-debo)>0?"+":(cobro-debo)<0?"−":""}${money(Math.abs(cobro-debo))}</b><span>NETO</span></div></div>
+    <div class="note" style="margin-top:8px">Cada pago es de su torneo: no se compensan entre torneos. Quien recibe marca "recibido".</div></div>
+    <div class="card"><div class="h">Pendientes <small>${pend.length}</small></div>${pend.length?pend.map(x=>sdRow(x,true)).join(""):`<div class="note">No tienes pagos pendientes ✓</div>`}</div>
+    <div class="card"><div class="h">Historial <small>ya liquidado</small></div>${done.length?done.map(x=>sdRow(x,false)).join(""):`<div class="note">Todavía no hay pagos liquidados.</div>`}</div>`; }
+function saldosText(){ const P=SD.X.filter(x=>!x.paid), by=new Map(); P.forEach(x=>{ if(!by.has(x.evn)) by.set(x.evn,[]); by.get(x.evn).push(x); });
+  return [`💸 *SALDOS PENDIENTES · HERMANOS McGREGOR*`,`Total por pagar ${money(P.reduce((a,x)=>a+x.amount,0))}`,"",...[...by].flatMap(([n,L])=>[`*${n}*`,...L.map(x=>`⏳ ${x.payer} → ${x.payee}: *${money(x.amount)}*`),""]),`👉 ${location.origin+location.pathname}`].join("\n"); }
+document.addEventListener("click",async e=>{ const t=e.target;
+  const tb=t.closest("[data-sdtab]"); if(tb){ SDTAB=tb.dataset.sdtab; renderSaldos(); return; }
+  if(t.id==="sdShare"){ try{ await navigator.clipboard.writeText(saldosText()); toast("Pendientes copiados ✓ · pégalos en WhatsApp"); }catch{ toast("No se pudo copiar"); } return; }
+  if(t.dataset&&t.dataset.sdp!=null){ t.disabled=true; try{ await rpc("b_settle_mark",{p_token:TOKEN,p_event:t.dataset.sdev,p_payer:t.dataset.sdp,p_payee:t.dataset.sde,p_on:true});
+      const x=SD.X.find(x=>x.ev===t.dataset.sdev&&x.payer===t.dataset.sdp&&x.payee===t.dataset.sde); if(x) x.paid=true; renderSaldos(); toast("Marcado como recibido ✓"); }catch(err){ toast(err.message); t.disabled=false; } } });
 /* ===== Cuentas: neto de cada quien y quién le paga a quién (directo entre socios) ===== */
 function cuentas(){ const T=TB(), P=new Map(), R=Math.round;
   const who=(mid,fb)=>{ const pl=mid&&(EV.players||[]).find(p=>p.member_id===mid); return pl?pl.n:fb; };
@@ -2131,7 +2172,7 @@ async function handleCreq(){ const q=new URLSearchParams(location.search), id=q.
 
 
 /* ===== uso de la app (solo superadmin) ===== */
-const VNAME={home:"Casa Club",cal:"Calendario",bets:"Apuestas",event:"Torneo (quiniela)",att:"Asistencias",treas:"Tesorería",honor:"Honor",code:"Código",board:"Board",hist:"Históricos",members:"Miembros",social:"Redes",profile:"Mi perfil",usage:"Uso",tee:"Salidas"};
+const VNAME={home:"Casa Club",cal:"Calendario",bets:"Apuestas",event:"Torneo (quiniela)",att:"Asistencias",treas:"Tesorería",honor:"Honor",code:"Código",board:"Board",hist:"Históricos",members:"Miembros",social:"Redes",profile:"Mi perfil",usage:"Uso",tee:"Salidas",saldos:"Saldos"};
 let US=null, ULOG="";
 let UTAB="act";
 const PERM_COLS=["invitado","socio","board","tesorero","secretario","presidente"];
