@@ -33,7 +33,7 @@
 </script>
 <link rel="icon" type="image/png" href="/icons/favicon-192.png">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
-<link rel="stylesheet" href="/fonts/fonts.css?v=7">
+<link rel="stylesheet" href="/fonts/fonts.css?v=8">
 <style>
 :root{
   --g:#0b3029;--g2:#0e3a32;--g3:#14453b;--gold:#a4a16a;--gold2:#c9c59a;--cream:#efe9cf;--cream2:#f7f3e3;
@@ -604,8 +604,8 @@ main{padding-bottom:110px}
   </section>
 
   <section class="view" id="v-usage">
-    <div class="plaque"><div class="pt">Board</div><div class="pn">Uso de la app</div><div class="ps">Actividad y permisos por perfil</div></div>
-    <div class="etabs stk" id="uTabs"><button data-utab="act" class="on">Actividad</button><button data-utab="perm">Permisos</button></div>
+    <div class="plaque"><div class="pt">Board</div><div class="pn">Admin</div><div class="ps">Actividad, permisos y noticias automáticas</div></div>
+    <div class="etabs stk" id="uTabs"><button data-utab="act" class="on">Actividad</button><button data-utab="perm">Permisos</button><button data-utab="news">Noticias</button></div>
     <div class="card" id="uAct"><label class="f" style="margin-top:0">Periodo</label><select class="t" id="uDays"><option value="7">Últimos 7 días</option><option value="30" selected>Últimos 30 días</option><option value="90">Últimos 90 días</option><option value="365">Último año</option></select></div>
     <div id="uBody"></div>
   </section>
@@ -688,7 +688,7 @@ let EVENTS=[], EV=null, ETAB="principal", skew=0, form={picks:{},tb:""}, target=
 function moreItems(){ const can=v=>!ME.guest||GUEST_OK.has(v), bp=+($("#bdgBoard").textContent||0);
   const it=(v,i,t,x)=>can(v)?`<button class="it" data-nav="${v}"><i>${i}</i>${t}${x?`<small>${x}</small>`:""}</button>`:"";
   const club=it("honor","🏆","Cuadro de Honor")+it("hist","📈","Históricos")+it("code","📖","El Código")+it("social","📣","Redes")+it("members","👥","Miembros");
-  const adm=ME.guest?"":it("att","📋","Asistencias")+it("treas","💰","Tesorería")+(isBoard(ME)?it("board","🗳️","Board",bp?bp+" voto"+(bp>1?"s":""):"")+it("usage","📊","Uso y permisos")+`<a class="it" id="manBoard" href="/club/manual-board.pdf?v=${APP_VER}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit"><i>📘</i>Manual del Board<small>PDF</small></a>`:"");
+  const adm=ME.guest?"":it("att","📋","Asistencias")+it("treas","💰","Tesorería")+(isBoard(ME)?it("board","🗳️","Board",bp?bp+" voto"+(bp>1?"s":""):"")+it("usage","⚙️","Admin")+`<a class="it" id="manBoard" href="/club/manual-board.pdf?v=${APP_VER}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit"><i>📘</i>Manual del Board<small>PDF</small></a>`:"");
   return `<div class="mhead" data-nav="profile">${avatarHTML(ME)}<div><b>${esc(ME.nickname||ME.name)}</b><span>${ME.hidden?"Administrador":PROFS[prof(ME)]}</span></div></div>
     <div class="sec">El club</div>${club}${adm?`<div class="sec">${isBoard(ME)?"Administración":"Cuentas del club"}</div><div class="adm">${adm}</div>`:""}
     <div class="sec">Tu cuenta</div><button class="it" data-nav="saldos"><i>💸</i>${isBoard(ME)?"Saldos de apuestas":"Mis saldos"}</button><button class="it" data-nav="profile"><i>👤</i>Mi perfil</button><button class="it" id="moreOut"><i>↪</i>Salir</button>`; }
@@ -752,7 +752,7 @@ setInterval(()=>{ if(document.visibilityState==="visible") newsTick(); },120000)
 document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") newsTick(); });
 /* auto-actualización: al volver a la app y cada 10 min compara version.json con APP_VER; si cambió, actualiza el SW
    y recarga UNA sola vez por versión (sessionStorage evita bucles). bump.sh sube APP_VER y version.json juntos. */
-const APP_VER="7";
+const APP_VER="8";
 (()=>{ let busy=false;
   const check=async()=>{ if(busy||document.hidden) return; busy=true; try{
       const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"}); if(!r.ok) return;
@@ -2176,8 +2176,19 @@ async function handleCreq(){ const q=new URLSearchParams(location.search), id=q.
 
 
 /* ===== uso de la app (solo superadmin) ===== */
-const VNAME={home:"Casa Club",cal:"Calendario",bets:"Apuestas",event:"Torneo (quiniela)",att:"Asistencias",treas:"Tesorería",honor:"Honor",code:"Código",board:"Board",hist:"Históricos",members:"Miembros",social:"Redes",profile:"Mi perfil",usage:"Uso",tee:"Salidas",saldos:"Saldos"};
+const VNAME={home:"Casa Club",cal:"Calendario",bets:"Apuestas",event:"Torneo (quiniela)",att:"Asistencias",treas:"Tesorería",honor:"Honor",code:"Código",board:"Board",hist:"Históricos",members:"Miembros",social:"Redes",profile:"Mi perfil",usage:"Admin",tee:"Salidas",saldos:"Saldos"};
 let US=null, ULOG="";
+/* ===== Admin › Noticias automáticas: prender/apagar por tipo (cambian Presidente y Secretario; el Board lo ve) ===== */
+let NCFG=null;
+async function loadNewsCfg(){ $("#uAct").classList.add("hide"); $("#uBody").innerHTML=`<div class="card"><div class="note">Cargando…</div></div>`;
+  try{ NCFG=await rpc("n_cfg",{p_token:TOKEN}); renderNewsCfg(); }catch(e){ $("#uBody").innerHTML=`<div class="card"><div class="note">${esc(e.message)}</div></div>`; } }
+function renderNewsCfg(){ const C=NCFG, ago=t=>t?new Date(t).toLocaleDateString("es-MX",{day:"numeric",month:"short",year:"numeric"}):"nunca";
+  $("#uBody").innerHTML=`<div class="card"><div class="h">Noticias automáticas <small>${C.kinds.filter(k=>k.on).length} de ${C.kinds.length} prendidas</small></div>
+    <div class="note" style="margin-bottom:8px">La app publica estas noticias sola cuando pasa algo. Apagada = no se publica; al prenderla no se publica nada hacia atrás. Los avisos que escribe el Board siempre salen.${C.can_edit?"":" <b>Solo el Presidente o el Secretario las cambian.</b>"}</div>
+    ${C.kinds.map(k=>`<div class="xr" style="grid-template-columns:1fr auto"><span><b>${k.i} ${esc(k.n)}</b><small style="display:block;opacity:.75">${esc(k.w)} · última: ${ago(k.last)}</small></span>
+      <button class="pc ${k.on?"ok":"no"}" data-ncfg="${k.k}" data-on="${k.on?1:0}" ${C.can_edit?"":"disabled"} style="min-width:96px">${k.on?"✓ Prendida":"Apagada"}</button></div>`).join("")}</div>`; }
+document.addEventListener("click",async e=>{ const b=e.target.closest("[data-ncfg]"); if(!b||b.disabled) return; b.disabled=true;
+  try{ NCFG=await rpc("n_cfg_set",{p_token:TOKEN,p_kind:b.dataset.ncfg,p_on:b.dataset.on!=="1"}); renderNewsCfg(); toast("Listo ✓"); }catch(err){ toast(err.message); b.disabled=false; } });
 let UTAB="act";
 const PERM_COLS=["invitado","socio","board","tesorero","secretario","presidente"];
 const PERM_ROWS=[["Casa Club","👁","👁","👁","👁","👁","👁"],["Apuestas","👁 entra","👁 entra","✏️ + pagos","✏️ + pagos","✏️ + pagos","✏️ + pagos"],
@@ -2195,7 +2206,7 @@ async function renderPerm(){ $("#uAct").classList.add("hide"); let M=MEMBERS; if
     <div class="note" style="margin-top:6px">El perfil se cambia en Miembros (Presidente o Secretario).</div></div>`; }
 document.addEventListener("click",e=>{ const t=e.target.closest("[data-utab]"); if(t){ UTAB=t.dataset.utab; document.querySelectorAll("#uTabs [data-utab]").forEach(b=>b.classList.toggle("on",b===t)); loadUsage(); return; }
   if(e.target.closest("[data-goperm]")){ e.preventDefault(); UTAB="perm"; go("usage"); document.querySelectorAll("#uTabs [data-utab]").forEach(b=>b.classList.toggle("on",b.dataset.utab==="perm")); } });
-async function loadUsage(){ if(UTAB==="perm") return renderPerm(); $("#uAct").classList.remove("hide"); $("#uBody").innerHTML=`<div class="card"><div class="note">Cargando…</div></div>`;
+async function loadUsage(){ if(UTAB==="perm") return renderPerm(); if(UTAB==="news") return loadNewsCfg(); $("#uAct").classList.remove("hide"); $("#uBody").innerHTML=`<div class="card"><div class="note">Cargando…</div></div>`;
   try{ US=await rpc("u_stats",{p_token:TOKEN,p_days:+$("#uDays").value}); }catch(e){ $("#uBody").innerHTML=`<div class="card"><div class="note">${esc(e.message)}</div></div>`; return; } renderUsage(); }
 document.addEventListener("change",e=>{ if(e.target.id==="uDays") loadUsage(); if(e.target.id==="uLogF"){ ULOG=e.target.value; renderUsage(); } });
 function renderUsage(){ const U=US, K=U.kpis, ago=t=>{ if(!t) return "nunca"; const d=(Date.now()-new Date(t))/864e5; return d<1/24?"hace minutos":d<1?"hace "+Math.round(d*24)+" h":d<2?"ayer":"hace "+Math.floor(d)+" días"; };
