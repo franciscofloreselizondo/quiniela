@@ -33,7 +33,7 @@
 </script>
 <link rel="icon" type="image/png" href="/icons/favicon-192.png">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
-<link rel="stylesheet" href="/fonts/fonts.css?v=3">
+<link rel="stylesheet" href="/fonts/fonts.css?v=4">
 <style>
 :root{
   --g:#0b3029;--g2:#0e3a32;--g3:#14453b;--gold:#a4a16a;--gold2:#c9c59a;--cream:#efe9cf;--cream2:#f7f3e3;
@@ -748,7 +748,7 @@ setInterval(()=>{ if(document.visibilityState==="visible") newsTick(); },120000)
 document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") newsTick(); });
 /* auto-actualización: al volver a la app y cada 10 min compara version.json con APP_VER; si cambió, actualiza el SW
    y recarga UNA sola vez por versión (sessionStorage evita bucles). bump.sh sube APP_VER y version.json juntos. */
-const APP_VER="3";
+const APP_VER="4";
 (()=>{ let busy=false;
   const check=async()=>{ if(busy||document.hidden) return; busy=true; try{
       const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"}); if(!r.ok) return;
@@ -1006,13 +1006,15 @@ const RP_CSS=`.rp-page{width:1100px;min-height:1956px;position:relative;overflow
 .rp-page table{width:100%;border-collapse:collapse;font-size:20px}
 .rp-page th{text-align:left;font-weight:700;text-transform:uppercase;letter-spacing:.06em;font-size:17px;color:#8a8650;padding:0 0 8px}
 .rp-page td{padding:5px 0;border-top:1px solid #e9e1cb}.rp-page td.r,.rp-page th.r{text-align:right}.rp-page td.up{color:#2f7a4a;font-weight:800}.rp-page td.dn{color:#a8323e;font-weight:700}`;
-const loadJS=src=>new Promise((ok,ko)=>{ if(document.querySelector(`script[src="${src}"]`)) return ok(); const s=document.createElement("script"); s.src=src; s.onload=ok; s.onerror=()=>ko(new Error("No cargó "+src)); document.head.appendChild(s); });
+/* carga una librería una sola vez: si ya se está descargando espera esa misma descarga; si falló, la siguiente vez reintenta */
+const _JS={}; const loadJS=src=>_JS[src]||(_JS[src]=new Promise((ok,ko)=>{ const s=document.createElement("script"); s.src=src; s.onload=ok; s.onerror=()=>{ s.remove(); delete _JS[src]; ko(new Error("No cargó "+src)); }; document.head.appendChild(s); }));
 async function downloadReport(btn){
   const old=btn?.textContent; if(btn){ btn.disabled=true; btn.textContent="Generando PDF…"; }
   const box=document.createElement("div"); box.style.cssText="position:fixed;left:-12000px;top:0;z-index:-1";
   try{
     await logoData().catch(()=>null);
     await Promise.all([loadJS("/vendor/html2canvas.min.js"),loadJS("/vendor/jspdf.umd.min.js")]);
+    if(!window.jspdf||!window.html2canvas){ delete _JS["/vendor/html2canvas.min.js"]; delete _JS["/vendor/jspdf.umd.min.js"]; throw new Error("no terminó de cargar el generador, intenta de nuevo"); }
     box.innerHTML=`<style>${RP_CSS}</style>`+reportPages().map(h=>`<div class="rp-page">${h}</div>`).join(""); document.body.appendChild(box);
     if(document.fonts?.ready) await document.fonts.ready;
     const pages=[...box.querySelectorAll(".rp-page")], hs=pages.map(pg=>Math.max(1956,Math.ceil(pg.scrollHeight)));
@@ -2137,7 +2139,7 @@ const PERM_ROWS=[["Casa Club","👁","👁","👁","👁","👁","👁"],["Apues
   ["Honor","👁","➕ publica","➕ publica","➕ publica","✏️ + borra","✏️ + borra"],["Redes","👁","👁","👁","👁","👁","👁"],
   ["Código","👁","➕ propone","➕ vota","➕ vota","✏️ vota + publica","✏️ vota + publica"],["Noticias","👁","👁","✏️ publica","✏️ publica","✏️ publica","✏️ publica"],
   ["Calendario","👁","👁","👁","👁","✏️","✏️"],["Históricos","👁","👁","👁","👁","👁","👁"],["Salidas","—","👁","✏️","✏️","✏️","✏️"],["Asistencias","—","👁","✏️","✏️","✏️","✏️"],
-  ["Tesorería (liga)","—","👁 su cuota","👁","✏️","✏️","✏️"],["Board","—","—","✏️","✏️","✏️","✏️"],["Miembros","—","👁","➕ altas","➕ altas","✏️ + elimina","✏️ + elimina"],["Uso","—","—","👁","👁","👁","👁"]];
+  ["Tesorería (liga)","—","👁 su cuota","👁","✏️","👁","✏️"],["Board","—","—","✏️","✏️","✏️","✏️"],["Miembros","—","👁","➕ altas","➕ altas","✏️ + elimina","✏️ + elimina"],["Uso","—","—","👁","👁","👁","👁"]];
 async function renderPerm(){ $("#uAct").classList.add("hide"); let M=MEMBERS; if(!M||!M.length){ try{ M=MEMBERS=await rpc("c_members_list",{p_token:TOKEN}); }catch{ M=[]; } }
   const who=k=>M.filter(m=>m.active&&prof(m)===k).map(m=>esc(m.nickname||m.name)); const cnt=k=>M.filter(m=>m.active&&prof(m)===k).length;
   $("#uBody").innerHTML=`<div class="card"><div class="h">Permisos por perfil <small>👁 ve · ➕ ve y agrega lo suyo · ✏️ edita y administra · — sin acceso</small></div>
