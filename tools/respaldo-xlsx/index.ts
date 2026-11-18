@@ -215,6 +215,23 @@ function buildWorkbook(dump, now = new Date()) {
     table(s, { title: `BD · ${name}`, sub: `${rows.length} registros · ${sub}`, rows, cols: keys.length ? keys.map(k => ({ h: k, k, w: Math.min(40, Math.max(10, k.length + 4)), t: t(k) || undefined })) : [{ h: '(tabla vacía)', k: 'x', w: 20 }] }); });
   return sheets;
 }
+// 2_datos.sql: inserta todas las tablas con jsonb_populate_recordset. Va entre 1_esquema.sql y 3_final.sql
+// (las llaves foráneas y triggers se crean después, así el orden de las tablas no importa y no se disparan avisos).
+// Las credenciales no viajan: approve_key / token / admin_token se regeneran al azar; sesiones y códigos van vacíos.
+function buildDataSql(dump, now = new Date()) {
+  const T = dump.tables || {}, strip = dump.strip || {}, rnd = () => (globalThis.crypto && crypto.randomUUID ? crypto.randomUUID().replace(/-/g, '') : Math.random().toString(36).slice(2) + Date.now().toString(36));
+  const tag = '$d' + rnd().slice(0, 10) + '$';
+  let o = `-- 2_datos.sql · App Hermanos McGregor · generado ${now.toISOString()}\n-- Correr DESPUÉS de 1_esquema.sql y ANTES de 3_final.sql.\n`
+    + `-- No incluye credenciales: sesiones y códigos de acceso quedan vacíos (todos vuelven a entrar con su correo); las llaves de aprobación y tokens viejos se regeneran.\n\nbegin;\nset local timezone = 'UTC';\n\n`;
+  for (const name of Object.keys(T).sort()) {
+    const fill = strip[name] || [], rows = (T[name] || []).map(r => { const x = { ...r }; fill.forEach(k => { x[k] = 'restaurado-' + rnd(); }); delete x.tiene_foto; return x; });
+    o += `-- ${name}: ${rows.length} registros\n`;
+    if (!rows.length) continue;
+    for (let i = 0; i < rows.length; i += 500) { const json = JSON.stringify(rows.slice(i, i + 500)); if (json.includes(tag)) throw new Error('etiqueta en datos');
+      o += `insert into public.${name} select * from jsonb_populate_recordset(null::public.${name}, ${tag}${json}${tag}::jsonb);\n`; }
+  }
+  return o + '\ncommit;\n';
+}
 // buildXlsx(dump, now, {zipSync, strToU8}) → Uint8Array del .xlsx
 function buildXlsx(dump, now, z) { return writeXlsx(buildWorkbook(dump, now), z.zipSync, z.strToU8); }
 
@@ -227,10 +244,18 @@ Deno.serve(async (req) => {
   if (!key || !same(key, secret)) return J(401, "Clave de respaldo inválida o ausente (header x-backup-key).");
   const url = Deno.env.get("SUPABASE_URL"), sk = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   if (!url || !sk) return J(500, "La función no tiene SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY.");
-  const r = await fetch(`${url}/rest/v1/rpc/bk_dump`, { method: "POST", headers: { apikey: sk, Authorization: `Bearer ${sk}`, "content-type": "application/json" }, body: "{}" });
-  if (!r.ok) return J(502, `No se pudieron leer los datos (${r.status}): ${(await r.text()).slice(0, 300)}`);
-  const dump = await r.json(), now = new Date();
-  const bytes = buildXlsx(dump, now, { zipSync, strToU8 });
-  const ymd = new Date(now.getTime() - 6 * 3600e3).toISOString().slice(0, 10);
-  return new Response(bytes, { status: 200, headers: { "content-type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "content-disposition": `attachment; filename="McGregor_respaldo_${ymd}.xlsx"`, "cache-control": "no-store" } });
+  // ?tipo=xlsx (por omisión) · esquema (1_esquema.sql) · datos (2_datos.sql) · final (3_final.sql)
+  const tipo = new URL(req.url).searchParams.get("tipo") || "xlsx";
+  const rpc = async (fn: string, args: unknown) => { const r = await fetch(`${url}/rest/v1/rpc/${fn}`, { method: "POST", headers: { apikey: sk, Authorization: `Bearer ${sk}`, "content-type": "application/json" }, body: JSON.stringify(args) });
+    if (!r.ok) throw new Error(`No se pudieron leer los datos (${fn} · ${r.status}): ${(await r.text()).slice(0, 300)}`); return r.json(); };
+  const now = new Date(), ymd = new Date(now.getTime() - 6 * 3600e3).toISOString().slice(0, 10);
+  const txt = (body: string, name: string) => new Response(body, { status: 200, headers: { "content-type": "text/plain; charset=utf-8", "content-disposition": `attachment; filename="${name}"`, "cache-control": "no-store" } });
+  try {
+    if (tipo === "esquema") return txt(await rpc("bk_schema", { p_part: "pre" }), "1_esquema.sql");
+    if (tipo === "final") return txt(await rpc("bk_schema", { p_part: "post" }), "3_final.sql");
+    if (tipo === "datos") return txt(buildDataSql(await rpc("bk_export", { p_full: true }), now), "2_datos.sql");
+    if (tipo !== "xlsx") return J(400, "tipo inválido: usa xlsx, esquema, datos o final");
+    const bytes = buildXlsx(await rpc("bk_export", { p_full: false }), now, { zipSync, strToU8 });
+    return new Response(bytes, { status: 200, headers: { "content-type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "content-disposition": `attachment; filename="McGregor_respaldo_${ymd}.xlsx"`, "cache-control": "no-store" } });
+  } catch (e) { return J(502, String((e as Error).message || e)); }
 });

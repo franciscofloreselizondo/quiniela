@@ -211,6 +211,23 @@ function buildWorkbook(dump, now = new Date()) {
     table(s, { title: `BD · ${name}`, sub: `${rows.length} registros · ${sub}`, rows, cols: keys.length ? keys.map(k => ({ h: k, k, w: Math.min(40, Math.max(10, k.length + 4)), t: t(k) || undefined })) : [{ h: '(tabla vacía)', k: 'x', w: 20 }] }); });
   return sheets;
 }
+// 2_datos.sql: inserta todas las tablas con jsonb_populate_recordset. Va entre 1_esquema.sql y 3_final.sql
+// (las llaves foráneas y triggers se crean después, así el orden de las tablas no importa y no se disparan avisos).
+// Las credenciales no viajan: approve_key / token / admin_token se regeneran al azar; sesiones y códigos van vacíos.
+function buildDataSql(dump, now = new Date()) {
+  const T = dump.tables || {}, strip = dump.strip || {}, rnd = () => (globalThis.crypto && crypto.randomUUID ? crypto.randomUUID().replace(/-/g, '') : Math.random().toString(36).slice(2) + Date.now().toString(36));
+  const tag = '$d' + rnd().slice(0, 10) + '$';
+  let o = `-- 2_datos.sql · App Hermanos McGregor · generado ${now.toISOString()}\n-- Correr DESPUÉS de 1_esquema.sql y ANTES de 3_final.sql.\n`
+    + `-- No incluye credenciales: sesiones y códigos de acceso quedan vacíos (todos vuelven a entrar con su correo); las llaves de aprobación y tokens viejos se regeneran.\n\nbegin;\nset local timezone = 'UTC';\n\n`;
+  for (const name of Object.keys(T).sort()) {
+    const fill = strip[name] || [], rows = (T[name] || []).map(r => { const x = { ...r }; fill.forEach(k => { x[k] = 'restaurado-' + rnd(); }); delete x.tiene_foto; return x; });
+    o += `-- ${name}: ${rows.length} registros\n`;
+    if (!rows.length) continue;
+    for (let i = 0; i < rows.length; i += 500) { const json = JSON.stringify(rows.slice(i, i + 500)); if (json.includes(tag)) throw new Error('etiqueta en datos');
+      o += `insert into public.${name} select * from jsonb_populate_recordset(null::public.${name}, ${tag}${json}${tag}::jsonb);\n`; }
+  }
+  return o + '\ncommit;\n';
+}
 // buildXlsx(dump, now, {zipSync, strToU8}) → Uint8Array del .xlsx
 function buildXlsx(dump, now, z) { return writeXlsx(buildWorkbook(dump, now), z.zipSync, z.strToU8); }
-if (typeof module !== 'undefined') module.exports = { buildXlsx, buildWorkbook, compute };
+if (typeof module !== 'undefined') module.exports = { buildXlsx, buildWorkbook, buildDataSql, compute };
