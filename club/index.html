@@ -33,7 +33,7 @@
 </script>
 <link rel="icon" type="image/png" href="/icons/favicon-192.png">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
-<link rel="stylesheet" href="/fonts/fonts.css?v=2">
+<link rel="stylesheet" href="/fonts/fonts.css?v=3">
 <style>
 :root{
   --g:#0b3029;--g2:#0e3a32;--g3:#14453b;--gold:#a4a16a;--gold2:#c9c59a;--cream:#efe9cf;--cream2:#f7f3e3;
@@ -748,7 +748,7 @@ setInterval(()=>{ if(document.visibilityState==="visible") newsTick(); },120000)
 document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") newsTick(); });
 /* auto-actualización: al volver a la app y cada 10 min compara version.json con APP_VER; si cambió, actualiza el SW
    y recarga UNA sola vez por versión (sessionStorage evita bucles). bump.sh sube APP_VER y version.json juntos. */
-const APP_VER="2";
+const APP_VER="3";
 (()=>{ let busy=false;
   const check=async()=>{ if(busy||document.hidden) return; busy=true; try{
       const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"}); if(!r.ok) return;
@@ -1055,7 +1055,13 @@ function cuentas(){ const T=TB(), P=new Map(), R=Math.round;
   const paid=new Map((EV.settle_paid||[]).map(x=>[x.payer+"→"+x.payee,x.by]));
   X.forEach(x=>{ x.paid=paid.has(x.payer+"→"+x.payee); x.by=paid.get(x.payer+"→"+x.payee); });
   return {L,X,tot:L.reduce((a,o)=>a+o.ap,0),me:who(ME&&ME.id,ME&&ME.name)}; }
+/* hay apuesta = quiniela con aportación o competencia con bolsa (los históricos sin registro de apuestas no cuentan) */
+function hasBet(){ const B=EV.bolsas||{}; return !EV.solo_historico&&((+EV.aportacion||0)>0||(+B.equipos||0)+(+B.podio||0)>0); }
 function cuentasHTML(){ const C=cuentas(), mine=n=>n===C.me, canMark=x=>EV.can_admin||mine(x.payee);
+  if(!EV.closed){ const L=C.L.filter(o=>o.ap>0).sort((a,b)=>b.ap-a.ap||a.n.localeCompare(b.n));
+    return `<div class="card"><div class="h">Cuentas del torneo <small>preliminar · bolsa ${money(C.tot)}</small></div>
+      <div class="note" style="margin-bottom:8px">El torneo sigue abierto. Aquí ves quién está apostando y cuánto. <b>Quién le paga a quién</b> se calcula solo al cerrar el torneo con los resultados finales.</div>${quorumNote()}
+      ${L.length?`<div class="ctbl"><div class="ch"><span>Socio</span><span>Quiniela</span><span>Competencia</span><span>Total</span></div>${L.map(o=>`<div class="cr ${mine(o.n)?"mine":""}"><span class="cn">${esc(o.n)}</span><span>${o.apQ?money(o.apQ):"—"}</span><span>${o.apC?money(o.apC):"—"}</span><b>${money(o.ap)}</b></div>`).join("")}</div>`:`<div class="note">Todavía nadie se inscribe.</div>`}</div>`; }
   if(!C.L.length) return `<div class="card"><div class="note">${quorum().L.some(x=>!x.ok)?"":"Nadie apostó en este torneo."}</div>${quorumNote()}</div>`;
   const pend=C.X.filter(x=>!x.paid).length;
   return `<div class="card"><div class="h">Cuentas del torneo <small>bolsa total ${money(C.tot)}</small></div>
@@ -1142,7 +1148,7 @@ function setETab(t){ ETAB=t; renderEvent(); show("event"); }
 function renderEvent(){
   const [c,l]=evStatus(EV); $("#v-event").classList.toggle("tblue",/azul|blue/i.test(EV.teams?.[0]||""));
   $("#evPlaque").innerHTML=`<div class="pt">${esc(l)}</div><div class="pn">${esc(EV.name)}</div><div class="ps">${esc(EV.course||"")}${EV.course?" · ":""}${esc(fdate(EV.event_date))}</div>`;
-  const tabs=[["principal","Principal"],["picks","Mis picks"],["ranking","Ranking"]].concat(EV.closed?[["cuentas","Cuentas"]]:[]).concat(EV.can_admin?[["admin","Admin"]]:[]);
+  const tabs=[["principal","Principal"],["picks","Mis picks"],["ranking","Ranking"]].concat(hasBet()?[["cuentas","Cuentas"]]:[]).concat(EV.can_admin?[["admin","Admin"]]:[]);
   $("#evTabs").innerHTML=tabs.map(([k,t])=>`<button class="${ETAB===k?"on":""}" data-etab="${k}">${t}</button>`).join("");
   const b=$("#evBody");
   if(ETAB==="principal") b.innerHTML=principalHTML();
