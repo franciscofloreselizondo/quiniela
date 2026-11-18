@@ -33,7 +33,7 @@
 </script>
 <link rel="icon" type="image/png" href="/icons/favicon-192.png">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
-<link rel="stylesheet" href="/fonts/fonts.css?v=5">
+<link rel="stylesheet" href="/fonts/fonts.css?v=6">
 <style>
 :root{
   --g:#0b3029;--g2:#0e3a32;--g3:#14453b;--gold:#a4a16a;--gold2:#c9c59a;--cream:#efe9cf;--cream2:#f7f3e3;
@@ -752,7 +752,7 @@ setInterval(()=>{ if(document.visibilityState==="visible") newsTick(); },120000)
 document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") newsTick(); });
 /* auto-actualización: al volver a la app y cada 10 min compara version.json con APP_VER; si cambió, actualiza el SW
    y recarga UNA sola vez por versión (sessionStorage evita bucles). bump.sh sube APP_VER y version.json juntos. */
-const APP_VER="5";
+const APP_VER="6";
 (()=>{ let busy=false;
   const check=async()=>{ if(busy||document.hidden) return; busy=true; try{
       const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"}); if(!r.ok) return;
@@ -1051,7 +1051,7 @@ async function loadSaldos(){ $("#sdBody").innerHTML=`<div class="card"><div clas
   try{ const L=await rpc("b_events_list",{p_token:TOKEN}); EVENTS=L;
     const ev=L.filter(e=>e.closed&&!e.solo_historico&&(!e.event_date||e.event_date>=SALDO_DESDE)), X=[], keep=EV; let me=null;
     for(const ce of ev){ const full=await rpc("b_event_get",{p_token:TOKEN,p_event:ce.id}); EV=full;
-      try{ const C=cuentas(); me=C.me; C.X.forEach(x=>X.push({...x,ev:ce.id,evn:ce.name,d:ce.event_date})); } finally{ EV=keep; } }
+      try{ const C=cuentas(); me=C.me; savePlan(full,C.X); C.X.forEach(x=>X.push({...x,ev:ce.id,evn:ce.name,d:ce.event_date})); } finally{ EV=keep; } }
     SD={X,me:me||(ME.nickname||ME.name),n:ev.length}; renderSaldos(); }
   catch(e){ $("#sdBody").innerHTML=`<div class="card"><div class="note">${esc(e.message)}</div></div>`; } }
 function saldosBy(X){ const P=new Map(), g=n=>{ if(!P.has(n)) P.set(n,{n,debe:0,cobra:0}); return P.get(n); };
@@ -1100,7 +1100,11 @@ function cuentas(){ const T=TB(), P=new Map(), R=Math.round;
   return {L,X,tot:L.reduce((a,o)=>a+o.ap,0),me:who(ME&&ME.id,ME&&ME.name)}; }
 /* hay apuesta = quiniela con aportación o competencia con bolsa (los históricos sin registro de apuestas no cuentan) */
 function hasBet(){ const B=EV.bolsas||{}; return !EV.solo_historico&&((+EV.aportacion||0)>0||(+B.equipos||0)+(+B.podio||0)>0); }
-function cuentasHTML(){ const C=cuentas(), mine=n=>n===C.me, canMark=x=>EV.can_admin||mine(x.payee);
+/* guarda el plan "quién le paga a quién" de un torneo cerrado (lo usa el respaldo semanal); solo quien administra apuestas, una vez por sesión si no cambió */
+function savePlan(ev,X){ if(!ev||!ev.closed||!ev.can_admin) return; const T=X.map(x=>({payer:x.payer,payee:x.payee,amount:x.amount})), sig=JSON.stringify(T);
+  try{ if(sessionStorage.getItem("plan_"+ev.id)===sig) return; }catch(e){}
+  rpc("b_settle_plan_save",{p_token:TOKEN,p_event:ev.id,p_transfers:T}).then(()=>{ try{ sessionStorage.setItem("plan_"+ev.id,sig); }catch(e){} }).catch(()=>{}); }
+function cuentasHTML(){ const C=cuentas(), mine=n=>n===C.me, canMark=x=>EV.can_admin||mine(x.payee); if(EV.closed) savePlan(EV,C.X);
   if(!EV.closed){ const L=C.L.filter(o=>o.ap>0).sort((a,b)=>b.ap-a.ap||a.n.localeCompare(b.n));
     return `<div class="card"><div class="h">Cuentas del torneo <small>preliminar · bolsa ${money(C.tot)}</small></div>
       <div class="note" style="margin-bottom:8px">El torneo sigue abierto. Aquí ves quién está apostando y cuánto. <b>Quién le paga a quién</b> se calcula solo al cerrar el torneo con los resultados finales.</div>${quorumNote()}
