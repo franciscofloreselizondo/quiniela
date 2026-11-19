@@ -33,7 +33,7 @@
 </script>
 <link rel="icon" type="image/png" href="/icons/favicon-192.png">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
-<link rel="stylesheet" href="/fonts/fonts.css?v=8">
+<link rel="stylesheet" href="/fonts/fonts.css?v=9">
 <style>
 :root{
   --g:#0b3029;--g2:#0e3a32;--g3:#14453b;--gold:#a4a16a;--gold2:#c9c59a;--cream:#efe9cf;--cream2:#f7f3e3;
@@ -306,6 +306,10 @@ table.att td.ok{color:var(--ok);font-weight:700}table.att td.ko{color:var(--bad)
 .seg button{flex:1;border:0;background:transparent;padding:7px 6px;font:600 11.5px Inter;color:var(--mute)}
 .seg button.on.a{background:var(--ok);color:var(--g)}.seg button.on.n{background:var(--red2);color:var(--cream)}.seg button.on.x{background:rgba(255,255,255,.12);color:var(--cream)}
 .mk2{display:grid;grid-template-columns:1fr 190px;gap:8px;align-items:center;padding:6px 0;border-top:1px solid rgba(164,161,106,.15)}
+.mk3{display:grid;grid-template-columns:minmax(0,1fr) auto 34px;gap:8px;align-items:center;padding:7px 0;border-top:1px solid rgba(164,161,106,.15)}
+.mk3>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px}.mk3 .seg{margin:0;grid-template-columns:auto auto;gap:4px}.mk3 .seg button{padding:7px 11px;font-size:12.5px}
+.mk3 .seg button.a.on{background:rgba(127,191,138,.22);border-color:var(--ok);color:var(--ok)}.mk3 .seg button.n.on{background:rgba(229,154,143,.2);border-color:var(--bad);color:var(--bad)}
+.mkx{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:none;color:var(--mute);font-size:14px;cursor:pointer}
 .trow{display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid rgba(164,161,106,.2)}.trow:first-child{border-top:0}
 .trow .nm2{flex:1}
 .st2{font-size:10.5px;font-weight:700;letter-spacing:.04em;padding:3px 7px;border-radius:999px;white-space:nowrap}
@@ -688,7 +692,7 @@ let EVENTS=[], EV=null, ETAB="principal", skew=0, form={picks:{},tb:""}, target=
 function moreItems(){ const can=v=>!ME.guest||GUEST_OK.has(v), bp=+($("#bdgBoard").textContent||0);
   const it=(v,i,t,x)=>can(v)?`<button class="it" data-nav="${v}"><i>${i}</i>${t}${x?`<small>${x}</small>`:""}</button>`:"";
   const club=it("honor","🏆","Cuadro de Honor")+it("hist","📈","Históricos")+it("code","📖","El Código")+it("social","📣","Redes")+it("members","👥","Miembros");
-  const adm=ME.guest?"":it("att","📋","Asistencias")+it("treas","💰","Tesorería")+(isBoard(ME)?it("board","🗳️","Board",bp?bp+" voto"+(bp>1?"s":""):"")+it("usage","⚙️","Admin")+`<a class="it" id="manBoard" href="/club/manual-board.pdf?v=${APP_VER}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit"><i>📘</i>Manual del Board<small>PDF</small></a>`:"");
+  const adm=ME.guest?"":it("tee","🛺","Salidas")+it("att","📋","Asistencias")+it("treas","💰","Tesorería")+(isBoard(ME)?it("board","🗳️","Board",bp?bp+" voto"+(bp>1?"s":""):"")+it("usage","⚙️","Admin")+`<a class="it" id="manBoard" href="/club/manual-board.pdf?v=${APP_VER}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit"><i>📘</i>Manual del Board<small>PDF</small></a>`:"");
   return `<div class="mhead" data-nav="profile">${avatarHTML(ME)}<div><b>${esc(ME.nickname||ME.name)}</b><span>${ME.hidden?"Administrador":PROFS[prof(ME)]}</span></div></div>
     <div class="sec">El club</div>${club}${adm?`<div class="sec">${isBoard(ME)?"Administración":"Cuentas del club"}</div><div class="adm">${adm}</div>`:""}
     <div class="sec">Tu cuenta</div><button class="it" data-nav="saldos"><i>💸</i>${isBoard(ME)?"Saldos de apuestas":"Mis saldos"}</button><button class="it" data-nav="profile"><i>👤</i>Mi perfil</button><button class="it" id="moreOut"><i>↪</i>Salir</button>`; }
@@ -752,7 +756,7 @@ setInterval(()=>{ if(document.visibilityState==="visible") newsTick(); },120000)
 document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") newsTick(); });
 /* auto-actualización: al volver a la app y cada 10 min compara version.json con APP_VER; si cambió, actualiza el SW
    y recarga UNA sola vez por versión (sessionStorage evita bucles). bump.sh sube APP_VER y version.json juntos. */
-const APP_VER="8";
+const APP_VER="9";
 (()=>{ let busy=false;
   const check=async()=>{ if(busy||document.hidden) return; busy=true; try{
       const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"}); if(!r.ok) return;
@@ -2014,7 +2018,7 @@ function renderAtt(){
   const cnt={}; ns.forEach(x=>cnt[x.mid]=(cnt[x.mid]||0)+1);
   let h=`<div class="card"><div class="h">${ATT.liga==="sabado"?"Liga Sabatina":"Liga Dominical"} <small>${O.length} salidas · ${ATT.can_edit?"toca una fecha para editar":seasonLabel(ATT.season)}</small></div>
     <div class="grid"><table class="att" id="attTable">${head}${rows}${tot}${gst}</table></div>
-    <div class="note" style="margin-top:8px">1 = asistió · NS = No Call, No Show · rojo = 6 o más salidas seguidas sin jugar (incumple 7a).</div>
+    <div class="note" style="margin-top:8px">1 = asistió · NS = No Call, No Show · vacío = no convocado · rojo = 6 o más salidas seguidas sin jugar (incumple 7a).</div>
     <div class="row2" style="margin-top:10px"><button class="btn sm" id="attXlsx">⬇️ Descargar Excel</button><button class="btn sm ghost" id="attCsv">⬇️ Descargar CSV</button></div></div>`;
   h+=`<div class="card"><div class="h">Regla 7a <small>${fails.length?fails.length+" la incumplen":"todos cumplen"}</small></div>${fails.length?fails.map(m=>`<div class="trow"><span class="nm2">${esc(m.name)}</span><span class="st2 late">${m.max_streak} SALIDAS SIN JUGAR</span></div>`).join(""):`<div class="note">Nadie lleva 6 salidas seguidas sin jugar.</div>`}</div>`;
   h+=`<div class="card"><div class="h">No Call, No Show <small>${ns.length} en la temporada</small></div>${ns.length?ns.map(x=>`<div class="trow"><span class="nm2">${esc(x.name)}<div class="note">${esc(d2(x.o.date))}${x.o.label?" · "+esc(x.o.label):""} · ${nsLabel(x.k.n)}</div></span>
@@ -2026,25 +2030,42 @@ function outFormHTML(o){
   const liga=$("#attLiga").value, fees=ATT.fees;
   o=o||{date:new Date().toISOString().slice(0,10),tipo:"regular",label:"",fee:fees.regular,guests:0,notes:"",marks:{}};
   OUTF={id:o.id||null,marks:Object.fromEntries(Object.entries(o.marks||{}).map(([k,v])=>[k,v.s]))};
-  const lg=m=>m.liga===liga||m.liga==="ambas"; const mem=MEMBERS.filter(m=>(m.active&&!m.guest)||OUTF.marks[m.id]).sort((a,b)=>(lg(b)-lg(a))||a.name.localeCompare(b.name));
   return `<div class="h">${o.id?"Editar salida":"Registrar salida"} <small>${liga==="sabado"?"Sabatina":"Dominical"}</small></div>
     <div class="row2"><div><label class="f">Fecha</label><input class="t" id="oDate" type="date" value="${esc(o.date)}"></div>
     <div><label class="f">Tipo</label><select class="t" id="oTipo">${Object.entries(TIPOS).map(([k,l])=>`<option value="${k}" ${o.tipo===k?"selected":""}>${l}</option>`).join("")}</select></div></div>
     <div class="row3"><div><label class="f">Etiqueta</label><input class="t" id="oLabel" maxlength="6" value="${esc(o.label||"")}" placeholder="TP"></div>
     <div><label class="f">Inscripción ($)</label><input class="t" id="oFee" type="number" value="${esc(o.fee)}"></div>
     <div><label class="f">Invitados</label><input class="t" id="oGuests" type="number" value="${esc(o.guests)}"></div></div>
-    <div class="mt" style="margin-top:12px">Socios <span id="oCount"></span></div>
-    <div id="oMarks">${mem.map(m=>{const v=OUTF.marks[m.id]||""; return `<div class="mk2"><span>${esc(m.name)}</span><div class="seg" data-om="${m.id}"><button class="x ${!v?"on":""}" data-v="">—</button><button class="a ${v==="asistio"?"on":""}" data-v="asistio">Asistió</button><button class="n ${v==="no_show"?"on":""}" data-v="no_show">No-show</button></div></div>`;}).join("")}</div>
+    <div class="mt" style="margin-top:12px">Convocados <span id="oCount"></span></div>
+    <div id="oMarks"></div>
     <button class="btn gold w" id="oSave" style="margin-top:14px">Guardar salida</button>
     ${o.id?`<button class="btn w" id="oMail" style="margin-top:8px">${o.mailed_at?"Reenviar":"Enviar"} resumen por correo a todos</button><button class="btn danger w" id="oDel" style="margin-top:8px">Borrar salida</button>`:""}
     <button class="btn ghost w" id="oCancel" style="margin-top:8px">Cerrar</button>`;
 }
-function oCount(){ const a=Object.values(OUTF.marks).filter(v=>v==="asistio").length, n=Object.values(OUTF.marks).filter(v=>v==="no_show").length; $("#oCount").textContent=`· ${a} asistieron${n?" · "+n+" no-show":""}`; }
-$("#newOutBtn").onclick=()=>{ $("#outForm").innerHTML=outFormHTML(null); $("#outForm").classList.remove("hide"); oCount(); window.scrollTo(0,$("#outForm").offsetTop-120); };
-document.addEventListener("change",e=>{ if(e.target.id==="oTipo"&&ATT){ $("#oFee").value=ATT.fees[e.target.value]??0; } });
+function oCount(){ const a=Object.values(OUTF.marks).filter(v=>v==="asistio").length, n=Object.values(OUTF.marks).filter(v=>v==="no_show").length; const c=$("#oCount"); if(c) c.textContent=`· ${a} asistieron${n?" · "+n+" no-show":""}`; }
+/* Convocados: solo se agregan los que fueron convocados (dropdown); quien no está en la lista = no convocado */
+function oEligible(){ const liga=$("#attLiga").value, lg=m=>m.liga===liga||m.liga==="ambas"; return MEMBERS.filter(m=>(m.active&&!m.guest)||OUTF.marks[m.id]).sort((a,b)=>(lg(b)-lg(a))||a.name.localeCompare(b.name)); }
+function renderOMarks(){ const box=$("#oMarks"); if(!box||!OUTF) return; const E=oEligible(), inn=E.filter(m=>OUTF.marks[m.id]).sort((a,b)=>a.name.localeCompare(b.name)), out=E.filter(m=>!OUTF.marks[m.id]);
+  const T=OUTF.tee, add=T?T.ids.filter(id=>!OUTF.marks[id]):[];
+  box.innerHTML=`${add.length?`<button class="btn ghost w" id="oTee" style="margin:6px 0">🛺 Agregar los ${add.length} de las Salidas de este día</button>`:""}${T&&T.unknown.length?`<div class="note">En Salidas pero no son socios: ${esc(T.unknown.join(", "))}</div>`:""}
+    <select class="t" id="oAdd" style="margin:6px 0 4px" ${out.length?"":"disabled"}><option value="">${out.length?"➕ Agregar socio convocado…":"Ya están todos agregados"}</option>${out.map(m=>`<option value="${m.id}">${esc(m.name)}</option>`).join("")}</select>
+    ${inn.length?inn.map(m=>{ const v=OUTF.marks[m.id]; return `<div class="mk3"><span>${esc(m.name)}</span><div class="seg" data-om="${m.id}"><button class="a ${v==="asistio"?"on":""}" data-v="asistio">Asistió</button><button class="n ${v==="no_show"?"on":""}" data-v="no_show">No-show</button></div><button class="mkx" data-orm="${m.id}" aria-label="Quitar a ${esc(m.name)}">✕</button></div>`; }).join("")
+      :`<div class="note" style="margin-top:6px">Todavía no hay convocados.</div>`}
+    <div class="note" style="margin-top:6px">Quien no esté en la lista cuenta como <b>no convocado</b> (ni asistencia ni no-show).</div>`; oCount(); }
+async function oLoadTee(){ if(!OUTF) return; const d=$("#oDate")?.value; OUTF.tee=null; renderOMarks(); if(!d) return;
+  try{ const t=await rpc("s_get",{p_token:TOKEN,p_date:d}); const names=[...new Set((t?.slots||[]).flatMap(sl=>(sl.carts||[]).flatMap(c=>c.p||[])).map(x=>String(x||"").trim()).filter(Boolean))];
+    const ids=[], unknown=[], low=x=>x.toLowerCase();
+    names.forEach(n=>{ const m=MEMBERS.find(m=>m.active&&!m.guest&&(low(pName(m))===low(n)||low(m.name)===low(n)||(m.nickname&&low(m.nickname)===low(n)))); if(m){ if(!ids.includes(m.id)) ids.push(m.id); } else unknown.push(n); });
+    if($("#oDate")?.value===d){ OUTF.tee=names.length?{ids,unknown}:null; renderOMarks(); } }catch(e){ /* sin salidas ese día */ } }
+$("#newOutBtn").onclick=()=>{ $("#outForm").innerHTML=outFormHTML(null); $("#outForm").classList.remove("hide"); renderOMarks(); oLoadTee(); window.scrollTo(0,$("#outForm").offsetTop-120); };
+document.addEventListener("change",e=>{ if(e.target.id==="oTipo"&&ATT){ $("#oFee").value=ATT.fees[e.target.value]??0; }
+  if(e.target.id==="oAdd"&&e.target.value&&OUTF){ OUTF.marks[e.target.value]="asistio"; renderOMarks(); }
+  if(e.target.id==="oDate"&&OUTF) oLoadTee(); });
 document.addEventListener("click",async e=>{
-  const th=e.target.closest("th[data-out]"); if(th&&ATT?.can_edit){ const o=ATT.outings.find(x=>x.id===th.dataset.out); $("#outForm").innerHTML=outFormHTML(o); $("#outForm").classList.remove("hide"); oCount(); window.scrollTo(0,$("#outForm").offsetTop-120); return; }
+  const th=e.target.closest("th[data-out]"); if(th&&ATT?.can_edit){ const o=ATT.outings.find(x=>x.id===th.dataset.out); $("#outForm").innerHTML=outFormHTML(o); $("#outForm").classList.remove("hide"); renderOMarks(); oLoadTee(); window.scrollTo(0,$("#outForm").offsetTop-120); return; }
   const sb=e.target.closest(".seg[data-om] button"); if(sb){ const seg=sb.parentElement; seg.querySelectorAll("button").forEach(b=>b.classList.toggle("on",b===sb)); if(sb.dataset.v) OUTF.marks[seg.dataset.om]=sb.dataset.v; else delete OUTF.marks[seg.dataset.om]; oCount(); return; }
+  const rm=e.target.closest("[data-orm]"); if(rm&&OUTF){ delete OUTF.marks[rm.dataset.orm]; renderOMarks(); return; }
+  if(e.target.id==="oTee"&&OUTF?.tee){ OUTF.tee.ids.forEach(id=>{ if(!OUTF.marks[id]) OUTF.marks[id]="asistio"; }); renderOMarks(); toast("Convocados de Salidas agregados ✓"); return; }
   const t=e.target;
   if(t.id==="oCancel"){ $("#outForm").classList.add("hide"); return; }
   if(t.id==="oSave"){ t.disabled=true; const d={id:OUTF.id,liga:$("#attLiga").value,date:$("#oDate").value,tipo:$("#oTipo").value,label:$("#oLabel").value,fee:Number($("#oFee").value||0),guests:Number($("#oGuests").value||0),
