@@ -33,7 +33,7 @@
 </script>
 <link rel="icon" type="image/png" href="/icons/favicon-192.png">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
-<link rel="stylesheet" href="/fonts/fonts.css?v=9">
+<link rel="stylesheet" href="/fonts/fonts.css?v=10">
 <style>
 :root{
   --g:#0b3029;--g2:#0e3a32;--g3:#14453b;--gold:#a4a16a;--gold2:#c9c59a;--cream:#efe9cf;--cream2:#f7f3e3;
@@ -168,7 +168,8 @@ body.guest .agseg{display:none}
 .slot{border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:10px}
 .slot .sh{display:grid;grid-template-columns:90px 80px 1fr;gap:6px;align-items:center;margin-bottom:6px}
 .slot .sh input{padding:7px 6px;font-size:13px}.slot .cnt{font-size:12px;text-align:right}
-.crow{display:grid;grid-template-columns:120px 1fr 1fr 26px;gap:4px;margin-bottom:5px;align-items:center}
+.crow{display:grid;grid-template-columns:1fr 1fr 40px;gap:6px;margin-bottom:10px;align-items:center;padding-bottom:10px;border-bottom:1px solid rgba(164,161,106,.15)}
+.crow>[data-cs]{grid-column:1/3}.crow>[data-cdel]{grid-column:3;grid-row:1}.crow>[data-cp]{grid-row:2;min-width:0}
 .crow input,.crow select{padding:7px 5px;font-size:12.5px}
 .ubar{display:grid;grid-template-columns:110px 1fr 54px;gap:8px;align-items:center;font-size:13px;margin:5px 0}
 .ubar .tr{height:10px;border-radius:5px;background:rgba(255,255,255,.06);overflow:hidden}.ubar .tr i{display:block;height:100%;background:var(--gold);border-radius:5px}
@@ -756,7 +757,7 @@ setInterval(()=>{ if(document.visibilityState==="visible") newsTick(); },120000)
 document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") newsTick(); });
 /* auto-actualización: al volver a la app y cada 10 min compara version.json con APP_VER; si cambió, actualiza el SW
    y recarga UNA sola vez por versión (sessionStorage evita bucles). bump.sh sube APP_VER y version.json juntos. */
-const APP_VER="9";
+const APP_VER="10";
 (()=>{ let busy=false;
   const check=async()=>{ if(busy||document.hidden) return; busy=true; try{
       const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"}); if(!r.ok) return;
@@ -1899,6 +1900,15 @@ async function loadTee(){ const d=$("#teeDate").value||nextPlayDay(); $("#teeDat
   renderTee(); }
 $("#teeDate").addEventListener("change",loadTee);
 function teeEditHTML(){ const T=TEE, used=new Set(); T.slots.forEach(s=>s.carts.forEach(c=>{ if(c.owner) used.add(c.owner); }));
+  /* jugadores: menú de socios; quien ya está en otro carrito de este día ya no aparece. Invitados con "Guest N" u "Otro…" */
+  const taken=new Set(); T.slots.forEach(s=>s.carts.forEach(c=>c.p.forEach(x=>{ if(x) taken.add(x.toLowerCase()); })));
+  const socios=MEMBERS.filter(m=>m.active&&!m.guest).map(m=>({v:pName(m),n:m.name})).sort((a,b)=>a.n.localeCompare(b.n));
+  const guests=["Guest 1","Guest 2","Guest 3","Guest 4","Guest 5"];
+  const playerSel=(c,si,ci,k)=>{ const cur=c.p[k]||"", free=v=>!taken.has(v.toLowerCase())||v.toLowerCase()===cur.toLowerCase();
+    const known=cur&&!socios.some(o=>o.v===cur)&&!guests.includes(cur);
+    return `<select class="t" data-cp="${si}.${ci}.${k}"><option value="">— Jugador —</option>${known?`<option value="${esc(cur)}" selected>${esc(cur)}</option>`:""}
+      <optgroup label="Socios">${socios.filter(o=>free(o.v)).map(o=>`<option value="${esc(o.v)}" ${o.v===cur?"selected":""}>${esc(o.n)}</option>`).join("")}</optgroup>
+      <optgroup label="Invitados">${guests.filter(free).map(g=>`<option value="${g}" ${g===cur?"selected":""}>${g}</option>`).join("")}<option value="__otro">✏️ Otro (escribir nombre)…</option></optgroup></select>`; };
   const cartSel=(c,si,ci)=>`<select class="t" data-cs="${si}.${ci}">${CARTS.map(o=>`<option value="${o.k}" ${(c.owner||"")===o.k?"selected":""} ${o.k&&!o.multi&&used.has(o.k)&&c.owner!==o.k?"disabled":""}>${esc(o.n)}</option>`).join("")}</select>`;
   return `<div class="card"><div class="h">Armar salidas <small>2 a 5 por salida · 2 por carrito</small></div>
     <label class="f" style="margin-top:0">Título</label><input class="t" id="teeTitle" value="${esc(T.title||"")}" placeholder="Torneo Invierno 2026">
@@ -1906,7 +1916,7 @@ function teeEditHTML(){ const T=TEE, used=new Set(); T.slots.forEach(s=>s.carts.
     <datalist id="teeNames">${MEMBERS.filter(m=>m.active).map(m=>`<option value="${esc(pName(m))}">${esc(m.name)}</option>`).join("")}<option value="Guest 1"><option value="Guest 2"><option value="Guest 3"></datalist>
     <div style="margin-top:10px">${T.slots.map((s,si)=>{ const n=s.carts.reduce((a,c)=>a+c.p.filter(Boolean).length,0), ok=n===0||(n>=2&&n<=5);
       return `<div class="slot"><div class="sh"><input class="t" data-st="${si}" value="${esc(s.t)}" placeholder="07:30"><input class="t" data-sho="${si}" value="${esc(s.hoyo||"10")}" placeholder="Hoyo"><span class="cnt" style="color:${ok?"var(--mute)":"var(--bad)"}">${n} jugador${n===1?"":"es"}${ok?(n?" ✓":""):" · deben ser 2 a 5"}</span></div>
-      ${s.carts.map((c,ci)=>`<div class="crow">${cartSel(c,si,ci)}<input class="t" list="teeNames" data-cp="${si}.${ci}.0" value="${esc(c.p[0]||"")}" placeholder="Jugador"><input class="t" list="teeNames" data-cp="${si}.${ci}.1" value="${esc(c.p[1]||"")}" placeholder="Jugador"><button type="button" class="btn sm danger" data-cdel="${si}.${ci}">✕</button></div>`).join("")}
+      ${s.carts.map((c,ci)=>`<div class="crow">${cartSel(c,si,ci)}${playerSel(c,si,ci,0)}${playerSel(c,si,ci,1)}<button type="button" class="btn sm danger" data-cdel="${si}.${ci}">✕</button></div>`).join("")}
       <div class="row2"><button type="button" class="btn ghost sm" data-cadd="${si}">+ Carrito</button><button type="button" class="btn ghost sm" data-sdel="${si}">Quitar salida</button></div></div>`; }).join("")}
     <button type="button" class="btn ghost sm" id="teeAddSlot">+ Agregar salida</button></div>
     <button class="btn gold w" id="teeSave" style="margin-top:12px">Guardar salidas</button></div>`; }
@@ -1951,6 +1961,9 @@ function teeText(){ const T=TEE, S=teeClean().filter(s=>s.carts.length); const x
 async function teePNG(){ await logoData(); const svg=teeSVG(), img=new Image(); img.src="data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg); await img.decode();
   const c=document.createElement("canvas"); c.width=img.width*1.5; c.height=img.height*1.5; const x=c.getContext("2d"); x.scale(1.5,1.5); x.drawImage(img,0,0); return await new Promise(r=>c.toBlob(r,"image/png")); }
 document.addEventListener("input",e=>{ if(VIEW==="tee"&&e.target.closest("#teeEdit")){ teeSync(); $("#teePrev").innerHTML=teeSVG(); } });
+document.addEventListener("change",e=>{ if(VIEW==="tee"&&e.target.matches("[data-cp]")){ const sel=e.target;
+    if(sel.value==="__otro"){ const n=(prompt("Nombre del jugador invitado")||"").trim().slice(0,40); if(n){ const o=document.createElement("option"); o.value=n; o.textContent=n; sel.appendChild(o); sel.value=n; } else sel.value=""; }
+    teeSync(); renderTee(); return; } });
 document.addEventListener("change",e=>{ if(VIEW==="tee"&&e.target.matches("[data-cs]")){ teeSync(); const [a,b]=e.target.dataset.cs.split(".").map(Number), c=TEE.slots[a].carts[b];
   if(c.owner&&c.owner!=="Trolley"&&!c.p[0]){ const mm=MEMBERS.find(m=>pName(m).toLowerCase()===c.owner.toLowerCase()||m.name.toLowerCase().startsWith(c.owner.toLowerCase())); c.p[0]=mm?pName(mm):c.owner; } renderTee(); } });
 document.addEventListener("click",async e=>{ if(VIEW!=="tee") return; const t=e.target;
