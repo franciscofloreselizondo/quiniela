@@ -33,7 +33,7 @@
 </script>
 <link rel="icon" type="image/png" href="/icons/favicon-192.png">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
-<link rel="stylesheet" href="/fonts/fonts.css?v=10">
+<link rel="stylesheet" href="/fonts/fonts.css?v=11">
 <style>
 :root{
   --g:#0b3029;--g2:#0e3a32;--g3:#14453b;--gold:#a4a16a;--gold2:#c9c59a;--cream:#efe9cf;--cream2:#f7f3e3;
@@ -289,6 +289,17 @@ textarea.copy{width:100%;min-height:150px;font:12px/1.4 ui-monospace,monospace;b
 .pairrow input,.pairrow select,.pmrow input,.pmrow select{padding:7px 5px;font-size:12.5px}
 .pjsc{display:grid;grid-template-columns:1fr 66px 66px;gap:6px;margin-bottom:5px;align-items:center}.pjsc .pjnet{font-size:11px}.pjbb{background:rgba(164,161,106,.08);border-radius:8px;padding:4px 6px;margin-bottom:10px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.wtop{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--mute);margin:2px 2px 6px}.wtop .lnk{font-size:12px}
+.wdots{display:flex;gap:5px;flex-wrap:wrap;margin:0 2px 10px}.wdots i{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.14);cursor:pointer}.wdots i.ok{background:var(--gold)}.wdots i.on{outline:2px solid var(--cream);outline-offset:1px}
+.wnav{margin:4px 0 14px}.wrev{display:grid;gap:4px}.wrow{display:flex;justify-content:space-between;gap:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:9px 11px;color:var(--cream);font-size:13px;text-align:left;cursor:pointer}.wrow b{text-align:right}.wrow b.miss{color:#ff8a80}
+.rlf>summary{list-style:none;display:inline-block}.rlf>summary::-webkit-details-marker{display:none}.rlf[open]>summary{display:none}
+.cvi .cvh{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.cvi .cvb{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.sec2{font:700 11px Inter,sans-serif;letter-spacing:.06em;color:var(--mute);text-transform:uppercase;margin:4px 2px 8px}
+.cvfm{display:grid;grid-template-columns:1fr 1fr;gap:8px}.cvfm .opt{padding:12px 8px;min-height:58px}
+.cvpts{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}.cvpts div{display:grid;gap:3px;text-align:center}.cvpts span{font-size:11px;color:var(--mute)}.cvpts input{text-align:center;padding:8px 4px}
+.cvex{display:grid;gap:8px;margin:4px 0}.cvex label{display:flex;gap:8px;align-items:center;font-size:14px}
+.cvsum{margin-top:12px}.cvart{border-radius:12px;overflow:hidden;background:rgba(255,255,255,.04);min-height:160px;display:grid;place-items:center}.cvart img{width:100%;display:block}
+.cvcat{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;margin:6px 0;font-size:13px}.cvcat input{width:64px;display:inline-block;padding:6px;text-align:center}
+.foldc>summary{list-style:none;cursor:pointer}.foldc>summary::-webkit-details-marker{display:none}.foldc>summary .h:after{content:"Ver ›";font:600 11px Inter,sans-serif;color:var(--mute);margin-left:auto;padding-left:8px}.foldc[open]>summary .h:after{content:"Ocultar"}
 .ent{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:8px 0;border-top:1px solid rgba(164,161,106,.2)}.ent:first-child{border-top:0}
 .ent .nm2{flex:1;min-width:110px}
 .grid{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -4px}
@@ -603,6 +614,11 @@ main{padding-bottom:110px}
     <div class="plaque"><div class="pt">Hermanos McGregor</div><div class="pn">Saldos de apuestas</div><div class="ps">Lo que debes y te deben en todos los torneos</div></div>
     <div id="sdBody"></div>
   </section>
+  <section class="view" id="v-conv">
+    <div class="plaque"><div class="pt">Hermanos McGregor</div><div class="pn">Convocatorias</div><div class="ps">Archivo de convocatorias del club</div></div>
+    <div class="etabs stk hide" id="cvTabs"></div>
+    <div id="cvBody"></div>
+  </section>
   <section class="view" id="v-board">
     <div class="plaque"><div class="pt">Hermanos McGregor</div><div class="pn">Board</div><div class="ps" id="bdSub">Votaciones del board</div></div>
     <div id="bdBody"></div>
@@ -692,7 +708,7 @@ let EVENTS=[], EV=null, ETAB="principal", skew=0, form={picks:{},tb:""}, target=
 /* ===== menú "Más" ===== */
 function moreItems(){ const can=v=>!ME.guest||GUEST_OK.has(v), bp=+($("#bdgBoard").textContent||0);
   const it=(v,i,t,x)=>can(v)?`<button class="it" data-nav="${v}"><i>${i}</i>${t}${x?`<small>${x}</small>`:""}</button>`:"";
-  const club=it("honor","🏆","Cuadro de Honor")+it("hist","📈","Históricos")+it("code","📖","El Código")+it("social","📣","Redes")+it("members","👥","Miembros");
+  const club=it("honor","🏆","Cuadro de Honor")+it("hist","📈","Históricos")+it("code","📖","El Código")+it("social","📣","Redes")+it("members","👥","Miembros")+(ME.guest?"":it("conv","📄","Convocatorias"));
   const adm=ME.guest?"":it("tee","🛺","Salidas")+it("att","📋","Asistencias")+it("treas","💰","Tesorería")+(isBoard(ME)?it("board","🗳️","Board",bp?bp+" voto"+(bp>1?"s":""):"")+it("usage","⚙️","Admin")+`<a class="it" id="manBoard" href="/club/manual-board.pdf?v=${APP_VER}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit"><i>📘</i>Manual del Board<small>PDF</small></a>`:"");
   return `<div class="mhead" data-nav="profile">${avatarHTML(ME)}<div><b>${esc(ME.nickname||ME.name)}</b><span>${ME.hidden?"Administrador":PROFS[prof(ME)]}</span></div></div>
     <div class="sec">El club</div>${club}${adm?`<div class="sec">${isBoard(ME)?"Administración":"Cuentas del club"}</div><div class="adm">${adm}</div>`:""}
@@ -739,7 +755,7 @@ function newsAgo(t){ const d=(Date.now()-new Date(t))/6e4; if(d<1) return "ahora
 async function loadNews(){ try{ NEWS=await rpc("n_list",{p_token:TOKEN}); }catch(e){ $("#newsList").innerHTML=`<div class="note">${esc(e.message)}</div>`; return; }
   $("#newsPost").classList.toggle("hide",!NEWS.can_post);
   $("#newsList").innerHTML=NEWS.items.length?NEWS.items.map(n=>`<div class="nw ${n.new?"new":""}"><i>${esc(n.icon)}</i><div><b>${esc(n.title)}</b>${n.body?`<div class="s">${esc(n.body)}</div>`:""}<div class="s">${newsAgo(n.at)}${n.by?" · "+esc(n.by):""}</div></div>
-    <div>${n.link?`<button class="btn sm ghost" data-nlink="${esc(n.link)}">Ver</button>`:""}${NEWS.can_post?`<button class="btn sm ghost" data-ndel="${n.id}" title="Borrar" style="margin-left:4px">✕</button>`:""}</div></div>`).join(""):`<div class="note">Aún no hay noticias.</div>`;
+    <div>${n.link?`<button class="btn sm ghost" data-nlink="${esc(n.link)}">Ver</button>`:""}${NEWS.can_post&&n.kind!=="picks"?`<button class="btn sm ghost" data-ndel="${n.id}" title="Borrar" style="margin-left:4px">✕</button>`:""}</div></div>`).join(""):`<div class="note">Aún no hay noticias.</div>`;
   if(NEWS.unread){ rpc("n_seen",{p_token:TOKEN}).then(()=>bellSet(0)).catch(()=>{}); } else bellSet(0); }
 $("#bellBtn").onclick=()=>go("news");
 (()=>{ const top=document.querySelector(".top"), setH=()=>document.documentElement.style.setProperty("--toph",(top?top.offsetHeight:72)+"px"); setH(); addEventListener("resize",setH); setTimeout(setH,800);
@@ -757,7 +773,7 @@ setInterval(()=>{ if(document.visibilityState==="visible") newsTick(); },120000)
 document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") newsTick(); });
 /* auto-actualización: al volver a la app y cada 10 min compara version.json con APP_VER; si cambió, actualiza el SW
    y recarga UNA sola vez por versión (sessionStorage evita bucles). bump.sh sube APP_VER y version.json juntos. */
-const APP_VER="10";
+const APP_VER="11";
 (()=>{ let busy=false;
   const check=async()=>{ if(busy||document.hidden) return; busy=true; try{
       const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"}); if(!r.ok) return;
@@ -816,6 +832,7 @@ function go(v){
   if(v==="code") loadCode();
   if(v==="board") loadBoard();
   if(v==="saldos") loadSaldos();
+  if(v==="conv"){ if(ME.guest) v="home"; else loadConv(); }
   if(v==="home") renderHome();
   if(v==="news") loadNews();
   if(v==="usage"){ if(!isBoard(ME)){ v="home"; renderHome(); } else loadUsage(); }
@@ -1141,14 +1158,15 @@ function torneoPrizes(){ const T=TB(), PC=pairCalc(), R=EV.results||{}, out={tea
 const PODIO_PCT=[.60,.25,.15];
 function podEach(T,i,ps){ return Math.round(T.poPot*PODIO_PCT[i]/(ps||2)/100)*100; }
 function podioPrizes(T){ const p3=2*podEach(T,2), p2=2*podEach(T,1); return [Math.max(T.poPot-p2-p3,0),p2,p3]; }
+function foldCard(title,small,body,id){ return `<details class="card foldc"${id?` id="${id}"`:""}><summary><div class="h">${title}${small?` <small>${small}</small>`:""}</div></summary>${body}</details>`; }
 function torneoCard(){ const T=TB(); if(!T.on) return ""; const x=EV.aportacion, n=EV.entries.length, pq=prizes();
-  return `<div class="card"><div class="h">¿Cómo funciona la bolsa? <small>entras a una o a las dos</small></div>
+  return `<details class="card foldc"><summary><div class="h">¿Cómo funciona la bolsa? <small>entras a una o a las dos</small></div></summary>
   <table class="ht" id="bolsaTbl"><tr><th>Bolsa</th><th>Cuota</th><th>Total</th><th>Premios</th></tr>
   <tr><td>🎯 <b>Quiniela</b><div class="note">Individual · más puntos con tus picks</div></td><td>${money(x)}</td><td>${money(x*n)}<div class="note">${n} inscrito${n===1?"":"s"}</div></td><td style="text-align:left">1º el resto <span class="note">(hoy ${money(pq[0])})</span><br>2º ${money(pq[1]||0)} <span class="note">(doble)</span><br>3º ${money(pq[2]||0)} <span class="note">(reintegro)</span></td></tr>
   ${T.eq?`<tr><td>⚔️ <b>${esc(EV.teams[0])} vs ${esc(EV.teams[1])}</b><div class="note">Gana el equipo que gane más partidos: ${EV.matches.length} partidos (${EV.matches.length/2||0} por día), cada uno vale 1 punto. Si quedan ${half(EV.matches.length/2)}–${half(EV.matches.length/2)}: gana el de menos golpes netos totales</div></td><td>${money(T.eq)}</td><td>${money(T.eqPot)}<div class="note">${T.nP} de ${T.nPl} jugadores</div></td><td style="text-align:left">Se reparte entre los inscritos del equipo ganador <span class="note">(≈ el doble de su cuota)</span></td></tr>`:""}
   ${T.po?`<tr><td>🏆 <b>Podio de parejas</b><div class="note">Best ball net, suma de los 2 días</div></td><td>${money(T.po)}</td><td>${money(T.poPot)}</td><td style="text-align:left">1ª 60% <span class="note">(hoy ${money(podioPrizes(T)[0]/2)} c/u)</span><br>2ª 25% <span class="note">(hoy ${money(podEach(T,1))} c/u)</span><br>3ª 15% <span class="note">(hoy ${money(podEach(T,2))} c/u)</span><div class="note">Cobra cada jugador inscrito de la pareja</div></td></tr>`:""}
   <tr><td><b>Ambas</b></td><td><b>${money(x+T.eq+T.po)}</b></td><td><b>${money(x*n+T.eqPot+T.poPot)}</b></td><td></td></tr></table>
-  <div class="note" style="margin-top:8px">🎯 La quiniela es para cualquier socio, juegue o no. ⚔️🏆 La apuesta del torneo (${money(T.eq+T.po)}) es solo para jugadores y solo cobran quienes se inscriban a ella. Sin empates en el podio: desempata el net del compañero y luego el HCP combinado.</div>${quorumNote()}</div>`; }
+  <div class="note" style="margin-top:8px">🎯 La quiniela es para cualquier socio, juegue o no. ⚔️🏆 La apuesta del torneo (${money(T.eq+T.po)}) es solo para jugadores y solo cobran quienes se inscriban a ella. Sin empates en el podio: desempata el net del compañero y luego el HCP combinado.</div>${quorumNote()}</details>`; }
 function inscripcionCard(){ const T=TB(); if(!T.on) return ""; const mine=myEntry(), open=!EV.closed&&!locked(), mePl=(EV.players||[]).find(p=>p.member_id===ME.id), inT=mePl&&T.opt.has(mePl.n), picks=mine&&Object.keys(mine.picks||{}).length, tPaid=mePl&&(EV.torneo_paid||[]).includes(mePl.n);
   const st=(on)=>on?`<span class="st2 ok">INSCRITO</span>`:`<span class="st2 pend">NO INSCRITO</span>`;
   const row=(ic,t,price,on,paid,btn,note)=>`<div class="trow"><span class="nm2">${ic} <b>${t}</b> · ${money(price)}${note?`<div class="note">${note}</div>`:""}</span>${st(on,paid)}${open&&btn?btn:""}</div>`;
@@ -1191,7 +1209,7 @@ async function openEvent(id, keepTab){
   skew=new Date(EV.now).getTime()-Date.now(); res={...EV.results};
   history.replaceState(null,"","#e="+id);
   const mine=myEntry();
-  if(!keepTab){ target=mine?{member_id:ME.id,name:ME.name}:null; loadForm(mine);
+  if(!keepTab){ target=mine?{member_id:ME.id,name:ME.name}:null; loadForm(mine); wReset();
     ETAB = (locked()||EV.closed) ? "ranking" : (mine&&isComplete(mine.picks)) ? "ranking" : "principal"; }
   show("event"); renderEvent();
 }
@@ -1211,9 +1229,9 @@ function renderEvent(){
   if((ETAB==="ranking"||ETAB==="cuentas")&&(EV.closed||EV.results?.team)) b.insertAdjacentHTML("beforeend",`<button class="btn gold w" id="rpDl" style="margin:6px 0 14px">📄 Descargar resultados (PDF)</button><div class="note" style="text-align:center;margin-bottom:10px">Ganadores, quiniela, competencia y quién le paga a quién.</div>`);
   $("#saveBar").classList.toggle("hide",!(VIEW==="event"&&ETAB==="picks"&&target&&!picksDisabled()));
   if(ETAB==="picks") updateProg();
-  if(ETAB==="principal"||ETAB==="ranking") setTimeout(updatePreview,50);
+  if((ETAB==="principal"||ETAB==="ranking")&&$("#updFold")?.open) setTimeout(updatePreview,50);
 }
-document.addEventListener("click",e=>{const t=e.target.closest("[data-etab]"); if(t){ if(t.dataset.etab!=="picks"&&dirty&&!confirm("Tienes picks sin guardar. ¿Salir?")) return; if(t.dataset.etab==="picks"&&target?.admin){ const mine=myEntry(); target=mine?{member_id:ME.id,name:ME.name}:null; loadForm(mine);} setETab(t.dataset.etab);} });
+document.addEventListener("click",e=>{const t=e.target.closest("[data-etab]"); if(t){ if(t.dataset.etab!=="picks"&&dirty&&!confirm("Tienes picks sin guardar. ¿Salir?")) return; if(t.dataset.etab==="picks"&&target?.admin){ const mine=myEntry(); target=mine?{member_id:ME.id,name:ME.name}:null; loadForm(mine);} if(t.dataset.etab==="picks"&&ETAB!=="picks") wReset(); setETab(t.dataset.etab);} });
 
 function principalHTML(){
   const p=EV.pts, n=EV.entries.length, pr=prizes(), w=EV.winners, mine=myEntry();
@@ -1224,13 +1242,13 @@ function principalHTML(){
   if(!EV.closed && !locked() && !(PJ()&&TB().on&&!mine)) cta = mine ? `<button class="btn gold w" data-etab="picks">${isComplete(mine.picks)?"Editar mis picks":"Llenar mis picks"}</button>` : `<button class="btn gold w" id="joinBtn">Sumarme a este torneo</button>`;
   let h=`<div class="card"><div class="h">Reglas rápidas <small>${EV.closed?"evento cerrado":locked()?"picks cerrados":"cierran en "+fmtLeft(ms)}</small></div>
     <div class="stats">${T0.on?`<div><b>${money(EV.aportacion+T0.eq+T0.po)}</b><span>ENTRADA TOTAL</span></div><div><b>${money(bolsa()+T0.eqPot+T0.poPot)}</b><span>BOLSA TOTAL</span></div>`:`<div><b>${money(EV.aportacion)}</b><span>ENTRADA</span></div><div><b>${money(bolsa())}</b><span>BOLSA · ${n}</span></div>`}<div><b>${maxPts()}</b><span>PUNTOS MÁX.</span></div></div>
-    <ul class="rl">${ST()?`<li><i>Formato</i><span>Individual · ${SB()?"Stableford net (más puntos gana)":"Stroke net (menor score gana)"} · ${PLAYERS().length} jugadores.</span></li><li><i>Picks</i><span>Podio: 1º, 2º y 3º lugar.</span></li>
+    <details class="rlf"><summary class="lnk" style="padding:8px 0 0">Ver reglas completas</summary><ul class="rl">${ST()?`<li><i>Formato</i><span>Individual · ${SB()?"Stableford net (más puntos gana)":"Stroke net (menor score gana)"} · ${PLAYERS().length} jugadores.</span></li><li><i>Picks</i><span>Podio: 1º, 2º y 3º lugar.</span></li>
     <li><i>Puntos</i><span>1º ${p.p1} · 2º ${p.p2} · 3º ${p.p3}.</span></li>`:PJ()?`<li><i>Formato</i><span>Ryder de parejas · 2 días · salida Shamble. Gana el partido la pareja con mejor net best ball del día (cuenta el mejor score net de los dos): 1 pt. Sin empates: si igualan, gana la pareja cuyo compañero hizo mejor net ese día.</span></li><li><i>Equipos</i><span>${esc(EV.teams[0])} vs ${esc(EV.teams[1])}: gana el equipo que gane más de los ${EV.matches.length} partidos (1 pt cada uno). Si terminan ${half(EV.matches.length/2)}–${half(EV.matches.length/2)}, gana el equipo con menos golpes netos (suma del best ball de sus parejas en los 2 días).</span></li>
     <li><i>Picks</i><span>Quién gana cada partido, qué equipo gana y la 1ª pareja (menor suma de best ball de los 2 días).</span></li>
     <li><i>Puntos</i><span>Partido ${p.match} · Equipo ${p.team} · 1ª pareja ${p.ind1}.</span></li>`:`<li><i>Formato</i><span>Ryder · match play por equipos.</span></li><li><i>Picks</i><span>${EV.matches.length} matches, equipo ganador (${esc(EV.teams.join(" o "))}) y 1er lugar individual.</span></li>
     <li><i>Puntos</i><span>Match ${p.match} · Equipo ${p.team} · 1er lugar ${p.ind1}.</span></li>`}<li><i>Premios</i><span>${premios}</span></li>
     <li><i>${PJ()?"Empate quiniela":"Empate"}</i><span>Gana quien más se acerque al ${PJ()?"net total de la 1ª pareja":SB()?"puntaje stableford del 1er lugar":"score net del 1er lugar"}.</span></li>
-    <li><i>Cierre</i><span>${new Date(EV.lock_at).toLocaleString("es-MX",{weekday:"long",day:"numeric",month:"short",hour:"numeric",minute:"2-digit"})}. Todos los picks son públicos.</span></li>${T0.on?"":`<li><i>Quórum</i><span>Mínimo ${QMIN.q(w)} inscritos para que se juegue; si no se completa, se cancela y nadie paga${EV.closed&&!quorum().q?" · <b style=\"color:var(--bad)\">cancelada: "+n+" inscritos</b>":""}.</span></li>`}</ul>
+    <li><i>Cierre</i><span>${new Date(EV.lock_at).toLocaleString("es-MX",{weekday:"long",day:"numeric",month:"short",hour:"numeric",minute:"2-digit"})}. Todos los picks son públicos.</span></li>${T0.on?"":`<li><i>Quórum</i><span>Mínimo ${QMIN.q(w)} inscritos para que se juegue; si no se completa, se cancela y nadie paga${EV.closed&&!quorum().q?" · <b style=\"color:var(--bad)\">cancelada: "+n+" inscritos</b>":""}.</span></li>`}</ul></details>
     ${cta?`<div style="margin-top:12px">${cta}</div>`:""}
     ${EV.convocatoria_url?`<a class="btn ghost w" style="margin-top:8px" href="${esc(EV.convocatoria_url)}" target="_blank" rel="noopener">Ver convocatoria</a>`:""}</div>`;
   h+=inscripcionCard()+torneoCard();
@@ -1243,7 +1261,7 @@ function principalHTML(){
     if(ST()) f=["p1","p2","p3"].map(chips).join("");
     else { f=EV.matches.map((m,i)=>{const c=cnt("m"+(i+1));return `<div class="mt">Match ${i+1}</div>`+bar(m.w[0],c[m.w[0]]||0,m.r[0],c[m.r[0]]||0);}).join("");
       const ct=cnt("team"); f+=`<div class="mt">Equipo</div>`+bar(EV.teams[0],ct[EV.teams[0]]||0,EV.teams[1],ct[EV.teams[1]]||0)+chips("ind1"); }
-    h+=`<div class="card"><div class="h">Favoritos del grupo <small>${withP.length} con picks</small></div>${f}</div>`;
+    h+=foldCard("Favoritos del grupo",withP.length+" con picks",f);
   }
   return h+updateCard();
 }
@@ -1252,7 +1270,7 @@ document.addEventListener("click",async e=>{ const t=e.target; if(t.id!=="leaveQ
     else { EV=await rpc("b_torneo_join",{p_token:TOKEN,p_event:EV.id,p_on:t.dataset.tj==="1"}); toast(t.dataset.tj==="1"?"Inscrito a la apuesta del torneo ✓":"Saliste de la apuesta del torneo"); }
     renderEvent(); }catch(err){ toast(err.message); t.disabled=false; } });
 document.addEventListener("click",async e=>{ if(e.target.id!=="joinBtn") return; e.target.disabled=true;
-  try{ EV=await rpc("b_join",{p_token:TOKEN,p_event:EV.id}); target={member_id:ME.id,name:ME.name}; loadForm(myEntry()); toast("¡Inscrito! Llena tus picks"); setETab("picks"); }catch(err){ toast(err.message); e.target.disabled=false; } });
+  try{ EV=await rpc("b_join",{p_token:TOKEN,p_event:EV.id}); target={member_id:ME.id,name:ME.name}; loadForm(myEntry()); wReset(); toast("¡Inscrito! Llena tus picks"); setETab("picks"); }catch(err){ toast(err.message); e.target.disabled=false; } });
 
 /* picks */
 function optBtn(name,h,c,sel,attrs,dis){return `<button class="opt ${c}${sel?" sel":""}" ${attrs} ${dis?"disabled":""}><b>${esc(name)}</b>${h!=null&&h!==""?`<i>HCP ${esc(h)}</i>`:""}</button>`;}
@@ -1272,7 +1290,8 @@ function picksHTML(){
   let ban = target.admin ? `<div class="banner">Capturando picks de <b>${esc(target.name)}</b> como admin.</div>`
     : EV.closed ? `<div class="banner red">Evento cerrado. Revisa el <b>Ranking</b> final.</div>`
     : locked() ? `<div class="banner red">Picks cerrados. Sigue el <b>Ranking</b> en vivo.</div>`
-    : `<div class="banner">Puedes cambiar tus picks hasta el cierre. Los picks de todos son públicos.</div>`;
+    : `<div class="banner">Puedes cambiar tus picks hasta el cierre. Los picks de todos son públicos.${PMODE==="all"?` <button class="lnk" id="wStep">Llenar paso a paso</button>`:""}</div>`;
+  if(PMODE==="step"&&!dis&&!target.admin) return ban+wizardHTML();
   if(ST()) return ban+["p1","p2","p3"].map(k=>`<div class="card"><div class="h">${LONG(k)} <small>${p[k]} pt${p[k]==1?"":"s"}</small></div><div class="grid3">${posHTML(form.picks,"p",k,dis)}</div></div>`).join("")
     +`<div class="card"><label class="f" for="tb">Desempate: ${SB()?"puntos stableford":"score net"} del 1er lugar</label><input id="tb" class="t" type="number" inputmode="numeric" min="${SB()?0:40}" max="${SB()?100:130}" placeholder="${SB()?"Ej. 38":"Ej. 68"}" value="${esc(form.tb??"")}" ${dis?"disabled":""}>
     <div class="note" style="margin-top:6px">Solo cuenta si hay empate en puntos. Gana el más cercano. Un jugador solo puede ir en un lugar del podio.</div></div>`;
@@ -1283,6 +1302,31 @@ function picksHTML(){
     <div class="card"><label class="f" for="tb">${pj?"Desempate: net total de la 1ª pareja (best ball, 2 días)":"Desempate: score net del 1er lugar"}</label><input id="tb" class="t" type="number" inputmode="numeric" min="40" max="${pj?400:130}" placeholder="${pj?"Ej. 138":"Ej. 68"}" value="${esc(form.tb??"")}" ${dis?"disabled":""}>
     <div class="note" style="margin-top:6px">Solo cuenta si hay empate en puntos. Gana el más cercano.</div></div>`;
 }
+/* picks paso a paso: una pregunta a la vez, avanza solo al elegir */
+let PMODE="step", PSTEP=0;
+function wReset(){ PMODE="step"; const K=KEYS(), i=K.findIndex(k=>!form.picks[k]); PSTEP=i<0?K.length+1:i; }
+function wSteps(){ return KEYS().concat(["tb","rev"]); }
+function wCard(k){ const p=EV.pts, pj=PJ(), src=form.picks;
+  if(k==="tb") return `<div class="card"><label class="f" for="tb">${ST()?(SB()?"Desempate: puntos stableford del 1er lugar":"Desempate: score net del 1er lugar"):pj?"Desempate: net total de la 1ª pareja (best ball, 2 días)":"Desempate: score net del 1er lugar"}</label><input id="tb" class="t" type="number" inputmode="numeric" min="${SB()?0:40}" max="${SB()?100:pj?400:130}" placeholder="${SB()?"Ej. 38":pj?"Ej. 138":"Ej. 68"}" value="${esc(form.tb??"")}">
+    <div class="note" style="margin-top:6px">Opcional. Solo cuenta si hay empate en puntos: gana el más cercano.</div></div>`;
+  if(k==="rev") return `<div class="card"><div class="h">Revisa tus picks</div><div class="wrev">${KEYS().map((kk,i)=>`<button class="wrow" data-wgo="${i}"><span>${LONG(kk)}</span><b class="${src[kk]?"":"miss"}">${src[kk]?esc(src[kk]):"Falta"}</b></button>`).join("")}<button class="wrow" data-wgo="${KEYS().length}"><span>Desempate</span><b>${form.tb!==""&&form.tb!=null?esc(form.tb):"—"}</b></button></div>
+    <div class="note" style="margin-top:8px">Toca uno para cambiarlo. Cuando estén completos, guarda abajo.</div></div>`;
+  if(/^p\d$/.test(k)) return `<div class="card"><div class="h">${LONG(k)} <small>${p[k]} pt${p[k]==1?"":"s"}</small></div><div class="grid3">${posHTML(src,"p",k,false)}</div></div>`;
+  if(k==="team") return `<div class="card"><div class="h">Equipo ganador <small>${p.team} pts</small></div><div class="teams">${teamHTML(src,"p",false)}</div></div>`;
+  if(k==="ind1") return `<div class="card"><div class="h">${pj?"1ª pareja (2 días)":"1er lugar individual"} <small>${p.ind1} pts</small></div><div class="${pj?"grid2":"grid3"}">${indHTML(src,"p",false)}</div></div>`;
+  const i=+k.slice(1)-1, m=EV.matches[i];
+  return `<div class="card"><div class="h">${pj?"Partido":"Match"} ${i+1} de ${EV.matches.length} <small>${p.match} pt</small></div>${m.d||m.t?`<div class="note" style="margin-bottom:6px">${m.d?"Día "+m.d:""}${m.d&&m.t?" · ":""}${m.t?esc(m.t):""}</div>`:""}<div class="match">
+    ${optBtn(m.w[0],m.w[1],"w",src[k]===m.w[0],`data-p="${k}" data-v="${esc(m.w[0])}"`)}<div class="vs">vs</div>${optBtn(m.r[0],m.r[1],"r",src[k]===m.r[0],`data-p="${k}" data-v="${esc(m.r[0])}"`)}</div></div>`; }
+function wizardHTML(){ const S=wSteps(); if(!ST()&&!EV.matches.length) return `<div class="card"><div class="note">Los partidos se publican cuando se definan los equipos.</div></div>`;
+  PSTEP=Math.max(0,Math.min(PSTEP,S.length-1)); const k=S[PSTEP];
+  const dots=S.map((s,i)=>`<i class="${i===PSTEP?"on":""} ${s==="tb"?(form.tb!==""&&form.tb!=null?"ok":""):s!=="rev"&&form.picks[s]?"ok":""}" data-wgo="${i}"></i>`).join("");
+  return `<div class="wtop"><span>Paso ${PSTEP+1} de ${S.length}</span><button class="lnk" id="wAll">Ver todos juntos</button></div><div class="wdots">${dots}</div>${wCard(k)}
+    <div class="row2 wnav"><button class="btn ghost" id="wPrev" ${PSTEP?"":"disabled"}>‹ Anterior</button>${k==="rev"?`<span></span>`:`<button class="btn ${form.picks[k]||k==="tb"?"gold":"ghost"}" id="wNext">${k==="tb"?"Revisar ›":form.picks[k]?"Siguiente ›":"Saltar ›"}</button>`}</div>`; }
+function wGo(i){ PSTEP=i; renderEvent(); const t=$("#evTabs"); if(t) window.scrollTo(0,Math.max(0,t.getBoundingClientRect().top+window.scrollY-60)); }
+document.addEventListener("click",e=>{ const t=e.target.closest("#wPrev,#wNext,#wAll,[data-wgo]"); if(!t) return;
+  if(t.id==="wAll"){ PMODE="all"; renderEvent(); return; } if(t.id==="wStep"){ return; }
+  if(t.dataset.wgo!=null) return wGo(+t.dataset.wgo); wGo(PSTEP+(t.id==="wPrev"?-1:1)); });
+document.addEventListener("click",e=>{ if(e.target.id!=="wStep") return; PMODE="step"; PSTEP=0; renderEvent(); });
 function updateProg(){
   const n=KEYS().filter(k=>form.picks[k]).length, N=KEYS().length;
   $("#prog").innerHTML=`<b>${n}/${N}</b> picks${dirty?" · sin guardar":(n===N?" · guardado ✓":"")}`;
@@ -1293,6 +1337,7 @@ document.addEventListener("click",e=>{
   const b=e.target.closest("[data-p]"); if(!b||b.disabled) return;
   const k=b.dataset.p,v=b.dataset.v; if(form.picks[k]===v) delete form.picks[k]; else { if(ST()) Object.keys(form.picks).forEach(kk=>{ if(form.picks[kk]===v) delete form.picks[kk]; }); form.picks[k]=v; }
   dirty=true; const y=window.scrollY; renderEvent(); window.scrollTo(0,y);
+  if(PMODE==="step"&&$("#wNext")&&wSteps()[PSTEP]===k&&form.picks[k]){ const at=PSTEP; setTimeout(()=>{ if(PSTEP===at&&ETAB==="picks") wGo(at+1); },260); }
 });
 document.addEventListener("input",e=>{ if(e.target.id==="tb"){ form.tb=e.target.value; dirty=true; updateProg(); } });
 $("#saveBtn").onclick=async()=>{
@@ -1367,7 +1412,7 @@ function summaryHTML(){
     if(t.length){const who=t.filter(x=>x.d===t[0].d); facts.push(["📏", who.length>3?`<b>${who.length} apostadores</b> <span>empataron como los más cercanos al net (${esc(who[0].tb)} vs ${esc(EV.net_ganador)}).</span>`:`<b>${esc(who.map(x=>x.a).join(", "))}</b> <span>${who.length>1?"fueron los más cercanos":"fue el más cercano"} al net del 1er lugar (${esc(who[0].tb)} vs ${esc(EV.net_ganador)}).</span>`]);}}
   const zero=rows.filter(r=>Object.keys(r.e.picks||{}).length&&r.h===0).length;
   if(zero) facts.push(["🙈",`<b>${zero}</b> <span>apostador${zero>1?"es":""} sin un solo acierto${fin?"":" todavía"}.</span>`]);
-  if(facts.length) h+=`<div class="card"><div class="h">Datos curiosos</div><ul class="facts">${facts.map(([i,t])=>`<li><i>${i}</i><div>${t}</div></li>`).join("")}</ul></div>`;
+  if(facts.length) h+=foldCard("Datos curiosos",facts.length+"",`<ul class="facts">${facts.map(([i,t])=>`<li><i>${i}</i><div>${t}</div></li>`).join("")}</ul>`);
   return h;
 }
 function pairTableHTML(){ const PC=pairCalc(); const L=[...PC.P].sort((a,b)=>(a.tot??999)-(b.tot??999)||a.no-b.no);
@@ -1420,11 +1465,11 @@ function shareData(){
   const txt=[T.on?`⛳ *${EV.name.toUpperCase()}*`:`⛳ *QUINIELA ${EV.name.toUpperCase()}*`,`_Hermanos McGregor${EV.course?" · "+EV.course:""}_`,"",st,marc,"",...(T.on?[...tor,"","🎯 *QUINIELA*"]:["🏆 *RANKING*"]),...lines,rest,"",dato,`💵 Bolsa${T.on?" quiniela":""}: *${money(bolsa())}* · ${EV.entries.length} apostadores`,...(T.on?[`💰 *Bolsa total: ${money(bolsa()+torTot)}*`]:[]),...(!nres?favText(favData()):[]),"",`👉 ${nres||locked()?"Ver todo":"Haz tus picks"}: ${url}`].filter((l,i,a)=>l!==""||(a[i-1]!==""&&i>0)).join("\n").replace(/\n{3,}/g,"\n\n").trim();
   return {txt,rows,st,marc,nres,fin,live,tor,torTot};
 }
-function updateCard(){ return `<div class="card"><div class="h">Update para WhatsApp <small>imágenes + texto</small></div>
+function updateCard(){ return `<details class="card foldc" id="updFold"><summary><div class="h">📲 Update para WhatsApp <small>imágenes + texto</small></div></summary>
     <div class="updPrev" id="updPrev"><div class="note">Preparando vista previa…</div></div>
     <div class="row2" style="margin-top:10px"><button class="btn gold" id="shareBtn">📲 Compartir imágenes</button><button class="btn ghost" id="copyBtn">📋 Copiar texto</button></div>
     <div class="note" style="margin-top:6px">Toca una imagen para copiarla sola. WhatsApp no manda imagen y texto juntos: comparte las imágenes y luego pega el texto (se copia solo).</div>
-    <textarea class="copy hide" id="copyTxt" readonly></textarea></div>`; }
+    <textarea class="copy hide" id="copyTxt" readonly></textarea></details>`; }
 function favData(){ const withP=EV.entries.filter(x=>Object.keys(x.picks||{}).length); if(!withP.length) return null;
   const cnt=k=>{const c={};withP.forEach(b=>{const v=b.picks?.[k];if(v)c[v]=(c[v]||0)+1;});return c;}, n=withP.length, pc=v=>Math.round(v/n*100);
   const R=[]; if(ST()) ["p1","p2","p3"].forEach(k=>R.push({lb:LONG(k),top:Object.entries(cnt(k)).sort((x,y)=>y[1]-x[1]).slice(0,3).map(([a,v])=>[a,pc(v)])}));
@@ -1458,6 +1503,7 @@ async function favImage(F){ const W=1080,H=1350,c=document.createElement("canvas
   return await new Promise(r=>c.toBlob(r,"image/png")); }
 async function updateImages(){ const d=shareData(), F=favData(), out=[{name:"resumen",blob:await shareImage(d)}]; if(F&&!d.nres) out.push({name:"favoritos",blob:await favImage(F)}); return {d,imgs:out}; }
 let UPDSEQ=0, UPDC=null;
+document.addEventListener("toggle",e=>{ if(e.target.id==="updFold"&&e.target.open) updatePreview(); },true);
 async function updatePreview(){ const el=$("#updPrev"); if(!el) return; const seq=++UPDSEQ;
   try{ const U=await updateImages(); const imgs=U.imgs; if(seq!==UPDSEQ||!document.body.contains(el)) return; UPDC={key:U.d.txt,imgs};
     el.innerHTML=imgs.map((o,i)=>`<figure><img src="${URL.createObjectURL(o.blob)}" alt="${o.name}" data-updimg="${i}"><figcaption>${i+1}. ${o.name==="resumen"?"Resumen":"Favoritos"} · toca para copiar</figcaption></figure>`).join(""); }
@@ -2279,6 +2325,179 @@ function renderUsage(){ const U=US, K=U.kpis, ago=t=>{ if(!t) return "nunca"; co
 }
 
 /* ===== cuadro de honor ===== */
+/* ===== Convocatorias: archivo, crear en 7 pasos, bases y PDF vertical de 4 páginas ===== */
+let CV=null, CVF=null, CVSTEP=0, CVTAB="arch";
+const CVSTEPS=["Datos","Formato","Jugadores y puntos","Aportación y premios","Reglas y extras","Arte","Revisar y publicar"];
+async function loadConv(){ $("#cvBody").innerHTML=`<div class="card"><div class="note">Cargando…</div></div>`;
+  try{ CV=await rpc("cv_list",{p_token:TOKEN}); }catch(e){ $("#cvBody").innerHTML=`<div class="card"><div class="note">${esc(e.message)}</div></div>`; return; }
+  if(CV.can_edit&&!EVENTS.length){ try{ EVENTS=await rpc("b_events_list",{p_token:TOKEN}); }catch{} }
+  renderConv(); }
+function cvB(){ return CV.bases; }
+function cvFmt(k){ return cvB().formatos.find(f=>f.k===k)||cvB().formatos[0]; }
+function cvAutoCat(c){ if(cvFmt(c.fmt).s==="finale") return "finale"; const n=+c.players||0, L=cvB().cats.filter(x=>x.k!=="finale"&&n>=(+x.min||0)).sort((a,b)=>(+b.min||0)-(+a.min||0)); return (L[0]||cvB().cats[0]).k; }
+function cvCalc(c){ const B=cvB(), s=cvFmt(c.fmt).s, cat=B.cats.find(x=>x.k===c.cat)||B.cats[0], tot=+cat.pts||0, days=s==="days"?Math.max(1,+c.days||1):1;
+  const M=s==="finale"?tot/2:s==="days"?tot:tot, im=s==="team"?M*2/3:s==="ryder"?M*5/6:M, r=x=>Math.round(x);
+  return {ind:B.escala.map(p=>r(im*p/100)), team:s==="team"?[r(M/3),r(M/6)]:s==="ryder"?[r(M/6)]:[], tables:s==="finale"?2:days, unit:s==="finale"?"por tabla":s==="days"?"por día":""}; }
+function cvNew(){ const B=cvB(), c={tee:"",lema:"",fmt:"A",fmt_t:"",days:1,hcp:B.hcp,players:12,cat:"",aport:+(CV.fees?.championship||350),donacion:+B.donacion_min||500,trofeo:+B.trofeo||500,
+    reparto:[...B.reparto],bolsa_equipo:0,oyes:true,oyes_hoyos:B.oyes_hoyos,oyes_monto:+B.oyes_monto||200,extras:[],reglas:B.reglas.join("\n"),notas:""};
+  c.fmt_t=cvFmt("A").t; c.cat=cvAutoCat(c); c.pts=cvCalc(c); return {id:null,name:"",event_date:"",course:"Las Cañadas",status:"borrador",event_id:"",pdf_url:"",has_art:false,cfg:c}; }
+function cvMoney(c){ const n=+c.players||0, oy=c.oyes?String(c.oyes_hoyos||"").split(/[^0-9]+/).filter(Boolean).length*(+c.oyes_monto||0):0, bolsa=(+c.aport||0)*n,
+    ind=Math.max(0,bolsa-(+c.trofeo||0)-(+c.bolsa_equipo||0)-oy); const R=c.reparto||[], pr=R.map(p=>Math.floor(ind*(+p||0)/100/50)*50); if(pr.length) pr[0]=Math.max(0,Math.round(ind*R.reduce((a,x)=>a+(+x||0),0)/100)-pr.slice(1).reduce((a,x)=>a+x,0)); return {bolsa,oy,ind,pr}; }
+function renderConv(){ const ed=CV.can_edit; $("#cvTabs").classList.toggle("hide",!ed||!!CVF);
+  $("#cvTabs").innerHTML=`<button data-cvtab="arch" class="${CVTAB==="arch"?"on":""}">Archivo</button><button data-cvtab="bases" class="${CVTAB==="bases"?"on":""}">Bases</button>`;
+  if(CVF) return renderCvForm(); if(CVTAB==="bases"&&ed) return renderCvBases();
+  const L=CV.items, pub=L.filter(x=>x.status==="publicada"), dr=L.filter(x=>x.status!=="publicada");
+  const card=v=>`<div class="card cvi"><div class="cvh"><div><b>${esc(v.name)}</b><div class="note">${esc([v.event_date?fdate(v.event_date):"",v.course].filter(Boolean).join(" · "))}</div></div>${v.status==="publicada"?(v.pdf_url&&!v.cfg?.fmt?`<span class="st2 pend">ARCHIVO</span>`:""):`<span class="st2 late">BORRADOR</span>`}</div>
+    <div class="cvb">${v.pdf_url?`<a class="btn sm gold" href="${esc(v.pdf_url)}" target="_blank" rel="noopener">📄 Ver PDF</a>`:`<button class="btn sm gold" data-cvpdf="${v.id}">📄 PDF</button>`}${ed?`<button class="btn sm ghost" data-cved="${v.id}">Editar</button><button class="btn sm ghost" data-cvdel="${v.id}" style="color:var(--bad)">Borrar</button>`:""}</div></div>`;
+  $("#cvBody").innerHTML=(ed?`<div class="row2" style="margin-bottom:12px"><button class="btn gold" id="cvNew">＋ Crear convocatoria</button><button class="btn ghost" id="cvOld">＋ Agregar PDF del archivo</button></div>`:"")
+    +(dr.length?`<div class="sec2">Borradores · solo los ve el Board</div>${dr.map(card).join("")}`:"")
+    +(pub.length?pub.map(card).join(""):`<div class="card"><div class="note">Aún no hay convocatorias publicadas.</div></div>`); }
+function cvField(lbl,path,val,o={}){ const t=o.type||"text"; return `<label class="f">${lbl}</label>${t==="area"?`<textarea class="t" data-cf="${path}" rows="${o.rows||4}" ${o.ph?`placeholder="${esc(o.ph)}"`:""}>${esc(val??"")}</textarea>`
+  :`<input class="t" data-cf="${path}" type="${t}" ${t==="number"?`inputmode="numeric" data-num="1"`:""} value="${esc(val??"")}" ${o.ph?`placeholder="${esc(o.ph)}"`:""}>`}${o.note?`<div class="note" style="margin-top:4px">${o.note}</div>`:""}`; }
+function renderCvForm(){ const F=CVF, c=F.cfg, B=cvB(), s=CVSTEP; let h="";
+  if(F.archivo){ $("#cvBody").innerHTML=`<div class="card"><div class="h">PDF del archivo <small>convocatoria anterior</small></div>${cvField("Torneo","name",F.name,{ph:"Ej. Bear Fest 2025"})}${cvField("Fecha","event_date",F.event_date,{type:"date"})}${cvField("Campo","course",F.course)}${cvField("Liga del PDF","pdf_url",F.pdf_url,{ph:"https://drive.google.com/…",note:"Pega la liga de Drive (compartida para que los socios la puedan abrir)."})}
+    <div class="row2" style="margin-top:12px"><button class="btn ghost" id="cvCancel">Cancelar</button><button class="btn gold" id="cvSaveOld">Guardar</button></div></div>`; return; }
+  if(s===0) h=cvField("Nombre del torneo","name",F.name,{ph:"Ej. Gran Finale Invierno 2026"})+cvField("Fecha","event_date",F.event_date,{type:"date"})+cvField("Campo","course",F.course)+cvField("Hora de salida","cfg.tee",c.tee,{ph:"Ej. 7:30 am · salida escopeta"})
+    +cvField("Lema (opcional)","cfg.lema",c.lema,{ph:"Ej. Sin miedo al bunker"})
+    +`<label class="f">Torneo de apuestas en la app (opcional)</label><select class="t" data-cf="event_id"><option value="">Ninguno</option>${EVENTS.filter(e=>!e.closed||e.id===F.event_id).map(e=>`<option value="${e.id}" ${F.event_id===e.id?"selected":""}>${esc(e.name)}</option>`).join("")}</select><div class="note" style="margin-top:4px">Si lo ligas, la página de apuestas del PDF copia la quiniela y la competencia de ese torneo.</div>`;
+  if(s===1) h=`<div class="cvfm">${B.formatos.map(f=>`<button class="opt${c.fmt===f.k?" sel":""}" data-cvfmt="${f.k}"><b style="font-size:14px">${esc(f.n)}</b></button>`).join("")}</div>`
+    +cvField("Cómo se juega","cfg.fmt_t",c.fmt_t,{type:"area",rows:4})+(cvFmt(c.fmt).s==="days"?cvField("Días de juego","cfg.days",c.days,{type:"number"}):"")+cvField("Handicap","cfg.hcp",c.hcp,{type:"area",rows:2});
+  if(s===2){ const P=c.pts; h=cvField("Jugadores confirmados (aprox.)","cfg.players",c.players,{type:"number"})
+    +`<label class="f">Categoría</label><select class="t" data-cf="cfg.cat">${B.cats.map(x=>`<option value="${x.k}" ${c.cat===x.k?"selected":""}>${esc(x.n)} · ${x.pts} pts${x.k==="finale"?"":x.min?" · "+x.min+"+ jugadores":""}</option>`).join("")}</select><div class="note" style="margin-top:4px">Se sugiere sola por número de jugadores; el Board la puede cambiar.</div>
+    <label class="f">Puntos individuales ${P.unit?"<small>("+P.unit+")</small>":""}</label><div class="cvpts">${P.ind.map((v,i)=>`<div><span>${i+1}º</span><input class="t" data-cf="cfg.pts.ind.${i}" data-num="1" type="number" inputmode="numeric" value="${v}"></div>`).join("")}</div>
+    ${P.team.length?`<label class="f">${cvFmt(c.fmt).s==="ryder"?"Equipo ganador (a cada integrante)":"Equipo / pareja (a cada integrante)"}</label><div class="cvpts">${P.team.map((v,i)=>`<div><span>${i+1}º</span><input class="t" data-cf="cfg.pts.team.${i}" data-num="1" type="number" inputmode="numeric" value="${v}"></div>`).join("")}</div>`:""}
+    <button class="lnk" id="cvRecalc" style="margin-top:8px;padding:0">Recalcular con las bases</button>`; }
+  if(s===3){ const M=cvMoney(c); h=`<div class="row2"><div>${cvField("Aportación","cfg.aport",c.aport,{type:"number"})}</div><div>${cvField("Donación mínima","cfg.donacion",c.donacion,{type:"number"})}</div></div>
+    <div class="row2"><div>${cvField("Trofeo (sale de la bolsa)","cfg.trofeo",c.trofeo,{type:"number"})}</div><div>${cvField("Bolsa al equipo ganador","cfg.bolsa_equipo",c.bolsa_equipo,{type:"number"})}</div></div>
+    <label class="f">Reparto individual (%)</label><div class="cvpts">${c.reparto.map((v,i)=>`<div><span>${i+1}º</span><input class="t" data-cf="cfg.reparto.${i}" data-num="1" type="number" inputmode="numeric" value="${v}"></div>`).join("")}</div>
+    <label class="f" style="display:flex;gap:8px;align-items:center"><input type="checkbox" data-cf="cfg.oyes" ${c.oyes?"checked":""}> O'yes</label>
+    ${c.oyes?`<div class="row2"><div>${cvField("Hoyos","cfg.oyes_hoyos",c.oyes_hoyos)}</div><div>${cvField("Premio por hoyo","cfg.oyes_monto",c.oyes_monto,{type:"number"})}</div></div>`:""}
+    <div class="cvsum" id="cvMoney">${cvMoneyHTML(c,M)}</div>`; }
+  if(s===4) h=`<label class="f">Extras</label><div class="cvex">${B.extras.map(x=>`<label><input type="checkbox" data-cvex="${esc(x)}" ${c.extras.includes(x)?"checked":""}> ${esc(x)}</label>`).join("")}</div>`
+    +cvField("Reglas (una por renglón)","cfg.reglas",c.reglas,{type:"area",rows:6})+cvField("Notas (opcional)","cfg.notas",c.notas,{type:"area",rows:3,ph:"Ej. Dress code, comida al terminar, rifa…"});
+  if(s===5) h=`<div class="cvart">${F.art||F.has_art?`<img id="cvArtImg" src="${F.art||""}" alt="Arte">`:`<div class="noph">Sin imagen</div>`}</div>
+    <div class="row2" style="margin-top:8px"><button class="btn ghost" id="cvArtPick">📷 ${F.art||F.has_art?"Cambiar imagen":"Subir imagen"}</button>${F.art||F.has_art?`<button class="btn ghost" id="cvArtDel">Quitar</button>`:"<span></span>"}</div>
+    <div class="note" style="margin-top:6px">El organizador sube su imagen; la app pone logo, tipografía y colores del club en la portada.</div>`;
+  if(s===6){ const M=cvMoney(c), ev=EVENTS.find(e=>e.id===F.event_id); h=`<div class="wrev">${[["Torneo",F.name||"Falta"],["Fecha",F.event_date?fdate(F.event_date):"Falta"],["Campo",F.course||"—"],["Formato",cvFmt(c.fmt).n],["Categoría",(B.cats.find(x=>x.k===c.cat)||{}).n+" · "+c.players+" jugadores"],["Puntos 1º–5º",c.pts.ind.join(" / ")+(c.pts.team.length?" + equipo "+c.pts.team.join("/"):"")],["Aportación",money(c.aport)+" + donación mín. "+money(c.donacion)],["Premios",M.pr.map(money).join(" / ")],["Apuestas app",ev?ev.name:"Sin torneo ligado"],["Arte",F.art||F.has_art?"Sí":"Sin imagen"]]
+      .map(([a,b],i)=>`<button class="wrow" data-cvgo="${[0,0,0,1,2,2,3,3,0,5][i]}"><span>${a}</span><b class="${/^Falta/.test(b)?"miss":""}">${esc(b)}</b></button>`).join("")}</div>
+    <button class="btn ghost w" id="cvPrev" style="margin-top:10px">👁️ Ver PDF</button>
+    <div class="row2" style="margin-top:8px"><button class="btn ghost" data-cvsave="borrador">Guardar borrador</button><button class="btn gold" data-cvsave="publicada">${F.status==="publicada"?"Guardar publicada":"Publicar"}</button></div>
+    <div class="note" style="margin-top:6px">Al publicar la ven todos los socios en Más › Convocatorias${F.status==="publicada"?"":" y sale la noticia"}.</div>`; }
+  $("#cvBody").innerHTML=`<div class="wtop"><span>Paso ${s+1} de 7 · ${CVSTEPS[s]}</span><button class="lnk" id="cvCancel">Cancelar</button></div><div class="wdots">${CVSTEPS.map((_,i)=>`<i class="${i===s?"on":""} ${i<s?"ok":""}" data-cvgo="${i}"></i>`).join("")}</div>
+    <div class="card">${h}</div><div class="row2 wnav"><button class="btn ghost" id="cvBack" ${s?"":"disabled"}>‹ Anterior</button>${s<6?`<button class="btn gold" id="cvNext">Siguiente ›</button>`:"<span></span>"}</div>`; }
+function cvMoneyHTML(c,M){ return `<div class="pzl"><span>Bolsa estimada (${c.players} × ${money(c.aport)})</span><b>${money(M.bolsa)}</b></div>${+c.trofeo?`<div class="pzl"><span>Trofeo</span><b>− ${money(c.trofeo)}</b></div>`:""}${+c.bolsa_equipo?`<div class="pzl"><span>Equipo ganador</span><b>− ${money(c.bolsa_equipo)}</b></div>`:""}${M.oy?`<div class="pzl"><span>O'yes</span><b>− ${money(M.oy)}</b></div>`:""}
+  ${M.pr.map((x,i)=>`<div class="pzl"><span>Premio ${i+1}º (${c.reparto[i]}%)</span><b>${money(x)}</b></div>`).join("")}`; }
+function cvSet(path,val){ const k=path.split("."); let o=CVF; for(let i=0;i<k.length-1;i++) o=o[/^\d+$/.test(k[i])?+k[i]:k[i]]; o[/^\d+$/.test(k.at(-1))?+k.at(-1):k.at(-1)]=val; }
+document.addEventListener("input",e=>{ const t=e.target; if(!t.dataset?.cf||!CVF) return; let v=t.type==="checkbox"?t.checked:t.value; if(t.dataset.num) v=v===""?"":+v; cvSet(t.dataset.cf,v);
+  const c=CVF.cfg; if(t.dataset.cf==="cfg.players"){ c.cat=cvAutoCat(c); c.pts=cvCalc(c); const sel=document.querySelector('[data-cf="cfg.cat"]'); if(sel) sel.value=c.cat; renderCvPtsOnly(); }
+  if(t.dataset.cf==="cfg.cat"){ c.pts=cvCalc(c); renderCvPtsOnly(); }
+  if(t.dataset.cf==="cfg.days"){ c.pts=cvCalc(c); }
+  if(t.dataset.cf==="cfg.oyes") renderCvForm();
+  const m=$("#cvMoney"); if(m) m.innerHTML=cvMoneyHTML(c,cvMoney(c)); });
+document.addEventListener("change",e=>{ const t=e.target; if(t.dataset?.cf&&t.tagName==="SELECT") t.dispatchEvent(new Event("input",{bubbles:true}));
+  if(t.dataset?.cvex!=null&&CVF){ const x=t.dataset.cvex, L=CVF.cfg.extras; if(t.checked&&!L.includes(x)) L.push(x); if(!t.checked) CVF.cfg.extras=L.filter(y=>y!==x); } });
+function renderCvPtsOnly(){ if(CVSTEP!==2) return; const y=window.scrollY, a=document.activeElement?.dataset?.cf; renderCvForm(); window.scrollTo(0,y); if(a){ const el=document.querySelector(`[data-cf="${a}"]`); if(el){ el.focus(); const v=el.value; if(el.setSelectionRange&&el.type!=="number") el.setSelectionRange(v.length,v.length); } } }
+async function cvArt(id){ try{ return await rpc("cv_art",{p_token:TOKEN,p_id:id}); }catch{ return null; } }
+document.addEventListener("click",async e=>{ const t=e.target.closest("[data-cvtab],#cvNew,#cvOld,[data-cved],[data-cvdel],[data-cvpdf],#cvCancel,#cvBack,#cvNext,[data-cvgo],[data-cvfmt],#cvRecalc,#cvArtPick,#cvArtDel,[data-cvsave],#cvSaveOld,#cvPrev,#cvBSave,#cvBReset"); if(!t) return;
+  if(t.dataset.cvtab){ CVTAB=t.dataset.cvtab; renderConv(); return; }
+  if(t.id==="cvNew"){ CVF=cvNew(); CVSTEP=0; renderConv(); return; }
+  if(t.id==="cvOld"){ CVF={id:null,archivo:true,name:"",event_date:"",course:"Las Cañadas",pdf_url:"",status:"publicada",cfg:{}}; renderConv(); return; }
+  if(t.dataset.cved){ const v=CV.items.find(x=>x.id===t.dataset.cved); if(!v) return; CVF=JSON.parse(JSON.stringify({...v,event_id:v.event_id||"",pdf_url:v.pdf_url||"",event_date:v.event_date||"",course:v.course||""}));
+    if(!CVF.cfg||!CVF.cfg.fmt){ CVF.archivo=true; } else { const d=cvNew().cfg; CVF.cfg={...d,...CVF.cfg}; if(CVF.has_art){ const a=await cvArt(v.id); if(a) CVF.art=a; } } CVSTEP=0; renderConv(); window.scrollTo(0,0); return; }
+  if(t.dataset.cvdel){ const v=CV.items.find(x=>x.id===t.dataset.cvdel); if(!v||!confirm(`¿Borrar la convocatoria "${v.name}"?`)) return; try{ CV=await rpc("cv_delete",{p_token:TOKEN,p_id:v.id}); toast("Convocatoria borrada"); renderConv(); }catch(err){ toast(err.message); } return; }
+  if(t.dataset.cvpdf){ const v=CV.items.find(x=>x.id===t.dataset.cvpdf); if(!v) return; t.disabled=true; const o=t.textContent; t.textContent="Armando PDF…";
+    try{ const art=v.has_art?await cvArt(v.id):null; await cvPDF({...v,art}); }catch(err){ toast("No se pudo armar el PDF"); } t.disabled=false; t.textContent=o; return; }
+  if(t.id==="cvCancel"){ if(!confirm("¿Salir sin guardar?")) return; CVF=null; renderConv(); return; }
+  if(t.id==="cvBack"||t.id==="cvNext"||t.dataset.cvgo!=null){ if(t.id==="cvNext"&&CVSTEP===0&&!CVF.name.trim()){ toast("Escribe el nombre del torneo"); return; }
+    CVSTEP=t.dataset.cvgo!=null?+t.dataset.cvgo:CVSTEP+(t.id==="cvBack"?-1:1); renderCvForm(); window.scrollTo(0,0); return; }
+  if(t.dataset.cvfmt){ const c=CVF.cfg, f=cvFmt(t.dataset.cvfmt); c.fmt=f.k; c.fmt_t=f.t; if(f.s==="finale"){ c.aport=+(CV.fees?.finale||500); } c.cat=cvAutoCat(c); c.pts=cvCalc(c); renderCvForm(); return; }
+  if(t.id==="cvRecalc"){ CVF.cfg.pts=cvCalc(CVF.cfg); renderCvForm(); return; }
+  if(t.id==="cvArtPick"){ const i=document.createElement("input"); i.type="file"; i.accept="image/*"; i.onchange=async()=>{ const f=i.files[0]; if(!f) return;
+      try{ let d=await shrink(f,1400,.85); if(d.length>880000) d=await shrink(f,1100,.75); CVF.art=d; CVF.has_art=true; renderCvForm(); }catch{ toast("No se pudo leer la imagen"); } }; i.click(); return; }
+  if(t.id==="cvArtDel"){ CVF.art=""; CVF.has_art=false; renderCvForm(); return; }
+  if(t.id==="cvPrev"){ t.disabled=true; try{ await cvPDF(CVF); }catch(err){ toast("No se pudo armar el PDF"); } t.disabled=false; return; }
+  if(t.dataset.cvsave||t.id==="cvSaveOld"){ const F=CVF; if(!F.name.trim()){ toast("Falta el nombre del torneo"); return; } if(t.id==="cvSaveOld"&&!/^https:\/\//.test(F.pdf_url||"")){ toast("Pega la liga del PDF (https://…)"); return; }
+    t.disabled=true; const d={id:F.id,name:F.name,event_date:F.event_date,course:F.course,status:t.dataset.cvsave||"publicada",cfg:F.archivo?{}:F.cfg,pdf_url:F.archivo?F.pdf_url:"",event_id:F.archivo?"":F.event_id};
+    if(!F.archivo&&F.art!==undefined) d.art=F.art||"";
+    try{ CV=await rpc("cv_save",{p_token:TOKEN,p_data:d}); toast(d.status==="publicada"?"Convocatoria publicada ✓":"Borrador guardado ✓"); CVF=null; renderConv(); window.scrollTo(0,0); }catch(err){ toast(err.message); t.disabled=false; } return; }
+  if(t.id==="cvBSave"){ t.disabled=true; try{ CV=await rpc("cv_bases_save",{p_token:TOKEN,p_bases:cvReadBases()}); toast("Bases guardadas ✓"); renderConv(); }catch(err){ toast(err.message); t.disabled=false; } return; }
+  if(t.id==="cvBReset"){ if(!confirm("¿Regresar las bases a las originales?")) return; try{ CV=await rpc("cv_bases_save",{p_token:TOKEN,p_bases:{reset:true}}); toast("Bases originales"); renderConv(); }catch(err){ toast(err.message); } return; }
+});
+function renderCvBases(){ const B=cvB();
+  $("#cvBody").innerHTML=`<div class="card"><div class="h">Puntos por categoría</div>${B.cats.map((x,i)=>`<div class="cvcat"><b>${esc(x.n)}</b>${x.k==="finale"?"<span></span>":`<label>desde <input class="t" id="cbMin${i}" type="number" inputmode="numeric" value="${x.min}"> jug.</label>`}<label><input class="t" id="cbPts${i}" type="number" inputmode="numeric" value="${x.pts}"> pts</label></div>`).join("")}
+    <label class="f">Escala por lugar (% del máximo, 1º a 5º)</label><input class="t" id="cbEsc" value="${B.escala.join(", ")}">
+    <div class="note" style="margin-top:4px">Parejas y equipos: 2/3 individual + 1/3 equipo. Ryder: 5/6 individual + 1/6 equipo. Gran Finale: dos tablas. Viajes: puntos por día.</div></div>
+  <div class="card"><div class="h">Dinero</div><label class="f">Reparto individual (%)</label><input class="t" id="cbRep" value="${B.reparto.join(", ")}">
+    <div class="row2"><div><label class="f">Trofeo</label><input class="t" id="cbTro" type="number" value="${B.trofeo}"></div><div><label class="f">Donación mínima</label><input class="t" id="cbDon" type="number" value="${B.donacion_min}"></div></div>
+    <div class="row2"><div><label class="f">Hoyos O'yes</label><input class="t" id="cbOyH" value="${esc(B.oyes_hoyos)}"></div><div><label class="f">Premio O'yes</label><input class="t" id="cbOyM" type="number" value="${B.oyes_monto}"></div></div>
+    <div class="note" style="margin-top:4px">La aportación sale de Admin › Ajustes (Championship ${money(CV.fees?.championship)} · Gran Finale ${money(CV.fees?.finale)}).</div></div>
+  <div class="card"><div class="h">Textos</div><label class="f">Handicap</label><textarea class="t" id="cbHcp" rows="2">${esc(B.hcp)}</textarea>
+    <label class="f">Reglas (una por renglón)</label><textarea class="t" id="cbReg" rows="5">${esc(B.reglas.join("\n"))}</textarea>
+    <label class="f">Extras (uno por renglón)</label><textarea class="t" id="cbExt" rows="4">${esc(B.extras.join("\n"))}</textarea></div>
+  <div class="card"><div class="h">Formatos</div>${B.formatos.map((f,i)=>`<label class="f">${esc(f.k)} · ${esc(f.n)}</label><textarea class="t" id="cbF${i}" rows="2">${esc(f.t)}</textarea>`).join("")}</div>
+  <div class="row2" style="margin-bottom:14px"><button class="btn ghost" id="cvBReset">Restaurar originales</button><button class="btn gold" id="cvBSave">Guardar bases</button></div>`; }
+function cvReadBases(){ const B=JSON.parse(JSON.stringify(cvB())), nums=s=>String(s).split(/[^0-9.]+/).filter(Boolean).map(Number), lines=s=>String(s).split("\n").map(x=>x.trim()).filter(Boolean);
+  B.cats.forEach((x,i)=>{ const mn=$("#cbMin"+i); if(mn) x.min=+mn.value||0; x.pts=+$("#cbPts"+i).value||0; });
+  B.escala=nums($("#cbEsc").value).slice(0,8); B.reparto=nums($("#cbRep").value).slice(0,6); B.trofeo=+$("#cbTro").value||0; B.donacion_min=+$("#cbDon").value||0;
+  B.oyes_hoyos=$("#cbOyH").value.trim(); B.oyes_monto=+$("#cbOyM").value||0; B.hcp=$("#cbHcp").value.trim(); B.reglas=lines($("#cbReg").value); B.extras=lines($("#cbExt").value);
+  B.formatos.forEach((f,i)=>{ f.t=$("#cbF"+i).value.trim(); }); return B; }
+/* PDF vertical de 4 páginas: portada · formato y reglas · puntos y premios · apuestas en la app */
+async function cvCover(src,w,h){ const i=new Image(); i.src=src; await i.decode(); const c=document.createElement("canvas"); c.width=w; c.height=h; const x=c.getContext("2d"), r=Math.max(w/i.width,h/i.height);
+  x.drawImage(i,(w-i.width*r)/2,(h-i.height*r)/2,i.width*r,i.height*r); return c.toDataURL("image/jpeg",.86); }
+async function cvPDF(V){ await loadJS("/vendor/jspdf.umd.min.js"); const c=V.cfg, B=cvB(), M=cvMoney(c), pdf=new window.jspdf.jsPDF({unit:"mm",format:"a4"}), W=210, H=297;
+  const G=[22,53,42], D=[11,28,21], AU=[201,165,75], CR=[243,234,210], INK=[30,40,34], MU=[110,115,105];
+  const col=(a)=>pdf.setTextColor(...a), fill=a=>pdf.setFillColor(...a), font=(f,s,z)=>{ pdf.setFont(f,s); pdf.setFontSize(z); };
+  const logo=await logoData(); let ev=null; if(V.event_id){ try{ ev=await rpc("b_event_get",{p_token:TOKEN,p_event:V.event_id}); }catch{} }
+  const when=V.event_date?new Date(V.event_date+"T12:00:00").toLocaleDateString("es-MX",{weekday:"long",day:"numeric",month:"long",year:"numeric"}):"";
+  const head=(t,n)=>{ fill(CR); pdf.rect(0,0,W,H,"F"); fill(G); pdf.rect(0,0,W,30,"F"); if(logo) pdf.addImage(logo,"PNG",14,5,20,20);
+    font("helvetica","bold",8); col(AU); pdf.text("HERMANOS McGREGOR · CONVOCATORIA",40,12); font("times","bold",20); col(CR); pdf.text(pdf.splitTextToSize(V.name,150)[0],40,22);
+    font("helvetica","normal",8); col(MU); pdf.text(`${n} / 4`,W-14,H-8,{align:"right"}); pdf.text("hermanosmcgregor.com/club",14,H-8); let y=44; font("times","bold",17); col(G); pdf.text(t,14,y); fill(AU); pdf.rect(14,y+2.5,24,0.8,"F"); return y+12; };
+  const sec=(y,t)=>{ font("helvetica","bold",9); col(AU); pdf.text(t.toUpperCase(),14,y); return y+6; };
+  const para=(y,t,o={})=>{ font("helvetica",o.b?"bold":"normal",o.z||10.5); col(o.c||INK); const L=pdf.splitTextToSize(String(t||""),o.w||182); pdf.text(L,o.x||14,y); return y+L.length*(o.lh||5.2)+(o.gap??3); };
+  const bul=(y,L)=>{ L.forEach(t=>{ fill(AU); pdf.circle(16,y-1.3,0.9,"F"); y=para(y,t,{x:20,w:176,gap:1.5}); }); return y+2; };
+  const row=(y,a,b,o={})=>{ font("helvetica",o.b?"bold":"normal",10.5); col(INK); pdf.text(a,14,y); pdf.text(b,196,y,{align:"right"}); pdf.setDrawColor(220,212,190); pdf.line(14,y+2.2,196,y+2.2); return y+8; };
+  // 1 · portada
+  fill(D); pdf.rect(0,0,W,H,"F");
+  if(V.art){ try{ pdf.addImage(await cvCover(V.art,1400,1100),"JPEG",0,0,W,165); }catch{} fill(D); pdf.rect(0,165,W,H-165,"F"); } else { fill(G); pdf.rect(0,0,W,165,"F"); }
+  pdf.setDrawColor(...AU); pdf.setLineWidth(0.6); pdf.rect(8,8,W-16,H-16);
+  if(logo){ fill(CR); pdf.circle(W/2,165,23,"F"); pdf.addImage(logo,"PNG",W/2-21,144,42,42); }
+  font("helvetica","bold",9); col(AU); pdf.text("HERMANOS McGREGOR PRESENTA",W/2,202,{align:"center"});
+  font("times","bold",34); col(CR); const tl=pdf.splitTextToSize(V.name.toUpperCase(),170); pdf.text(tl,W/2,216,{align:"center"}); let y=216+tl.length*12;
+  font("helvetica","normal",12); col(AU); [when,[V.course,c.tee].filter(Boolean).join(" · ")].filter(Boolean).forEach(t=>{ pdf.text(t,W/2,y,{align:"center"}); y+=7; });
+  if(c.lema){ font("times","italic",15); col(CR); pdf.text(pdf.splitTextToSize(`"${c.lema}"`,160),W/2,y+6,{align:"center"}); }
+  font("helvetica","normal",8); col(AU); pdf.text(`${cvFmt(c.fmt).n.toUpperCase()} · ${(B.cats.find(x=>x.k===c.cat)||{}).n||""}`.toUpperCase(),W/2,H-16,{align:"center"});
+  // 2 · formato y reglas
+  pdf.addPage(); y=head("Formato y reglas",2);
+  y=sec(y,"Formato · "+cvFmt(c.fmt).n); y=para(y,c.fmt_t); if(cvFmt(c.fmt).s==="days") y=para(y,`${c.days} días de juego; cada día reparte sus propios puntos.`);
+  y=sec(y+2,"Handicap"); y=para(y,c.hcp);
+  const R=String(c.reglas||"").split("\n").map(x=>x.trim()).filter(Boolean); if(R.length){ y=sec(y+2,"Reglas"); y=bul(y,R); }
+  if(c.extras.length){ y=sec(y+2,"Premios extra"); y=bul(y,c.extras); }
+  if(c.notas){ y=sec(y+2,"Notas"); y=para(y,c.notas); }
+  // 3 · puntos y premios
+  pdf.addPage(); y=head("Puntos y premios",3); const P=c.pts, cat=B.cats.find(x=>x.k===c.cat)||{};
+  y=sec(y,`Puntos McGregor · ${cat.n||""}${P.unit?" · "+P.unit:""}`);
+  const cw=182/5; P.ind.forEach((v,i)=>{ const x=14+i*cw; fill(i?[255,255,255]:G); pdf.roundedRect(x+1,y,cw-2,22,2,2,"F"); font("helvetica","bold",8); col(i?MU:AU); pdf.text(`${i+1}º LUGAR`,x+cw/2,y+7,{align:"center"}); font("times","bold",18); col(i?G:CR); pdf.text(String(v),x+cw/2,y+17,{align:"center"}); });
+  y+=30; if(P.team.length) y=para(y,`${cvFmt(c.fmt).s==="ryder"?"Equipo ganador":"Equipo / pareja"}: ${P.team.map((v,i)=>(P.team.length>1?`${i+1}º `:"")+v+" pts").join(" · ")} a cada integrante.`);
+  if(P.tables>1) y=para(y,cvFmt(c.fmt).s==="finale"?"Se reparte en dos tablas: Stroke Net y Stableford Net.":`Se reparte cada día (${P.tables} días).`);
+  y=sec(y+4,"Aportación"); y=row(y,"Aportación por jugador",money(c.aport),{b:1}); y=row(y,"Donación (mínimo)",money(c.donacion));
+  y=sec(y+4,`Bolsa estimada · ${c.players} jugadores`); y=row(y,"Bolsa",money(M.bolsa)); if(+c.trofeo) y=row(y,"Trofeo",money(c.trofeo)); if(+c.bolsa_equipo) y=row(y,"Equipo ganador",money(c.bolsa_equipo));
+  if(M.oy) y=row(y,`O'yes · hoyos ${c.oyes_hoyos} (${money(c.oyes_monto)} c/u)`,money(M.oy)); M.pr.forEach((v,i)=>{ y=row(y,`Premio ${i+1}º lugar (${c.reparto[i]}%)`,money(v),{b:1}); });
+  y=para(y+2,"La bolsa final depende de los confirmados; los montos se ajustan con la misma proporción.",{z:9,c:MU});
+  // 4 · apuestas en la app
+  pdf.addPage(); y=head("Apuestas en la app",4);
+  if(ev){ const n=(ev.entries||[]).length, w=ev.winners;
+    y=sec(y,"Quiniela · para cualquier socio, juegue o no"); y=row(y,"Entrada",money(ev.aportacion),{b:1});
+    y=para(y,w===1?"El 1º se lleva toda la bolsa.":w===2?"1º 70% y 2º 30% de la bolsa.":"1º el resto de la bolsa · 2º doble entrada · 3º reintegro.");
+    y=para(y,`Cierre de picks: ${new Date(ev.lock_at).toLocaleString("es-MX",{weekday:"long",day:"numeric",month:"long",hour:"numeric",minute:"2-digit"})}.`);
+    y=para(y,`Quórum mínimo: ${QMIN.q(w)} inscritos; si no se completa, se cancela y nadie paga.${n?` Hoy van ${n}.`:""}`);
+    const bo=ev.bolsas||{}; if(+bo.eq||+bo.po){ y=sec(y+4,"Competencia · solo jugadores"); if(+bo.eq) y=row(y,"Equipos",money(bo.eq)); if(+bo.po) y=row(y,"Podio de parejas",money(bo.po)); y=para(y+1,"Solo cobran quienes se inscriban a esa apuesta en la app."); } }
+  else { y=sec(y,"Quiniela"); y=para(y,"Cuando el Board abra el torneo en la app podrás entrar a la quiniela y llenar tus picks paso a paso, juegues o no."); }
+  y=sec(y+4,"Cómo entrar"); y=bul(y,["Abre hermanosmcgregor.com/club con tu correo.","Ve a Apuestas, entra al torneo y toca Sumarme.","Llena tus picks antes del cierre; todos los picks son públicos.","Los pagos se arreglan directo entre socios: la app dice quién le paga a quién."]);
+  fill(G); pdf.roundedRect(14,H-60,182,34,3,3,"F"); font("times","bold",16); col(CR); pdf.text("Nos vemos en el tee.",W/2,H-45,{align:"center"}); font("helvetica","normal",9); col(AU); pdf.text("Confirma tu lugar con el organizador.",W/2,H-37,{align:"center"});
+  const name=`Convocatoria ${V.name}`.replace(/[^\wáéíóúñÁÉÍÓÚÑ ]+/g,"").trim()+".pdf", blob=pdf.output("blob"), file=new File([blob],name,{type:"application/pdf"});
+  if(navigator.canShare&&navigator.canShare({files:[file]})&&!window.__noShare){ try{ await navigator.share({files:[file],title:V.name}); return blob; }catch(e){ if(e.name==="AbortError") return blob; } }
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); a.remove(); return blob; }
+
 let HN=null;
 const HCAT={liga_sabado:"Campeones · Liga Sabatina",liga_domingo:"Campeones · Liga Dominical",gran_finale:"Gran Finale",championship:"Championships",torneo:"Torneo regular",hole_in_one:"Hole-in-One",otro:"Leyendas y otros honores"};
 /* insignia por categoría: trofeo de color según la importancia; Hole-in-One con bandera */
