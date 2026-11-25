@@ -33,7 +33,7 @@
 </script>
 <link rel="icon" type="image/png" href="/icons/favicon-192.png">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
-<link rel="stylesheet" href="/fonts/fonts.css?v=14">
+<link rel="stylesheet" href="/fonts/fonts.css?v=15">
 <style>
 :root{
   --g:#0b3029;--g2:#0e3a32;--g3:#14453b;--gold:#a4a16a;--gold2:#c9c59a;--cream:#efe9cf;--cream2:#f7f3e3;
@@ -778,7 +778,7 @@ setInterval(()=>{ if(document.visibilityState==="visible") newsTick(); },120000)
 document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") newsTick(); });
 /* auto-actualización: al volver a la app y cada 10 min compara version.json con APP_VER; si cambió, actualiza el SW
    y recarga UNA sola vez por versión (sessionStorage evita bucles). bump.sh sube APP_VER y version.json juntos. */
-const APP_VER="14";
+const APP_VER="15";
 (()=>{ let busy=false;
   const check=async()=>{ if(busy||document.hidden) return; busy=true; try{
       const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"}); if(!r.ok) return;
@@ -933,7 +933,7 @@ async function renderHome(){ newsTick();
   rpc("c_home_stats",{p_token:TOKEN}).then(k=>{ const n=x=>Number(x||0).toLocaleString("es-MX");
     const bp=+k.board_pending||0; $("#bnMoreB").textContent=bp; $("#bnMoreB").classList.toggle("hide",!(bp&&isBoard(ME))); $("#bdgBoard").textContent=bp; $("#bdgBoard").classList.toggle("hide",!bp); $("#navBoard").textContent=bp?`Board (${bp})`:"Board";
     $("#homeKpis").innerHTML=`<div class="kpi"><b>${n(k.hermanos)}</b><span>Hermanos</span></div>${k.torneos_year!=null?`<div class="kpi"><b>${n(k.torneos_year)}</b><span>Torneos ${k.asist_year}</span>${kDelta(k.torneos_year,k.torneos_prev,"",k.asist_year-1)}</div>`:`<div class="kpi"><b>${n(k.torneos)}</b><span>Torneos jugados</span></div>`}
-      ${k.quinielas!=null?`<div class="kpi wide"><b>${money(k.quinielas)}</b><span>Total apostado en quinielas</span><small class="ksub">${n(k.apuestas)} apuestas en ${n(k.n_quinielas)} quiniela${k.n_quinielas==1?"":"s"}</small></div>
+      ${k.quinielas!=null?`<div class="kpi wide"><b>${money(k.quinielas)}</b><span>Total apostado</span><small class="ksub">quinielas y competencia · ${n(k.apuestas)} apuestas en ${n(k.n_quinielas)} torneo${k.n_quinielas==1?"":"s"}</small></div>
       <div class="kpi"><b>${money(k.hio)}</b><span>Bolsa Hole in One</span></div>`:`<div class="kpi wide"><b>${money(k.hio)}</b><span>Bolsa Hole in One</span></div><div class="kpi"><b>${n(k.horas)}</b><span>Horas jugadas juntos</span></div>`}${k.asistencia!=null?`<div class="kpi"><b>${k.asistencia}%</b><span>Asistencia ${k.asist_year}</span>${kDelta(k.asistencia,k.asist_prev," pt",k.asist_year-1)}</div><div class="kpi wide">`:`<div class="kpi">`}<b>${n(k.honores)}</b><span>Reconocimientos</span></div>`; kpiLinks(); }).catch(()=>{ $("#homeKpis").innerHTML=""; });
   try{ EVENTS=await rpc("b_events_list",{p_token:TOKEN}); }catch{ EVENTS=[]; }
   const nx=EVENTS.filter(e=>!e.closed).sort((a,b)=>new Date(a.lock_at)-new Date(b.lock_at))[0];
