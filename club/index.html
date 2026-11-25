@@ -33,7 +33,7 @@
 </script>
 <link rel="icon" type="image/png" href="/icons/favicon-192.png">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
-<link rel="stylesheet" href="/fonts/fonts.css?v=13">
+<link rel="stylesheet" href="/fonts/fonts.css?v=14">
 <style>
 :root{
   --g:#0b3029;--g2:#0e3a32;--g3:#14453b;--gold:#a4a16a;--gold2:#c9c59a;--cream:#efe9cf;--cream2:#f7f3e3;
@@ -97,6 +97,7 @@ input.t:focus,select.t:focus,textarea.t:focus{outline:2px solid var(--gold);bord
 .orline{display:flex;align-items:center;gap:10px;margin:16px 0 4px;color:var(--mute);font-size:12px}.orline::before,.orline::after{content:"";flex:1;height:1px;background:var(--line)}
 .kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:4px 0 14px}
 .kpi{border:1px solid var(--line);border-radius:14px;padding:14px 10px;text-align:center;background:rgba(164,161,106,.07)}
+.kpi.kgo{cursor:pointer;position:relative;transition:background .15s,border-color .15s}.kpi.kgo:after{content:"›";position:absolute;top:8px;right:11px;color:var(--gold2);font-size:16px;opacity:.7}.kpi.kgo:hover,.kpi.kgo:active{background:rgba(164,161,106,.16);border-color:var(--gold2)}
 .kpi b{display:block;font:700 34px/1 "Cormorant Garamond",serif;color:var(--cream)}
 .kdelta{display:block;margin-top:5px;font:600 11.5px Inter}.kdelta.up{color:var(--ok)}.kdelta.dn{color:var(--bad)}.kdelta.eq{color:var(--mute)}
 .kpi span{display:block;margin-top:6px;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold2)}
@@ -777,7 +778,7 @@ setInterval(()=>{ if(document.visibilityState==="visible") newsTick(); },120000)
 document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") newsTick(); });
 /* auto-actualización: al volver a la app y cada 10 min compara version.json con APP_VER; si cambió, actualiza el SW
    y recarga UNA sola vez por versión (sessionStorage evita bucles). bump.sh sube APP_VER y version.json juntos. */
-const APP_VER="13";
+const APP_VER="14";
 (()=>{ let busy=false;
   const check=async()=>{ if(busy||document.hidden) return; busy=true; try{
       const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"}); if(!r.ok) return;
@@ -922,6 +923,10 @@ async function afterLogin(){
 }
 
 /* ===== home ===== */
+/* recuadros de "El club en …": cada uno lleva a su módulo */
+const KPI_NAV=[["Hermanos","members"],["Torneos","cal"],["Total apostado","bets"],["Bolsa Hole","treas"],["Horas","hist"],["Asistencia","att"],["Reconocimientos","honor"]];
+function kpiLinks(){ document.querySelectorAll("#homeKpis .kpi").forEach(d=>{ const t=d.querySelector("span")?.textContent||"", m=KPI_NAV.find(([k])=>t.startsWith(k));
+  if(m&&!(ME.guest&&!GUEST_OK.has(m[1]))){ d.dataset.nav=m[1]; d.classList.add("kgo"); d.setAttribute("role","button"); d.tabIndex=0; } }); }
 async function renderHome(){ newsTick();
   $("#hiName").textContent="Hola, "+(ME.nickname||ME.name).replace(/^(El|La)\s+/,""); $("#hiDate").textContent=new Date().toLocaleDateString("es-MX",{weekday:"long",day:"numeric",month:"long"}); $("#hiYear").textContent=new Date().getFullYear();
   $("#hiRole").textContent=ME.hidden?"Administrador":PROFS[prof(ME)];
@@ -929,7 +934,7 @@ async function renderHome(){ newsTick();
     const bp=+k.board_pending||0; $("#bnMoreB").textContent=bp; $("#bnMoreB").classList.toggle("hide",!(bp&&isBoard(ME))); $("#bdgBoard").textContent=bp; $("#bdgBoard").classList.toggle("hide",!bp); $("#navBoard").textContent=bp?`Board (${bp})`:"Board";
     $("#homeKpis").innerHTML=`<div class="kpi"><b>${n(k.hermanos)}</b><span>Hermanos</span></div>${k.torneos_year!=null?`<div class="kpi"><b>${n(k.torneos_year)}</b><span>Torneos ${k.asist_year}</span>${kDelta(k.torneos_year,k.torneos_prev,"",k.asist_year-1)}</div>`:`<div class="kpi"><b>${n(k.torneos)}</b><span>Torneos jugados</span></div>`}
       ${k.quinielas!=null?`<div class="kpi wide"><b>${money(k.quinielas)}</b><span>Total apostado en quinielas</span><small class="ksub">${n(k.apuestas)} apuestas en ${n(k.n_quinielas)} quiniela${k.n_quinielas==1?"":"s"}</small></div>
-      <div class="kpi"><b>${money(k.hio)}</b><span>Bolsa Hole in One</span></div>`:`<div class="kpi wide"><b>${money(k.hio)}</b><span>Bolsa Hole in One</span></div><div class="kpi"><b>${n(k.horas)}</b><span>Horas jugadas juntos</span></div>`}${k.asistencia!=null?`<div class="kpi"><b>${k.asistencia}%</b><span>Asistencia ${k.asist_year}</span>${kDelta(k.asistencia,k.asist_prev," pt",k.asist_year-1)}</div><div class="kpi wide">`:`<div class="kpi">`}<b>${n(k.honores)}</b><span>Reconocimientos</span></div>`; }).catch(()=>{ $("#homeKpis").innerHTML=""; });
+      <div class="kpi"><b>${money(k.hio)}</b><span>Bolsa Hole in One</span></div>`:`<div class="kpi wide"><b>${money(k.hio)}</b><span>Bolsa Hole in One</span></div><div class="kpi"><b>${n(k.horas)}</b><span>Horas jugadas juntos</span></div>`}${k.asistencia!=null?`<div class="kpi"><b>${k.asistencia}%</b><span>Asistencia ${k.asist_year}</span>${kDelta(k.asistencia,k.asist_prev," pt",k.asist_year-1)}</div><div class="kpi wide">`:`<div class="kpi">`}<b>${n(k.honores)}</b><span>Reconocimientos</span></div>`; kpiLinks(); }).catch(()=>{ $("#homeKpis").innerHTML=""; });
   try{ EVENTS=await rpc("b_events_list",{p_token:TOKEN}); }catch{ EVENTS=[]; }
   const nx=EVENTS.filter(e=>!e.closed).sort((a,b)=>new Date(a.lock_at)-new Date(b.lock_at))[0];
   $("#homeNext").innerHTML = nx ? `<div class="hsec">${new Date(nx.lock_at)>new Date()?"Próximo torneo":"En juego"}</div>${evCard(nx)}` : "";
