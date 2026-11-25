@@ -2,7 +2,7 @@
    - Solo mismo dominio y GET; Supabase y otros dominios pasan directo (datos siempre en vivo).
    - Intenta la red (cache:'no-cache'); si tarda más de 6 s o falla, usa la copia guardada.
    - Solo guarda respuestas r.ok. version.json nunca se guarda. */
-const V = "16";
+const V = "17";
 const CACHE = "mcg-club-v" + V;
 const TIMEOUT = 6000;
 self.addEventListener("install", e => { self.skipWaiting(); });

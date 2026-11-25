@@ -33,7 +33,7 @@
 </script>
 <link rel="icon" type="image/png" href="/icons/favicon-192.png">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
-<link rel="stylesheet" href="/fonts/fonts.css?v=16">
+<link rel="stylesheet" href="/fonts/fonts.css?v=17">
 <style>
 :root{
   --g:#0b3029;--g2:#0e3a32;--g3:#14453b;--gold:#a4a16a;--gold2:#c9c59a;--cream:#efe9cf;--cream2:#f7f3e3;
@@ -303,6 +303,8 @@ textarea.copy{width:100%;min-height:150px;font:12px/1.4 ui-monospace,monospace;b
 .btop{display:flex;gap:8px;margin-bottom:12px}.btop .btn{flex:1}.btop #sdBtn .bdg{margin-left:6px}
 .bstats{display:grid;grid-template-columns:1fr 1fr;gap:6px}.bst{background:rgba(255,255,255,.05);border-radius:10px;padding:8px 10px}.bst span{display:block;font-size:11px;color:var(--mute)}.bst b{font-size:17px}.bst .pos{color:#8fd19e}.bst .neg{color:#f0a59f}
 .brk{display:flex;justify-content:space-between;gap:10px;padding:6px 2px;border-bottom:1px solid rgba(255,255,255,.06);font-size:13px}.brk:last-child{border:0}.brk.yo{color:var(--gold);font-weight:600}
+.selbar{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin:0 2px 12px;font-size:12px;color:var(--mute)}.selbar label{display:flex;align-items:center;gap:6px;font-weight:600;letter-spacing:.04em}.selbar select.t{width:auto;min-width:0;padding:7px 28px 7px 10px;font-size:13px}
+[data-tog].on{border-color:var(--gold2)}
 .foldc>summary{list-style:none;cursor:pointer}.foldc>summary::-webkit-details-marker{display:none}.foldc>summary .h:after{content:"Ver ›";font:600 11px Inter,sans-serif;color:var(--mute);margin-left:auto;padding-left:8px}.foldc[open]>summary .h:after{content:"Ocultar"}
 .ent{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:8px 0;border-top:1px solid rgba(164,161,106,.2)}.ent:first-child{border-top:0}
 .ent .nm2{flex:1;min-width:110px}
@@ -562,9 +564,9 @@ main{padding-bottom:110px}
   <section class="view" id="v-hist">
     <div class="plaque"><div class="pt">Históricos</div><div class="pn">Libro de Récords</div><div class="ps">Tu récord como jugador y como apostador</div></div>
     <div class="etabs stk" id="hTabs"><button data-htab="jug" class="on">Como jugador</button><button data-htab="apo">Como apostador</button></div>
-    <div class="card">
-      <div class="h">Rango de fechas</div>
-      <div class="row2"><div><label class="f" for="hFrom">Desde</label><input id="hFrom" class="t" type="date"></div><div><label class="f" for="hTo">Hasta</label><input id="hTo" class="t" type="date"></div></div>
+    <div class="selbar"><button class="btn ghost sm" data-tog="hRange">📅 Filtrar fechas</button><span class="note" id="hRangeLbl">Todas las fechas</span></div>
+    <div class="card hide" id="hRange">
+      <div class="row2"><div><label class="f" for="hFrom" style="margin-top:0">Desde</label><input id="hFrom" class="t" type="date"></div><div><label class="f" for="hTo" style="margin-top:0">Hasta</label><input id="hTo" class="t" type="date"></div></div>
       <button class="btn ghost sm" id="hAll" style="margin-top:10px">Todas las fechas</button>
     </div>
     <div id="histBody"></div>
@@ -583,8 +585,8 @@ main{padding-bottom:110px}
 
   <section class="view" id="v-att">
     <div class="plaque"><div class="pt">Asistencias</div><div class="pn">Libro de Salidas</div><div class="ps">No Call, No Show · Regla 7a: jugar al menos cada 6 semanas</div></div>
-    <div class="card"><div class="row2"><div><label class="f" for="attLiga">Liga</label><select id="attLiga" class="t"><option value="sabado">Sabatina</option><option value="domingo">Dominical</option></select></div>
-      <div><label class="f" for="attSeason">Temporada</label><select id="attSeason" class="t"></select></div></div></div>
+    <div class="selbar"><label>Liga <select id="attLiga" class="t"><option value="sabado">Sabatina</option><option value="domingo">Dominical</option></select></label>
+      <label>Temporada <select id="attSeason" class="t"></select></label></div>
     <button class="btn gold w hide" id="newOutBtn" style="margin-bottom:14px">+ Registrar salida</button>
     <div class="card hide" id="outForm"></div>
     <div id="attBody"></div>
@@ -593,7 +595,7 @@ main{padding-bottom:110px}
   <!-- TESORERIA -->
   <section class="view" id="v-treas">
     <div class="plaque"><div class="pt">Tesorería</div><div class="pn">Libro de Cuentas</div><div class="ps">Inscripciones y fondos del club</div></div>
-    <div class="card"><label class="f" for="trSeason">Temporada</label><select id="trSeason" class="t"></select></div>
+    <div class="selbar"><label>Temporada <select id="trSeason" class="t"></select></label></div>
     <div id="trBody"></div>
   </section>
 
@@ -632,7 +634,7 @@ main{padding-bottom:110px}
   <section class="view" id="v-usage">
     <div class="plaque"><div class="pt">Board</div><div class="pn">Admin</div><div class="ps">Actividad, permisos y noticias automáticas</div></div>
     <div class="etabs stk" id="uTabs"><button data-utab="act" class="on">Actividad</button><button data-utab="perm">Permisos</button><button data-utab="news">Noticias</button></div>
-    <div class="card" id="uAct"><label class="f" style="margin-top:0">Periodo</label><select class="t" id="uDays"><option value="7">Últimos 7 días</option><option value="30" selected>Últimos 30 días</option><option value="90">Últimos 90 días</option><option value="365">Último año</option></select></div>
+    <div class="selbar" id="uAct"><label>Periodo <select class="t" id="uDays"><option value="7">Últimos 7 días</option><option value="30" selected>Últimos 30 días</option><option value="90">Últimos 90 días</option><option value="365">Último año</option></select></label></div>
     <div id="uBody"></div>
   </section>
 
@@ -780,7 +782,7 @@ setInterval(()=>{ if(document.visibilityState==="visible") newsTick(); },120000)
 document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") newsTick(); });
 /* auto-actualización: al volver a la app y cada 10 min compara version.json con APP_VER; si cambió, actualiza el SW
    y recarga UNA sola vez por versión (sessionStorage evita bucles). bump.sh sube APP_VER y version.json juntos. */
-const APP_VER="16";
+const APP_VER="17";
 (()=>{ let busy=false;
   const check=async()=>{ if(busy||document.hidden) return; busy=true; try{
       const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"}); if(!r.ok) return;
@@ -924,6 +926,10 @@ async function afterLogin(){
   if(m) openEvent(m[1]); else if(location.hash==='#asistencias') go('att'); else if(location.hash==='#tesoreria') go('treas'); else if(location.hash==='#codigo') go('code'); else if(location.hash==='#honor') go('honor'); else if(location.hash==='#board') go(ME.board?'board':'code'); else go("home");
 }
 
+/* botones que abren/cierran un formulario o bloque */
+document.addEventListener("click",e=>{ const b=e.target.closest("[data-tog]"); if(!b) return; const t=document.getElementById(b.dataset.tog); if(!t) return;
+  const open=t.classList.toggle("hide")===false; b.classList.toggle("on",open); b.setAttribute("aria-expanded",open); if(open){ const f=t.querySelector("input,select,textarea"); if(f&&f.type!=="date") f.focus({preventScroll:true}); } });
+function hRangeLbl(){ const a=$("#hFrom").value, b=$("#hTo").value, L=$("#hRangeLbl"); if(L) L.textContent=a||b?`${a?fdate(a):"inicio"} → ${b?fdate(b):"hoy"}`:"Todas las fechas"; }
 /* ===== home ===== */
 /* recuadros de "El club en …": cada uno lleva a su módulo */
 const KPI_NAV=[["Hermanos","members"],["Torneos","cal"],["Total apostado","bets"],["Bolsa Hole","treas"],["Horas","hist"],["Asistencia","att"],["Reconocimientos","honor"]];
@@ -1860,8 +1866,8 @@ async function loadHist(){
   try{ HIST=await rpc("b_history",{p_token:TOKEN}); }catch(e){ toast(e.message); return; }
   renderHist();
 }
-["#hFrom","#hTo"].forEach(s=>$(s).addEventListener("change",renderHist));
-$("#hAll").onclick=()=>{ $("#hFrom").value=""; $("#hTo").value=""; renderHist(); };
+["#hFrom","#hTo"].forEach(s=>$(s).addEventListener("change",()=>{ hRangeLbl(); renderHist(); }));
+$("#hAll").onclick=()=>{ $("#hFrom").value=""; $("#hTo").value=""; hRangeLbl(); renderHist(); };
 function renderHist(){
   if(!HIST) return;
   document.querySelectorAll("#hTabs [data-htab]").forEach(b=>b.classList.toggle("on",b.dataset.htab===HTAB));
@@ -2205,16 +2211,18 @@ function renderTreas(){
     <div class="stats" style="grid-template-columns:1fr 1fr"><div><b>${money(TR.hio.saldo)}</b><span>SALDO</span></div><div><b>${P.length}</b><span>PARTICIPANTES</span></div></div>
     <div class="chips" style="margin-top:10px">${P.map(p=>`<span class="chip">${esc(p.name)}${c?` <b data-hio="${p.member_id}" data-on="0" style="cursor:pointer">✕</b>`:""}</span>`).join("")||`<span class="note">Sin participantes.</span>`}</div>
     <div class="note" style="margin-top:8px">Aportación anual ${money(TR.settings.hio_fee)}.</div>
-    ${c?`<div class="row2" style="grid-template-columns:1fr auto;margin-top:10px"><select id="hioAdd" class="t">${TR.members.filter(m=>!inP.has(m.id)).map(m=>`<option value="${m.id}">${esc(m.name)}</option>`).join("")}</select><button class="btn" id="hioAddBtn">Sumar</button></div>`:""}</div>`;
+    ${c?`<button class="btn ghost sm" data-tog="hioForm" style="margin-top:10px">＋ Agregar participante</button><div class="row2 hide" id="hioForm" style="grid-template-columns:1fr auto;margin-top:8px"><select id="hioAdd" class="t">${TR.members.filter(m=>!inP.has(m.id)).map(m=>`<option value="${m.id}">${esc(m.name)}</option>`).join("")}</select><button class="btn" id="hioAddBtn">Sumar</button></div>`:""}</div>`;
   if(c){
     const fl={hio:"Hole-in-One",noshow:"No-Show",general:"General"};
     h+=`<div class="card"><div class="h">Movimientos</div>
+      <button class="btn gold w" data-tog="mvForm">＋ Registrar movimiento</button><div class="hide" id="mvForm">
       <div class="row2"><div><label class="f">Fondo</label><select class="t" id="mvFund"><option value="hio">Hole-in-One</option><option value="noshow">No-Show</option><option value="general">General</option></select></div><div><label class="f">Fecha</label><input class="t" id="mvDate" type="date" value="${TR.today}"></div></div>
       <label class="f">Concepto</label><input class="t" id="mvConcept" placeholder="Ej. Aportación anual JR / Premio Gran Finale">
       <div class="row2"><div><label class="f">Monto (+ entra / − sale)</label><input class="t" id="mvAmount" type="number" placeholder="500"></div><div><label class="f">Socio (opcional)</label><select class="t" id="mvMember"><option value="">—</option>${TR.members.map(m=>`<option value="${m.id}">${esc(m.name)}</option>`).join("")}</select></div></div>
-      <button class="btn w" id="mvSave" style="margin-top:10px">Registrar movimiento</button>
+      <button class="btn gold w" id="mvSave" style="margin-top:10px">Guardar movimiento</button></div>
       <div style="margin-top:12px">${TR.moves.map(m=>`<div class="trow"><span class="nm2">${esc(m.concept)}<div class="note">${dd(m.date)} · ${fl[m.fund]}${m.name?" · "+esc(m.name):""}</div></span><b style="color:${m.amount<0?"var(--bad)":"var(--ok)"}">${m.amount<0?"−":"+"}${money(Math.abs(m.amount))}</b><button class="btn sm danger" data-mvdel="${m.id}">✕</button></div>`).join("")||`<div class="note">Sin movimientos.</div>`}</div></div>
-    <div class="card"><div class="h">Ajustes de cuotas</div>
+    <button class="btn ghost w" data-tog="sForm" style="margin-bottom:14px">⚙️ Ajustes de cuotas</button>
+    <div class="card hide" id="sForm"><div class="h">Ajustes de cuotas</div>
       <div class="row2"><div><label class="f">Inscripción semestral</label><input class="t" id="sDues" type="number" value="${TR.settings.dues_fee}"></div><div><label class="f">Hole-in-One anual</label><input class="t" id="sHio" type="number" value="${TR.settings.hio_fee}"></div></div>
       <div class="row3"><div><label class="f">Championship</label><input class="t" id="sNC" type="number" value="${TR.settings.fee_championship}"></div><div><label class="f">Gran Finale</label><input class="t" id="sNG" type="number" value="${TR.settings.fee_gran_finale}"></div><div><label class="f">Reincidencia NS</label><input class="t" id="sNR" type="number" value="${TR.settings.noshow_reinc}"></div></div>
       <button class="btn ghost w" id="sSave" style="margin-top:10px">Guardar ajustes</button></div>`;
