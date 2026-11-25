@@ -33,7 +33,7 @@
 </script>
 <link rel="icon" type="image/png" href="/icons/favicon-192.png">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
-<link rel="stylesheet" href="/fonts/fonts.css?v=12">
+<link rel="stylesheet" href="/fonts/fonts.css?v=13">
 <style>
 :root{
   --g:#0b3029;--g2:#0e3a32;--g3:#14453b;--gold:#a4a16a;--gold2:#c9c59a;--cream:#efe9cf;--cream2:#f7f3e3;
@@ -299,6 +299,9 @@ textarea.copy{width:100%;min-height:150px;font:12px/1.4 ui-monospace,monospace;b
 .cvex{display:grid;gap:8px;margin:4px 0}.cvex label{display:flex;gap:8px;align-items:center;font-size:14px}
 .cvsum{margin-top:12px}.cvart{border-radius:12px;overflow:hidden;background:rgba(255,255,255,.04);min-height:160px;display:grid;place-items:center}.cvart img{width:100%;display:block}
 .cvcat{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;margin:6px 0;font-size:13px}.cvcat input{width:64px;display:inline-block;padding:6px;text-align:center}
+.btop{display:flex;gap:8px;margin-bottom:12px}.btop .btn{flex:1}.btop #sdBtn .bdg{margin-left:6px}
+.bstats{display:grid;grid-template-columns:1fr 1fr;gap:6px}.bst{background:rgba(255,255,255,.05);border-radius:10px;padding:8px 10px}.bst span{display:block;font-size:11px;color:var(--mute)}.bst b{font-size:17px}.bst .pos{color:#8fd19e}.bst .neg{color:#f0a59f}
+.brk{display:flex;justify-content:space-between;gap:10px;padding:6px 2px;border-bottom:1px solid rgba(255,255,255,.06);font-size:13px}.brk:last-child{border:0}.brk.yo{color:var(--gold);font-weight:600}
 .foldc>summary{list-style:none;cursor:pointer}.foldc>summary::-webkit-details-marker{display:none}.foldc>summary .h:after{content:"Ver ›";font:600 11px Inter,sans-serif;color:var(--mute);margin-left:auto;padding-left:8px}.foldc[open]>summary .h:after{content:"Ocultar"}
 .ent{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:8px 0;border-top:1px solid rgba(164,161,106,.2)}.ent:first-child{border-top:0}
 .ent .nm2{flex:1;min-width:110px}
@@ -540,7 +543,8 @@ main{padding-bottom:110px}
   <!-- BETS LIST -->
   <section class="view" id="v-bets">
     <div class="plaque"><div class="pt">Apuestas</div><div class="pn">Quinielas McGregor</div><div class="ps">Torneos por venir y los que ya son historia</div></div>
-    <button class="btn gold w hide" id="newEvBtn" style="margin-bottom:14px">+ Nuevo torneo</button>
+    <div class="btop"><button class="btn gold hide" id="newEvBtn">+ Nuevo torneo</button><button class="btn ghost" id="sdBtn" data-nav="saldos">💸 Mis saldos<span class="bdg hide" id="sdBdg"></span></button></div>
+    <div id="betStats"></div>
     <div class="card"><div class="h">Próximos y en juego</div><div id="evNext"></div></div>
     <div class="card"><div class="h">Pasados</div><div id="evPast"></div></div>
   </section>
@@ -773,7 +777,7 @@ setInterval(()=>{ if(document.visibilityState==="visible") newsTick(); },120000)
 document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") newsTick(); });
 /* auto-actualización: al volver a la app y cada 10 min compara version.json con APP_VER; si cambió, actualiza el SW
    y recarga UNA sola vez por versión (sessionStorage evita bucles). bump.sh sube APP_VER y version.json juntos. */
-const APP_VER="12";
+const APP_VER="13";
 (()=>{ let busy=false;
   const check=async()=>{ if(busy||document.hidden) return; busy=true; try{
       const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"}); if(!r.ok) return;
@@ -950,7 +954,34 @@ async function loadEvents(){
   const nxt=EVENTS.filter(e=>!e.closed), past=EVENTS.filter(e=>e.closed);
   $("#evNext").innerHTML = nxt.length? nxt.map(evCard).join("") : `<div class="note">No hay torneos abiertos.${isAdminBets()?" Crea uno con “Nuevo torneo”.":""}</div>`;
   $("#evPast").innerHTML = past.length? past.map(row).join("") : `<div class="note">Aún no hay torneos cerrados.</div>`;
+  loadBetStats();
 }
+/* estadística de apuestas: tu historial, ranking de quinielas (por premios y aciertos, no por dinero) y, para el Board, totales del club */
+const STC=new Map();
+function evFull(id){ const c=STC.get(id); if(c&&Date.now()-c.t<60000) return c.p; const p=rpc("b_event_get",{p_token:TOKEN,p_event:id}); STC.set(id,{t:Date.now(),p}); p.catch(()=>STC.delete(id)); return p; }
+async function loadBetStats(){ const box=$("#betStats"); if(!box) return;
+  const L=EVENTS.filter(e=>e.closed&&!e.solo_historico&&(!e.event_date||e.event_date>=SALDO_DESDE));
+  if(!L.length){ box.innerHTML=""; $("#sdBdg").classList.add("hide"); return; }
+  let F; try{ F=await Promise.all(L.map(e=>evFull(e.id))); }catch{ return; }
+  const keep=EV, P=new Map(), me={net:0,debe:0,cobra:0,ev:0,pr:0,best:null,h:0,k:0,nPend:0}; let tot=0, pendClub=0, H=0, K=0, myName=ME.nickname||ME.name;
+  try{ for(const full of F){ EV=full; const C=cuentas(), R=ranked(), nres=KEYS().filter(k=>EV.results?.[k]).length; myName=C.me||myName; tot+=C.tot;
+      const o=C.L.find(x=>x.n===C.me); if(o) me.net+=o.net;
+      C.X.filter(x=>!x.paid).forEach(x=>{ pendClub+=x.amount; if(x.payer===C.me){ me.debe+=x.amount; me.nPend++; } if(x.payee===C.me){ me.cobra+=x.amount; me.nPend++; } });
+      R.filter(r=>Object.keys(r.e.picks||{}).length).forEach(r=>{ const mine=r.e.member_id===ME.id, n=mine?"\u0000yo":r.e.name;
+        if(!P.has(n)) P.set(n,{n:mine?myName:r.e.name,mine,ev:0,pr:0,best:null,h:0,k:0}); const q=P.get(n);
+        q.ev++; if(r.prize>0) q.pr++; q.best=q.best==null?r.rank:Math.min(q.best,r.rank); q.h+=r.h; q.k+=nres; H+=r.h; K+=nres; }); } }
+  finally{ EV=keep; }
+  const pct=q=>q.k?Math.round(q.h/q.k*100):0, Rk=[...P.values()].sort((a,b)=>b.pr-a.pr||pct(b)-pct(a)||a.n.localeCompare(b.n)), my=Rk.find(q=>q.mine), myPos=my?Rk.indexOf(my)+1:0;
+  const bd=$("#sdBdg"); bd.textContent=me.nPend; bd.classList.toggle("hide",!me.nPend);
+  const pend=me.debe>me.cobra?`<b class="neg">Debes ${money(me.debe-me.cobra)}</b>`:me.cobra>me.debe?`<b class="pos">Te deben ${money(me.cobra-me.debe)}</b>`:`<b>Al corriente</b>`;
+  const tile=(l,v)=>`<div class="bst"><span>${l}</span>${v}</div>`;
+  const top=Rk.slice(0,5), rows=top.concat(my&&myPos>5?[my]:[]);
+  box.innerHTML=`<div class="card"><div class="h">Tu historial <small>desde la Rosa · ${L.length} torneo${L.length>1?"s":""}</small></div>
+    <div class="bstats">${tile("Neto",`<b class="${me.net>0?"pos":me.net<0?"neg":""}">${me.net>0?"+":me.net<0?"−":""}${money(Math.abs(me.net))}</b>`)}${tile("Pendiente",pend)}
+    ${tile("Quinielas jugadas",`<b>${my?my.ev:0} de ${L.length}</b>`)}${tile("Premios · mejor lugar",`<b>${my?my.pr:0} · ${my&&my.best?my.best+"º":"—"}</b>`)}</div>
+    <div class="note" style="margin-top:8px">Aciertos: ${my?pct(my)+"%":"—"} · promedio del club ${K?Math.round(H/K*100):0}%</div>
+    ${isBoard(ME)?`<div class="bstats" style="margin-top:8px">${tile("Total apostado (club)",`<b>${money(tot)}</b>`)}${tile("Pendiente de cobrar (club)",`<b class="${pendClub?"neg":""}">${money(pendClub)}</b>`)}</div>`:""}</div>
+  ${Rk.length?`<div class="card"><div class="h">Ranking de quinielas <small>por premios y aciertos</small></div>${rows.map(q=>`<div class="brk${q.mine?" yo":""}"><span>${Rk.indexOf(q)+1}. ${esc(q.mine?"Tú":q.n)}</span><span>${q.pr} premio${q.pr===1?"":"s"} · ${pct(q)}%</span></div>`).join("")}</div>`:""}`; }
 document.addEventListener("click",e=>{const r=e.target.closest("[data-ev]"); if(r) openEvent(r.dataset.ev);});
 
 /* ===== event ===== */
