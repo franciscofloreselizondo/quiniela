@@ -33,7 +33,7 @@
 </script>
 <link rel="icon" type="image/png" href="/icons/favicon-192.png">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
-<link rel="stylesheet" href="/fonts/fonts.css?v=15">
+<link rel="stylesheet" href="/fonts/fonts.css?v=16">
 <style>
 :root{
   --g:#0b3029;--g2:#0e3a32;--g3:#14453b;--gold:#a4a16a;--gold2:#c9c59a;--cream:#efe9cf;--cream2:#f7f3e3;
@@ -638,9 +638,10 @@ main{padding-bottom:110px}
 
   <section class="view" id="v-news">
     <div class="plaque"><div class="pt">Hermanos McGregor</div><div class="pn">Noticias</div><div class="ps">Lo nuevo en el club</div></div>
-    <div class="card hide" id="newsPost"><div class="h">Publicar aviso <small>lo ven todos los socios</small></div>
+    <div class="hide" id="newsPost"><button class="btn gold w" id="newsOpen" style="margin-bottom:14px">📣 Publicar aviso</button>
+      <div class="card hide" id="newsForm"><div class="h">Publicar aviso <small>lo ven todos los socios</small></div>
       <input class="t" id="newsTitle" maxlength="120" placeholder="Título del aviso"><textarea class="t" id="newsBody" maxlength="1000" rows="3" placeholder="Detalle (opcional)" style="margin-top:8px"></textarea>
-      <button class="btn gold w" id="newsSend" style="margin-top:10px">📣 Publicar</button></div>
+      <div class="row2" style="margin-top:10px"><button class="btn ghost" id="newsCancel">Cancelar</button><button class="btn gold" id="newsSend">📣 Publicar</button></div></div></div>
     <div class="card"><div class="h">Últimas noticias</div><div id="newsList"><div class="note">Cargando…</div></div></div>
   </section>
   <section class="view" id="v-social">
@@ -772,13 +773,14 @@ document.querySelector(".top .bar").addEventListener("click",e=>{ if(!ME) return
 document.addEventListener("click",async e=>{ const t=e.target;
   if(t.dataset.nlink){ const l=t.dataset.nlink; if(l.startsWith("#e=")) openEvent(l.slice(3)); else if(l.startsWith("tee:")){ $("#teeDate").value=l.slice(4); go("tee"); } else go(l); return; }
   if(t.dataset.ndel){ if(!confirm("¿Borrar esta noticia?")) return; try{ await rpc("n_delete",{p_token:TOKEN,p_news:+t.dataset.ndel}); loadNews(); }catch(err){ toast(err.message); } return; }
+  if(t.id==="newsOpen"||t.id==="newsCancel"){ const o=t.id==="newsOpen"; $("#newsForm").classList.toggle("hide",!o); $("#newsOpen").classList.toggle("hide",o); if(o) $("#newsTitle").focus(); return; }
   if(t.id==="newsSend"){ const ti=$("#newsTitle").value.trim(); if(!ti){ toast("Escribe un título"); return; } t.disabled=true;
-    try{ await rpc("n_post",{p_token:TOKEN,p_title:ti,p_body:$("#newsBody").value}); $("#newsTitle").value=""; $("#newsBody").value=""; toast("Aviso publicado ✓"); loadNews(); }catch(err){ toast(err.message); } t.disabled=false; } });
+    try{ await rpc("n_post",{p_token:TOKEN,p_title:ti,p_body:$("#newsBody").value}); $("#newsTitle").value=""; $("#newsBody").value=""; $("#newsForm").classList.add("hide"); $("#newsOpen").classList.remove("hide"); toast("Aviso publicado ✓"); loadNews(); }catch(err){ toast(err.message); } t.disabled=false; } });
 setInterval(()=>{ if(document.visibilityState==="visible") newsTick(); },120000);
 document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") newsTick(); });
 /* auto-actualización: al volver a la app y cada 10 min compara version.json con APP_VER; si cambió, actualiza el SW
    y recarga UNA sola vez por versión (sessionStorage evita bucles). bump.sh sube APP_VER y version.json juntos. */
-const APP_VER="15";
+const APP_VER="16";
 (()=>{ let busy=false;
   const check=async()=>{ if(busy||document.hidden) return; busy=true; try{
       const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"}); if(!r.ok) return;
