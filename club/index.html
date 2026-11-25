@@ -33,7 +33,7 @@
 </script>
 <link rel="icon" type="image/png" href="/icons/favicon-192.png">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
-<link rel="stylesheet" href="/fonts/fonts.css?v=11">
+<link rel="stylesheet" href="/fonts/fonts.css?v=12">
 <style>
 :root{
   --g:#0b3029;--g2:#0e3a32;--g3:#14453b;--gold:#a4a16a;--gold2:#c9c59a;--cream:#efe9cf;--cream2:#f7f3e3;
@@ -708,8 +708,8 @@ let EVENTS=[], EV=null, ETAB="principal", skew=0, form={picks:{},tb:""}, target=
 /* ===== menú "Más" ===== */
 function moreItems(){ const can=v=>!ME.guest||GUEST_OK.has(v), bp=+($("#bdgBoard").textContent||0);
   const it=(v,i,t,x)=>can(v)?`<button class="it" data-nav="${v}"><i>${i}</i>${t}${x?`<small>${x}</small>`:""}</button>`:"";
-  const club=it("honor","🏆","Cuadro de Honor")+it("hist","📈","Históricos")+it("code","📖","El Código")+it("social","📣","Redes")+it("members","👥","Miembros")+(ME.guest?"":it("conv","📄","Convocatorias"));
-  const adm=ME.guest?"":it("tee","🛺","Salidas")+it("att","📋","Asistencias")+it("treas","💰","Tesorería")+(isBoard(ME)?it("board","🗳️","Board",bp?bp+" voto"+(bp>1?"s":""):"")+it("usage","⚙️","Admin")+`<a class="it" id="manBoard" href="/club/manual-board.pdf?v=${APP_VER}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit"><i>📘</i>Manual del Board<small>PDF</small></a>`:"");
+  const club=it("honor","🏆","Cuadro de Honor")+it("hist","📈","Históricos")+it("code","📖","El Código")+it("social","📣","Redes")+it("members","👥","Miembros");
+  const adm=ME.guest?"":it("tee","🛺","Salidas")+it("att","📋","Asistencias")+it("treas","💰","Tesorería")+(isBoard(ME)?it("board","🗳️","Board",bp?bp+" voto"+(bp>1?"s":""):"")+it("conv","📄","Convocatorias")+it("usage","⚙️","Admin")+`<a class="it" id="manBoard" href="/club/manual-board.pdf?v=${APP_VER}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit"><i>📘</i>Manual del Board<small>PDF</small></a>`:"");
   return `<div class="mhead" data-nav="profile">${avatarHTML(ME)}<div><b>${esc(ME.nickname||ME.name)}</b><span>${ME.hidden?"Administrador":PROFS[prof(ME)]}</span></div></div>
     <div class="sec">El club</div>${club}${adm?`<div class="sec">${isBoard(ME)?"Administración":"Cuentas del club"}</div><div class="adm">${adm}</div>`:""}
     <div class="sec">Tu cuenta</div><button class="it" data-nav="saldos"><i>💸</i>${isBoard(ME)?"Saldos de apuestas":"Mis saldos"}</button><button class="it" data-nav="profile"><i>👤</i>Mi perfil</button><button class="it" id="moreOut"><i>↪</i>Salir</button>`; }
@@ -773,7 +773,7 @@ setInterval(()=>{ if(document.visibilityState==="visible") newsTick(); },120000)
 document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") newsTick(); });
 /* auto-actualización: al volver a la app y cada 10 min compara version.json con APP_VER; si cambió, actualiza el SW
    y recarga UNA sola vez por versión (sessionStorage evita bucles). bump.sh sube APP_VER y version.json juntos. */
-const APP_VER="11";
+const APP_VER="12";
 (()=>{ let busy=false;
   const check=async()=>{ if(busy||document.hidden) return; busy=true; try{
       const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"}); if(!r.ok) return;
@@ -820,6 +820,7 @@ function show(v){ if(window.__appOK) window.__appOK();
 function go(v){
   if(!ME){ show("login"); return; }
   if(ME.guest&&!GUEST_OK.has(v)) v="home";
+  if(v==="conv"&&!isBoard(ME)) v="home";
   if(v==="bets"){ history.replaceState(null,"",location.pathname); loadEvents(); }
   if(v==="hist") loadHist();
   if(v==="members") loadMembers();
@@ -832,7 +833,7 @@ function go(v){
   if(v==="code") loadCode();
   if(v==="board") loadBoard();
   if(v==="saldos") loadSaldos();
-  if(v==="conv"){ if(ME.guest) v="home"; else loadConv(); }
+  if(v==="conv") loadConv();
   if(v==="home") renderHome();
   if(v==="news") loadNews();
   if(v==="usage"){ if(!isBoard(ME)){ v="home"; renderHome(); } else loadUsage(); }
@@ -2275,7 +2276,7 @@ const PERM_ROWS=[["Casa Club","👁","👁","👁","👁","👁","👁"],["Apues
   ["Honor","👁","➕ publica","➕ publica","➕ publica","✏️ + borra","✏️ + borra"],["Redes","👁","👁","👁","👁","👁","👁"],
   ["Código","👁","➕ propone","➕ vota","➕ vota","✏️ vota + publica","✏️ vota + publica"],["Noticias","👁","👁","✏️ publica","✏️ publica","✏️ publica","✏️ publica"],
   ["Calendario","👁","👁","👁","👁","✏️","✏️"],["Históricos","👁","👁","👁","👁","👁","👁"],["Salidas","—","👁","✏️","✏️","✏️","✏️"],["Asistencias","—","👁","✏️","✏️","✏️","✏️"],
-  ["Tesorería (liga)","—","👁 su cuota","👁","✏️","👁","✏️"],["Board","—","—","✏️","✏️","✏️","✏️"],["Miembros","—","👁","➕ altas","➕ altas","✏️ + elimina","✏️ + elimina"],["Uso","—","—","👁","👁","👁","👁"]];
+  ["Tesorería (liga)","—","👁 su cuota","👁","✏️","👁","✏️"],["Board","—","—","✏️","✏️","✏️","✏️"],["Miembros","—","👁","➕ altas","➕ altas","✏️ + elimina","✏️ + elimina"],["Convocatorias","—","—","✏️","✏️","✏️","✏️"],["Admin","—","—","👁","👁","👁","👁"]];
 async function renderPerm(){ $("#uAct").classList.add("hide"); let M=MEMBERS; if(!M||!M.length){ try{ M=MEMBERS=await rpc("c_members_list",{p_token:TOKEN}); }catch{ M=[]; } }
   const who=k=>M.filter(m=>m.active&&prof(m)===k).map(m=>esc(m.nickname||m.name)); const cnt=k=>M.filter(m=>m.active&&prof(m)===k).length;
   $("#uBody").innerHTML=`<div class="card"><div class="h">Permisos por perfil <small>👁 ve · ➕ ve y agrega lo suyo · ✏️ edita y administra · — sin acceso</small></div>
@@ -2350,12 +2351,12 @@ function renderConv(){ const ed=CV.can_edit; $("#cvTabs").classList.toggle("hide
   const card=v=>`<div class="card cvi"><div class="cvh"><div><b>${esc(v.name)}</b><div class="note">${esc([v.event_date?fdate(v.event_date):"",v.course].filter(Boolean).join(" · "))}</div></div>${v.status==="publicada"?(v.pdf_url&&!v.cfg?.fmt?`<span class="st2 pend">ARCHIVO</span>`:""):`<span class="st2 late">BORRADOR</span>`}</div>
     <div class="cvb">${v.pdf_url?`<a class="btn sm gold" href="${esc(v.pdf_url)}" target="_blank" rel="noopener">📄 Ver PDF</a>`:`<button class="btn sm gold" data-cvpdf="${v.id}">📄 PDF</button>`}${ed?`<button class="btn sm ghost" data-cved="${v.id}">Editar</button><button class="btn sm ghost" data-cvdel="${v.id}" style="color:var(--bad)">Borrar</button>`:""}</div></div>`;
   $("#cvBody").innerHTML=(ed?`<div class="row2" style="margin-bottom:12px"><button class="btn gold" id="cvNew">＋ Crear convocatoria</button><button class="btn ghost" id="cvOld">＋ Agregar PDF del archivo</button></div>`:"")
-    +(dr.length?`<div class="sec2">Borradores · solo los ve el Board</div>${dr.map(card).join("")}`:"")
-    +(pub.length?pub.map(card).join(""):`<div class="card"><div class="note">Aún no hay convocatorias publicadas.</div></div>`); }
+    +(dr.length?`<div class="sec2">Borradores</div>${dr.map(card).join("")}`:"")
+    +(pub.length?pub.map(card).join(""):`<div class="card"><div class="note">Aún no hay convocatorias en el archivo.</div></div>`); }
 function cvField(lbl,path,val,o={}){ const t=o.type||"text"; return `<label class="f">${lbl}</label>${t==="area"?`<textarea class="t" data-cf="${path}" rows="${o.rows||4}" ${o.ph?`placeholder="${esc(o.ph)}"`:""}>${esc(val??"")}</textarea>`
   :`<input class="t" data-cf="${path}" type="${t}" ${t==="number"?`inputmode="numeric" data-num="1"`:""} value="${esc(val??"")}" ${o.ph?`placeholder="${esc(o.ph)}"`:""}>`}${o.note?`<div class="note" style="margin-top:4px">${o.note}</div>`:""}`; }
 function renderCvForm(){ const F=CVF, c=F.cfg, B=cvB(), s=CVSTEP; let h="";
-  if(F.archivo){ $("#cvBody").innerHTML=`<div class="card"><div class="h">PDF del archivo <small>convocatoria anterior</small></div>${cvField("Torneo","name",F.name,{ph:"Ej. Bear Fest 2025"})}${cvField("Fecha","event_date",F.event_date,{type:"date"})}${cvField("Campo","course",F.course)}${cvField("Liga del PDF","pdf_url",F.pdf_url,{ph:"https://drive.google.com/…",note:"Pega la liga de Drive (compartida para que los socios la puedan abrir)."})}
+  if(F.archivo){ $("#cvBody").innerHTML=`<div class="card"><div class="h">PDF del archivo <small>convocatoria anterior</small></div>${cvField("Torneo","name",F.name,{ph:"Ej. Bear Fest 2025"})}${cvField("Fecha","event_date",F.event_date,{type:"date"})}${cvField("Campo","course",F.course)}${cvField("Liga del PDF","pdf_url",F.pdf_url,{ph:"https://drive.google.com/…",note:"Pega la liga de Drive (compartida para que el Board la pueda abrir)."})}
     <div class="row2" style="margin-top:12px"><button class="btn ghost" id="cvCancel">Cancelar</button><button class="btn gold" id="cvSaveOld">Guardar</button></div></div>`; return; }
   if(s===0) h=cvField("Nombre del torneo","name",F.name,{ph:"Ej. Gran Finale Invierno 2026"})+cvField("Fecha","event_date",F.event_date,{type:"date"})+cvField("Campo","course",F.course)+cvField("Hora de salida","cfg.tee",c.tee,{ph:"Ej. 7:30 am · salida escopeta"})
     +cvField("Lema (opcional)","cfg.lema",c.lema,{ph:"Ej. Sin miedo al bunker"})
@@ -2382,7 +2383,7 @@ function renderCvForm(){ const F=CVF, c=F.cfg, B=cvB(), s=CVSTEP; let h="";
       .map(([a,b],i)=>`<button class="wrow" data-cvgo="${[0,0,0,1,2,2,3,3,0,5][i]}"><span>${a}</span><b class="${/^Falta/.test(b)?"miss":""}">${esc(b)}</b></button>`).join("")}</div>
     <button class="btn ghost w" id="cvPrev" style="margin-top:10px">👁️ Ver PDF</button>
     <div class="row2" style="margin-top:8px"><button class="btn ghost" data-cvsave="borrador">Guardar borrador</button><button class="btn gold" data-cvsave="publicada">${F.status==="publicada"?"Guardar publicada":"Publicar"}</button></div>
-    <div class="note" style="margin-top:6px">Al publicar la ven todos los socios en Más › Convocatorias${F.status==="publicada"?"":" y sale la noticia"}.</div>`; }
+    <div class="note" style="margin-top:6px">Publicada queda en el archivo del Board, lista para descargar y mandar al grupo.</div>`; }
   $("#cvBody").innerHTML=`<div class="wtop"><span>Paso ${s+1} de 7 · ${CVSTEPS[s]}</span><button class="lnk" id="cvCancel">Cancelar</button></div><div class="wdots">${CVSTEPS.map((_,i)=>`<i class="${i===s?"on":""} ${i<s?"ok":""}" data-cvgo="${i}"></i>`).join("")}</div>
     <div class="card">${h}</div><div class="row2 wnav"><button class="btn ghost" id="cvBack" ${s?"":"disabled"}>‹ Anterior</button>${s<6?`<button class="btn gold" id="cvNext">Siguiente ›</button>`:"<span></span>"}</div>`; }
 function cvMoneyHTML(c,M){ return `<div class="pzl"><span>Bolsa estimada (${c.players} × ${money(c.aport)})</span><b>${money(M.bolsa)}</b></div>${+c.trofeo?`<div class="pzl"><span>Trofeo</span><b>− ${money(c.trofeo)}</b></div>`:""}${+c.bolsa_equipo?`<div class="pzl"><span>Equipo ganador</span><b>− ${money(c.bolsa_equipo)}</b></div>`:""}${M.oy?`<div class="pzl"><span>O'yes</span><b>− ${money(M.oy)}</b></div>`:""}
