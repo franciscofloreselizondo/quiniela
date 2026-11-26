@@ -33,7 +33,7 @@
 </script>
 <link rel="icon" type="image/png" href="/icons/favicon-192.png">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
-<link rel="stylesheet" href="/fonts/fonts.css?v=17">
+<link rel="stylesheet" href="/fonts/fonts.css?v=18">
 <style>
 :root{
   --g:#0b3029;--g2:#0e3a32;--g3:#14453b;--gold:#a4a16a;--gold2:#c9c59a;--cream:#efe9cf;--cream2:#f7f3e3;
@@ -530,6 +530,7 @@ main{padding-bottom:110px}
       <div class="stats" style="grid-template-columns:1fr 1fr"><div><b id="pfHcp">—</b><span>HCP 18 BIRDIES</span></div><div><b id="pfLigaTxt">—</b><span>LIGA</span></div></div>
       <div class="note" style="margin-top:8px;text-align:center">El HCP lo actualiza el admin con tu registro de 18 Birdies.</div>
       <label class="f" for="pfNick">Apodo</label><input id="pfNick" class="t" maxlength="30">
+      <label class="f" for="pfBday">Cumpleaños <small style="text-transform:none">(el club te felicita ese día)</small></label><input id="pfBday" class="t" type="date">
       <label class="f" for="pfLiga">Liga</label><select id="pfLiga" class="t"><option value="">—</option><option value="sabado">Sabatina</option><option value="domingo">Dominical</option><option value="ambas">Ambas</option></select>
       <button class="btn gold w" id="pfSave" style="margin-top:12px">Guardar</button></div>
     <button class="btn danger w" id="pfLogout">Cerrar sesión</button>
@@ -763,7 +764,7 @@ function newsAgo(t){ const d=(Date.now()-new Date(t))/6e4; if(d<1) return "ahora
 async function loadNews(){ try{ NEWS=await rpc("n_list",{p_token:TOKEN}); }catch(e){ $("#newsList").innerHTML=`<div class="note">${esc(e.message)}</div>`; return; }
   $("#newsPost").classList.toggle("hide",!NEWS.can_post);
   $("#newsList").innerHTML=NEWS.items.length?NEWS.items.map(n=>`<div class="nw ${n.new?"new":""}"><i>${esc(n.icon)}</i><div><b>${esc(n.title)}</b>${n.body?`<div class="s">${esc(n.body)}</div>`:""}<div class="s">${newsAgo(n.at)}${n.by?" · "+esc(n.by):""}</div></div>
-    <div>${n.link?`<button class="btn sm ghost" data-nlink="${esc(n.link)}">Ver</button>`:""}${NEWS.can_post&&n.kind!=="picks"?`<button class="btn sm ghost" data-ndel="${n.id}" title="Borrar" style="margin-left:4px">✕</button>`:""}</div></div>`).join(""):`<div class="note">Aún no hay noticias.</div>`;
+    <div>${n.link?`<button class="btn sm ghost" data-nlink="${esc(n.link)}">Ver</button>`:""}${NEWS.can_post&&typeof n.id==="number"?`<button class="btn sm ghost" data-ndel="${n.id}" title="Borrar" style="margin-left:4px">✕</button>`:""}</div></div>`).join(""):`<div class="note">Aún no hay noticias.</div>`;
   if(NEWS.unread){ rpc("n_seen",{p_token:TOKEN}).then(()=>bellSet(0)).catch(()=>{}); } else bellSet(0); }
 $("#bellBtn").onclick=()=>go("news");
 (()=>{ const top=document.querySelector(".top"), setH=()=>document.documentElement.style.setProperty("--toph",(top?top.offsetHeight:72)+"px"); setH(); addEventListener("resize",setH); setTimeout(setH,800);
@@ -782,7 +783,7 @@ setInterval(()=>{ if(document.visibilityState==="visible") newsTick(); },120000)
 document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") newsTick(); });
 /* auto-actualización: al volver a la app y cada 10 min compara version.json con APP_VER; si cambió, actualiza el SW
    y recarga UNA sola vez por versión (sessionStorage evita bucles). bump.sh sube APP_VER y version.json juntos. */
-const APP_VER="17";
+const APP_VER="18";
 (()=>{ let busy=false;
   const check=async()=>{ if(busy||document.hidden) return; busy=true; try{
       const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"}); if(!r.ok) return;
@@ -1835,6 +1836,7 @@ function memberForm(m){
   return `<div class="h">${m.id?"Editar socio":"Nuevo socio"}</div>
     <div class="row2"><div><label class="f">Nombre</label><input class="t" id="mName" value="${esc(m.name)}"></div><div><label class="f">Apodo</label><input class="t" id="mNick" maxlength="30" value="${esc(m.nickname||"")}" placeholder="Ej. La Bala"></div></div>
     <label class="f">Correo (para entrar)</label><input class="t" id="mEmail" type="email" value="${esc(m.email||"")}">
+    ${m.id&&isAdminMembers()?`<label class="f">Correos alternos <small style="text-transform:none">(opcional, separados por coma)</small></label><input class="t" id="mAlt" value="${esc((m.email_alt||[]).join(", "))}" placeholder="otro@correo.com">`:""}
     ${isAdminMembers()?`<div class="row2"><div><label class="f">Perfil</label><select class="t" id="mProf">${Object.entries(PROFS).map(([k,v])=>`<option value="${k}" ${prof(m)===k?"selected":""}>${v}</option>`).join("")}</select></div><div><label class="f">Liga</label><select class="t" id="mLiga"><option value="">—</option>${opt(LIGAS,m.liga)}</select></div></div>`:`<label class="f">Liga</label><select class="t" id="mLiga"><option value="">—</option>${opt(LIGAS,m.liga)}</select>`}
     <div class="row2"><div><label class="f">HCP</label><input class="t" id="mHcp" inputmode="decimal" value="${esc(m.hcp??"")}"></div>
     <div></div></div>
@@ -1856,6 +1858,7 @@ document.addEventListener("click",async e=>{
     try{ MEMBERS=await rpc("c_admin_save_member",{p_token:TOKEN,p_data:d});
       if($("#mProf")&&(($("#mProf").value==="invitado")!==!!prev?.guest)){ const nid=id||(MEMBERS.find(x=>d.email&&(x.email||"").toLowerCase()===d.email.toLowerCase())||MEMBERS.find(x=>x.name===d.name)||{}).id;
         if(nid) MEMBERS=await rpc("c_admin_set_guest",{p_token:TOKEN,p_id:nid,p_on:$("#mProf").value==="invitado"}); }
+      if(id&&$("#mAlt")&&$("#mAlt").value.trim()!==(prev?.email_alt||[]).join(", ")) MEMBERS=await rpc("c_admin_set_email_alt",{p_token:TOKEN,p_member:id,p_emails:$("#mAlt").value});
       toast("Socio guardado ✓"); $("#memForm").classList.add("hide"); loadMembers();
       if(id===ME.id){ ME=await rpc("c_me",{p_token:TOKEN}); renderWho(); } }
     catch(err){ toast(err.message); e.target.disabled=false; } }
@@ -2269,9 +2272,9 @@ document.addEventListener("click",async e=>{ const t=e.target;
 }, true);
 const LIGTXT={sabado:"Sabatina",domingo:"Dominical",ambas:"Ambas"};
 function fillProfile(){ if(!ME) return; $("#pfAv").innerHTML=ME.avatar?`<img src="${ME.avatar}" alt="">`:esc(ini(ME.nickname||ME.name)); $("#pfName").textContent=ME.name+(ME.nickname?` “${ME.nickname}”`:"");
-  $("#pfMail").textContent=ME.email||""; $("#pfHcp").textContent=ME.hcp??"—"; $("#pfLigaTxt").textContent=LIGTXT[ME.liga]||"—"; $("#pfNick").value=ME.nickname||""; $("#pfLiga").value=ME.liga||"";
+  $("#pfMail").textContent=ME.email||""; $("#pfHcp").textContent=ME.hcp??"—"; $("#pfLigaTxt").textContent=LIGTXT[ME.liga]||"—"; $("#pfNick").value=ME.nickname||""; $("#pfLiga").value=ME.liga||""; $("#pfBday").value=ME.birthday||"";
   $("#pfTags").innerHTML=memTags(ME); }
-$("#pfSave").onclick=async()=>{ try{ ME=await rpc("c_update_me",{p_token:TOKEN,p_data:{nickname:$("#pfNick").value.trim(),liga:$("#pfLiga").value}}); toast("Perfil guardado ✓"); fillProfile(); renderWho(); }catch(e){ toast(e.message); } };
+$("#pfSave").onclick=async()=>{ try{ ME=await rpc("c_update_me",{p_token:TOKEN,p_data:{nickname:$("#pfNick").value.trim(),liga:$("#pfLiga").value,birthday:$("#pfBday").value}}); toast("Perfil guardado ✓"); fillProfile(); renderWho(); }catch(e){ toast(e.message); } };
 $("#pfLogout").onclick=()=>logout(false);
 $("#pfPhoto").onclick=()=>$("#pfFile").click();
 $("#pfFile").addEventListener("change",async e=>{ const f=e.target.files[0]; e.target.value=""; if(!f) return; toast("Subiendo foto…");
@@ -2395,7 +2398,7 @@ function renderConv(){ const ed=CV.can_edit; $("#cvTabs").classList.toggle("hide
   if(CVF) return renderCvForm(); if(CVTAB==="bases"&&ed) return renderCvBases();
   const L=CV.items, pub=L.filter(x=>x.status==="publicada"), dr=L.filter(x=>x.status!=="publicada");
   const card=v=>`<div class="card cvi"><div class="cvh"><div><b>${esc(v.name)}</b><div class="note">${esc([v.event_date?fdate(v.event_date):"",v.course].filter(Boolean).join(" · "))}</div></div>${v.status==="publicada"?(v.pdf_url&&!v.cfg?.fmt?`<span class="st2 pend">ARCHIVO</span>`:""):`<span class="st2 late">BORRADOR</span>`}</div>
-    <div class="cvb">${v.pdf_url?`<a class="btn sm gold" href="${esc(v.pdf_url)}" target="_blank" rel="noopener">📄 Ver PDF</a>`:`<button class="btn sm gold" data-cvpdf="${v.id}">📄 PDF</button>`}${ed?`<button class="btn sm ghost" data-cved="${v.id}">Editar</button><button class="btn sm ghost" data-cvdel="${v.id}" style="color:var(--bad)">Borrar</button>`:""}</div></div>`;
+    <div class="cvb">${v.pdf_url?`<a class="btn sm gold" href="${esc(v.pdf_url)}" target="_blank" rel="noopener">${/\/folders\//.test(v.pdf_url)?"📁 Abrir":"📄 Ver PDF"}</a>`:`<button class="btn sm gold" data-cvpdf="${v.id}">📄 PDF</button>`}${ed?`<button class="btn sm ghost" data-cved="${v.id}">Editar</button><button class="btn sm ghost" data-cvdel="${v.id}" style="color:var(--bad)">Borrar</button>`:""}</div></div>`;
   $("#cvBody").innerHTML=(ed?`<div class="row2" style="margin-bottom:12px"><button class="btn gold" id="cvNew">＋ Crear convocatoria</button><button class="btn ghost" id="cvOld">＋ Agregar PDF del archivo</button></div>`:"")
     +(dr.length?`<div class="sec2">Borradores</div>${dr.map(card).join("")}`:"")
     +(pub.length?pub.map(card).join(""):`<div class="card"><div class="note">Aún no hay convocatorias en el archivo.</div></div>`); }
