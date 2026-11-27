@@ -33,7 +33,7 @@
 </script>
 <link rel="icon" type="image/png" href="/icons/favicon-192.png">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
-<link rel="stylesheet" href="/fonts/fonts.css?v=19">
+<link rel="stylesheet" href="/fonts/fonts.css?v=21">
 <style>
 :root{
   --g:#0b3029;--g2:#0e3a32;--g3:#14453b;--gold:#a4a16a;--gold2:#c9c59a;--cream:#efe9cf;--cream2:#f7f3e3;
@@ -783,7 +783,7 @@ setInterval(()=>{ if(document.visibilityState==="visible") newsTick(); },120000)
 document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") newsTick(); });
 /* auto-actualización: al volver a la app y cada 10 min compara version.json con APP_VER; si cambió, actualiza el SW
    y recarga UNA sola vez por versión (sessionStorage evita bucles). bump.sh sube APP_VER y version.json juntos. */
-const APP_VER="19";
+const APP_VER="21";
 (()=>{ let busy=false;
   const check=async()=>{ if(busy||document.hidden) return; busy=true; try{
       const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"}); if(!r.ok) return;
@@ -2002,7 +2002,7 @@ function teeEditHTML(){ const T=TEE, used=new Set(); T.slots.forEach(s=>s.carts.
     const known=cur&&!socios.some(o=>o.v===cur)&&!guests.includes(cur);
     return `<select class="t" data-cp="${si}.${ci}.${k}"><option value="">— Jugador —</option>${known?`<option value="${esc(cur)}" selected>${esc(cur)}</option>`:""}
       <optgroup label="Socios">${socios.filter(o=>free(o.v)).map(o=>`<option value="${esc(o.v)}" ${o.v===cur?"selected":""}>${esc(o.n)}</option>`).join("")}</optgroup>
-      <optgroup label="Invitados">${guests.filter(free).map(g=>`<option value="${g}" ${g===cur?"selected":""}>${g}</option>`).join("")}<option value="__otro">✏️ Otro (escribir nombre)…</option></optgroup></select>`; };
+      <optgroup label="Invitados">${guests.filter(free).map(g=>`<option value="${g}" ${g===cur?"selected":""}>${g.replace("Guest","Invitado")}</option>`).join("")}<option value="__otro">✏️ Otro (escribir nombre)…</option></optgroup></select>`; };
   const cartSel=(c,si,ci)=>`<select class="t" data-cs="${si}.${ci}">${CARTS.map(o=>`<option value="${o.k}" ${(c.owner||"")===o.k?"selected":""} ${o.k&&!o.multi&&used.has(o.k)&&c.owner!==o.k?"disabled":""}>${esc(o.n)}</option>`).join("")}</select>`;
   return `<div class="card"><div class="h">Armar salidas <small>2 a 5 por salida · 2 por carrito</small></div>
     <label class="f" style="margin-top:0">Título</label><input class="t" id="teeTitle" value="${esc(T.title||"")}" placeholder="Torneo Invierno 2026">
@@ -2031,8 +2031,8 @@ function teeDateLbl(d){ const x=new Date(d+"T12:00:00"); return `${x.getDate()}-
 let LOGO64=null;
 async function logoData(){ if(LOGO64) return LOGO64; try{ const i=new Image(); i.crossOrigin="anonymous"; i.src=STORE+"logo.webp"; await i.decode(); const c=document.createElement("canvas"); c.width=c.height=320; c.getContext("2d").drawImage(i,0,0,320,320); LOGO64=c.toDataURL("image/png"); }catch(e){ LOGO64=""; } return LOGO64; }
 /* imagen de salidas: nombre completo y, abajo, (apodo); invitados como se escribieron */
-function teeFull(p){ const k=String(p||"").toLowerCase(), m=MEMBERS.find(o=>pName(o).toLowerCase()===k)||MEMBERS.find(o=>(o.nickname||"").toLowerCase()===k);
-  if(!m) return {n:p,a:""}; const a=(m.nickname||"").trim(); return {n:m.name,a:a&&a.toLowerCase()!==m.name.toLowerCase()?a:""}; }
+function teeFull(p){ const k=String(p||"").toLowerCase(), m=MEMBERS.find(o=>pName(o).toLowerCase()===k)||MEMBERS.find(o=>(o.nickname||"").toLowerCase()===k)||(()=>{ const c=MEMBERS.filter(o=>o.active!==false&&!o.guest&&k.length>=4&&o.name.toLowerCase().replace(/\s/g,"").startsWith(k)); return c.length===1?c[0]:null; })();
+  if(!m) return {n:String(p||"").replace(/^Guest(?= |$)/i,"Invitado"),a:""}; const a=(m.nickname||"").trim(); return {n:m.name,a:a&&a.toLowerCase()!==m.name.toLowerCase()?a:""}; }
 function teeSVG(){ const T=TEE, S=teeClean().filter(s=>s.carts.length||!T.saved), GR="#1d3a2c", GO="#c2a96b", CR="#f7f2e6", INK="#1f2a24";
   const CW=215, W=Math.max(960,285+Math.max(0,...S.map(s=>s.carts.length))*CW), hd=250, top=hd+70, rh=280, H=top+Math.max(S.length,1)*rh+70;
   const tx=(x,y,t,sz,w,anc,fill,ls,it)=>`<text x="${x}" y="${y}" font-family="Georgia, 'Times New Roman', serif" font-size="${sz}" font-weight="${w||400}" text-anchor="${anc||"start"}" fill="${fill||INK}"${ls?` letter-spacing="${ls}"`:""}${it?` font-style="italic"`:""}>${esc(t)}</text>`;
@@ -2054,7 +2054,7 @@ function teeSVG(){ const T=TEE, S=teeClean().filter(s=>s.carts.length||!T.saved)
   g+=tx(W/2,H-34,"HERMANOS McGREGOR  ·  PLAY IT AS IT LIES",13,700,"middle",GR,4);
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">${g}</svg>`; }
 function teeText(){ const T=TEE, S=teeClean().filter(s=>s.carts.length); const x=new Date(T.date+"T12:00:00").toLocaleDateString("es-MX",{weekday:"long",day:"numeric",month:"long"});
-  return [`⛳ *${(T.title||"Salidas").toUpperCase()}*`,T.subtitle?`_${T.subtitle}_`:"",`📍 ${T.campo} · ${x}`,"",...S.flatMap(s=>[`🕗 *${s.t}* · Hoyo ${s.hoyo||10}`,...s.carts.map(c=>`   🛺 ${c.p.join(" / ")}${c.owner==="Trolley"?" _(trolley, caminando)_":c.owner?` _(carrito de ${(CARTS.find(o=>o.k===c.owner)||{}).n||c.owner})_`:""}`),""])].filter((l,i,a)=>l!==""||a[i-1]!=="").join("\n").trim(); }
+  return [`⛳ *${(T.title||"Salidas").toUpperCase()}*`,T.subtitle?`_${T.subtitle}_`:"",`📍 ${T.campo} · ${x}`,"",...S.flatMap(s=>[`🕗 *${s.t}* · Hoyo ${s.hoyo||10}`,...s.carts.map(c=>`   🛺 ${c.p.map(x=>String(x).replace(/^Guest(?= |$)/i,"Invitado")).join(" / ")}${c.owner==="Trolley"?" _(trolley, caminando)_":c.owner?` _(carrito de ${(CARTS.find(o=>o.k===c.owner)||{}).n||c.owner})_`:""}`),""])].filter((l,i,a)=>l!==""||a[i-1]!=="").join("\n").trim(); }
 async function teePNG(){ await logoData(); const svg=teeSVG(), img=new Image(); img.src="data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg); await img.decode();
   const c=document.createElement("canvas"); c.width=img.width*1.5; c.height=img.height*1.5; const x=c.getContext("2d"); x.scale(1.5,1.5); x.drawImage(img,0,0); return await new Promise(r=>c.toBlob(r,"image/png")); }
 document.addEventListener("input",e=>{ if(VIEW==="tee"&&e.target.closest("#teeEdit")){ teeSync(); $("#teePrev").innerHTML=teeSVG(); } });
