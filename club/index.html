@@ -33,7 +33,7 @@
 </script>
 <link rel="icon" type="image/png" href="/icons/favicon-192.png">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
-<link rel="stylesheet" href="/fonts/fonts.css?v=18">
+<link rel="stylesheet" href="/fonts/fonts.css?v=19">
 <style>
 :root{
   --g:#0b3029;--g2:#0e3a32;--g3:#14453b;--gold:#a4a16a;--gold2:#c9c59a;--cream:#efe9cf;--cream2:#f7f3e3;
@@ -783,7 +783,7 @@ setInterval(()=>{ if(document.visibilityState==="visible") newsTick(); },120000)
 document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") newsTick(); });
 /* auto-actualización: al volver a la app y cada 10 min compara version.json con APP_VER; si cambió, actualiza el SW
    y recarga UNA sola vez por versión (sessionStorage evita bucles). bump.sh sube APP_VER y version.json juntos. */
-const APP_VER="18";
+const APP_VER="19";
 (()=>{ let busy=false;
   const check=async()=>{ if(busy||document.hidden) return; busy=true; try{
       const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"}); if(!r.ok) return;
@@ -2030,8 +2030,11 @@ function cartSVG(c){ return `<g><rect x="22" y="0" width="108" height="12" rx="4
 function teeDateLbl(d){ const x=new Date(d+"T12:00:00"); return `${x.getDate()}-${x.toLocaleDateString("es-MX",{month:"short"}).replace(".","")}-${String(x.getFullYear()).slice(2)}`; }
 let LOGO64=null;
 async function logoData(){ if(LOGO64) return LOGO64; try{ const i=new Image(); i.crossOrigin="anonymous"; i.src=STORE+"logo.webp"; await i.decode(); const c=document.createElement("canvas"); c.width=c.height=320; c.getContext("2d").drawImage(i,0,0,320,320); LOGO64=c.toDataURL("image/png"); }catch(e){ LOGO64=""; } return LOGO64; }
+/* imagen de salidas: nombre completo y, abajo, (apodo); invitados como se escribieron */
+function teeFull(p){ const k=String(p||"").toLowerCase(), m=MEMBERS.find(o=>pName(o).toLowerCase()===k)||MEMBERS.find(o=>(o.nickname||"").toLowerCase()===k);
+  if(!m) return {n:p,a:""}; const a=(m.nickname||"").trim(); return {n:m.name,a:a&&a.toLowerCase()!==m.name.toLowerCase()?a:""}; }
 function teeSVG(){ const T=TEE, S=teeClean().filter(s=>s.carts.length||!T.saved), GR="#1d3a2c", GO="#c2a96b", CR="#f7f2e6", INK="#1f2a24";
-  const W=Math.max(960,285+Math.max(0,...S.map(s=>s.carts.length))*172), hd=250, top=hd+70, rh=225, H=top+Math.max(S.length,1)*rh+70;
+  const CW=215, W=Math.max(960,285+Math.max(0,...S.map(s=>s.carts.length))*CW), hd=250, top=hd+70, rh=280, H=top+Math.max(S.length,1)*rh+70;
   const tx=(x,y,t,sz,w,anc,fill,ls,it)=>`<text x="${x}" y="${y}" font-family="Georgia, 'Times New Roman', serif" font-size="${sz}" font-weight="${w||400}" text-anchor="${anc||"start"}" fill="${fill||INK}"${ls?` letter-spacing="${ls}"`:""}${it?` font-style="italic"`:""}>${esc(t)}</text>`;
   const tf=t=>{ const [h,m]=(t||"").split(":").map(Number); if(isNaN(h)) return t||""; return `${h>12?h-12:h}:${String(m||0).padStart(2,"0")}`; }, ap=t=>(+String(t).split(":")[0]<12?"a. m.":"p. m.");
   const fl=new Date(T.date+"T12:00:00").toLocaleDateString("es-MX",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
@@ -2044,8 +2047,8 @@ function teeSVG(){ const T=TEE, S=teeClean().filter(s=>s.carts.length||!T.saved)
   S.forEach((s,i)=>{ const y=top+i*rh; if(i%2===0) g+=`<rect x="15" y="${y-6}" width="${W-30}" height="${rh}" fill="#efe7d3" opacity=".55"/>`;
     g+=`<line x1="40" y1="${y-6}" x2="${W-40}" y2="${y-6}" stroke="${GO}" stroke-width="1"/>`;
     g+=tx(110,y+100,tf(s.t),46,700,"middle",GR)+tx(110,y+128,ap(s.t),16,400,"middle",INK,2)+tx(110,y+158,"HOYO "+(s.hoyo||"10"),14,700,"middle",GO,3);
-    s.carts.forEach((c,j)=>{ const x=255+j*172, co=CARTS.find(o=>o.k===(c.owner||""))||CARTS[0], im=CIMG[co.i]; if(im){ const sc=Math.min(150/im.w,108/im.h), w=im.w*sc, h=im.h*sc; g+=`<image href="${im.u}" x="${x+75-w/2}" y="${y+18+108-h}" width="${w}" height="${h}"/>`; } else g+=`<g transform="translate(${x},${y+18})">${cartSVG(co.c)}</g>`;
-      const L=(c.owner&&!c.p.length)?[c.owner]:c.p; L.forEach((n,k)=>g+=tx(x+75,y+160+k*27,n,21,400,"middle",INK)); });
+    s.carts.forEach((c,j)=>{ const x=255+j*CW+(CW-172)/2, co=CARTS.find(o=>o.k===(c.owner||""))||CARTS[0], im=CIMG[co.i]; if(im){ const sc=Math.min(150/im.w,108/im.h), w=im.w*sc, h=im.h*sc; g+=`<image href="${im.u}" x="${x+75-w/2}" y="${y+18+108-h}" width="${w}" height="${h}"/>`; } else g+=`<g transform="translate(${x},${y+18})">${cartSVG(co.c)}</g>`;
+      if(c.owner&&!c.p.length) g+=tx(x+75,y+160,c.owner,21,400,"middle",INK); else c.p.forEach((n,k)=>{ const f=teeFull(n), yy=y+158+k*56; g+=tx(x+75,yy,f.n,20,700,"middle",INK)+(f.a?tx(x+75,yy+23,"("+f.a+")",17,400,"middle","#5b5446",0,true):""); }); });
     if(!s.carts.length) g+=tx(320,y+108,"por definir",22,400,"start","#999",0,true); });
   g+=`<line x1="40" y1="${top+Math.max(S.length,1)*rh-6}" x2="${W-40}" y2="${top+Math.max(S.length,1)*rh-6}" stroke="${GO}" stroke-width="1"/>`;
   g+=tx(W/2,H-34,"HERMANOS McGREGOR  ·  PLAY IT AS IT LIES",13,700,"middle",GR,4);
